@@ -95,18 +95,18 @@ public class JdbcUtils
     // So, checking mechanism doesn't work at all.
     // Thus here just runs "SELECT 1" to check connectivity.
     //
-    public boolean isValidConnection(Connection connection, int timeout) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            stmt.executeQuery("SELECT 1").close();
-            return true;
-        } catch (SQLException ex) {
-            return false;
-        } finally {
-            stmt.close();
-        }
-    }
+    //public boolean isValidConnection(Connection connection, int timeout) throws SQLException
+    //{
+    //    Statement stmt = connection.createStatement();
+    //    try {
+    //        stmt.executeQuery("SELECT 1").close();
+    //        return true;
+    //    } catch (SQLException ex) {
+    //        return false;
+    //    } finally {
+    //        stmt.close();
+    //    }
+    //}
 
     //public void setNetworkTimeout(Connection connection,
     //        Executor executor, int milliseconds) throws SQLException {

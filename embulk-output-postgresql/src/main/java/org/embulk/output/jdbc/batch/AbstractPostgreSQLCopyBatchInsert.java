@@ -10,8 +10,10 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
+import org.embulk.output.jdbc.JdbcSchema;
 
 public abstract class AbstractPostgreSQLCopyBatchInsert
         implements BatchInsert
@@ -32,12 +34,17 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
     protected AbstractPostgreSQLCopyBatchInsert() throws IOException
     {
         this.index = 0;
+        // TODO create temp file
     }
 
     protected AbstractPostgreSQLCopyBatchInsert(File file) throws IOException
     {
         this();
         reopenFile(file);
+    }
+
+    public void prepare(JdbcSchema insertSchema) throws SQLException
+    {
     }
 
     protected void deleteFile()

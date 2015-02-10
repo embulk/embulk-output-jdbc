@@ -19,4 +19,14 @@ public class JdbcSchema
     {
         return columns;
     }
+
+    public int getCount()
+    {
+        return columns.size();
+    }
+
+    public JdbcColumn getColumn(int i)
+    {
+        return columns.get(i);
+    }
 }

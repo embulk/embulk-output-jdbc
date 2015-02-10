@@ -7,9 +7,12 @@ import java.sql.PreparedStatement;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import org.embulk.output.jdbc.JdbcSchema;
 
 public interface BatchInsert
 {
+    public void prepare(JdbcSchema insertSchema) throws SQLException;
+
     public int getBatchWeight();
 
     public void add() throws IOException, SQLException;

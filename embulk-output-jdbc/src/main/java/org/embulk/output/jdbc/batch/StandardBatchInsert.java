@@ -9,6 +9,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
+import org.embulk.output.jdbc.JdbcSchema;
 
 public class StandardBatchInsert
         implements BatchInsert
@@ -28,6 +29,11 @@ public class StandardBatchInsert
         this.batchRows = 0;
         this.totalRows = 0;
         batch.clearBatch();
+    }
+
+    public void prepare(JdbcSchema insertSchema) throws SQLException
+    {
+        // TODO
     }
 
     public int getBatchWeight()

@@ -26,6 +26,16 @@ public class JdbcColumn
         this.scaleTypeParameter = scaleTypeParameter;
     }
 
+    public static JdbcColumn skipColumn()
+    {
+        return new JdbcColumn(null, null, 0, 0, 0);
+    }
+
+    public boolean isSkipColumn()
+    {
+        return name == null;
+    }
+
     @JsonProperty("name")
     public String getName()
     {
