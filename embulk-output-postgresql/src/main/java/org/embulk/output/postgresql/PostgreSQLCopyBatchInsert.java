@@ -61,14 +61,6 @@ public class PostgreSQLCopyBatchInsert
         file.delete();
     }
 
-    public void finish() throws IOException, SQLException
-    {
-        closeCurrentFile();  // flush buffered data in writer
-        if (getBatchWeight() != 0) {
-            flush();
-        }
-    }
-
     @Override
     public void close() throws IOException, SQLException
     {

@@ -74,6 +74,14 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         }
     }
 
+    public void finish() throws IOException, SQLException
+    {
+        closeCurrentFile();  // this is necessary to make getBatchWeight() work
+        if (getBatchWeight() != 0) {
+            flush();
+        }
+    }
+
     public void add() throws IOException
     {
         writer.write(newLineString);

@@ -99,10 +99,7 @@ public class RedshiftCopyBatchInsert
     @Override
     public void finish() throws IOException, SQLException
     {
-        closeCurrentFile();  // flush buffered data in writer
-        if (getBatchWeight() != 0) {
-            flush();
-        }
+        super.finish();
         logger.info("Loaded {} files.", fileCount);
     }
 
