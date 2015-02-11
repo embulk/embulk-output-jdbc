@@ -1,3 +1,3 @@
 Embulk::JavaPlugin.register_output(
-  :jdbc, "org.embulk.output.JdbcOutputPlugin",
+  :mysql, "org.embulk.output.MySQLOutputPlugin",
   File.expand_path('../../../../classpath', __FILE__))

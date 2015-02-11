@@ -34,7 +34,7 @@ subprojects {
         testCompile 'junit:junit:4.+'
     }
 
-    task classpath(type: Copy) {
+    task classpath(type: Copy, dependsOn: ["jar"]) {
         doFirst { file('classpath').deleteDir() }
         from (configurations.runtime - configurations.provided + files(jar.archivePath))
         into 'classpath'

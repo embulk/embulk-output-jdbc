@@ -2,6 +2,7 @@ package org.embulk.output.jdbc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class JdbcColumn
 {
@@ -26,11 +27,13 @@ public class JdbcColumn
         this.scaleTypeParameter = scaleTypeParameter;
     }
 
+    @JsonIgnore
     public static JdbcColumn skipColumn()
     {
         return new JdbcColumn(null, null, 0, 0, 0);
     }
 
+    @JsonIgnore
     public boolean isSkipColumn()
     {
         return name == null;

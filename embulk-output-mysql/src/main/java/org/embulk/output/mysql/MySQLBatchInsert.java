@@ -1,18 +1,20 @@
-package org.embulk.output.jdbc.batch;
+package org.embulk.output.mysql;
 
 import java.io.IOException;
 import java.sql.Types;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.embulk.output.jdbc.StandardBatchInsert;
 
 public class MySQLBatchInsert
         extends StandardBatchInsert
 {
-    public MySQLBatchInsert(PreparedStatement batch) throws IOException, SQLException
+    public MySQLBatchInsert(MySQLOutputConnector connector) throws IOException, SQLException
     {
-        super(batch);
+        super(connector);
     }
 
+    @Override
     public void setFloat(float v) throws IOException, SQLException
     {
         if (Float.isNaN(v) || Float.isInfinite(v)) {
@@ -22,6 +24,7 @@ public class MySQLBatchInsert
         }
     }
 
+    @Override
     public void setDouble(double v) throws IOException, SQLException
     {
         if (Double.isNaN(v) || Double.isInfinite(v)) {

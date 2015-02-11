@@ -1,36 +1,51 @@
-package org.embulk.output.jdbc.batch;
+package org.embulk.output.postgresql;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
-import java.sql.SQLException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.embulk.spi.Exec;
+import org.embulk.output.jdbc.JdbcSchema;
 
 public class PostgreSQLCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
 {
     private final Logger logger = Exec.getLogger(PostgreSQLCopyBatchInsert.class);
+    private final PostgreSQLOutputConnector connector;
 
-    private final CopyManager copyManager;
-    private final String copySQL;
+    private PostgreSQLOutputConnection connection = null;
+    private CopyManager copyManager = null;
+    private String copySql = null;
     private long totalRows;
 
-    public PostgreSQLCopyBatchInsert(Connection connection, File tempFile, String copySQL) throws IOException, SQLException
+    public PostgreSQLCopyBatchInsert(PostgreSQLOutputConnector connector) throws IOException, SQLException
     {
-        super(tempFile);
-        this.copyManager = new CopyManager((BaseConnection) connection);
-        this.copySQL = copySQL;
+        super(File.createTempFile("embulk-output-postgres-copy-", ".tsv.tmp"));  // TODO configurable temporary file path
+        this.connector = connector;
     }
 
     @Override
-    public void close() throws IOException
+    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
     {
-        deleteFile();
+        this.connection = connector.connect(true);
+        this.copySql = connection.buildCopySql(loadTable, insertSchema);
+        this.copyManager = connection.newCopyManager();
+        logger.info("Copy SQL: "+copySql);
+    }
+
+    @Override
+    public void close() throws IOException, SQLException
+    {
         closeFile();
+        deleteFile();
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
     @Override
@@ -42,7 +57,8 @@ public class PostgreSQLCopyBatchInsert
         long startTime = System.currentTimeMillis();
         FileInputStream in = new FileInputStream(file);
         try {
-            copyManager.copyIn(copySQL, in);
+            // TODO check age of connection and call isValid if it's old and reconnect if it's invalid
+            copyManager.copyIn(copySql, in);
         } finally {
             in.close();
         }
@@ -60,10 +76,5 @@ public class PostgreSQLCopyBatchInsert
         if (getBatchWeight() != 0) {
             flush();
         }
-    }
-
-    public String getCopySQL()
-    {
-        return this.copySQL;
     }
 }

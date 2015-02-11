@@ -3,7 +3,7 @@ package org.embulk.output.jdbc.setter;
 import java.sql.Types;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.PageReader;
-import org.embulk.output.jdbc.batch.BatchInsert;
+import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 
 public class ColumnSetterFactory
@@ -132,6 +132,6 @@ public class ColumnSetterFactory
     {
         throw new UnsupportedOperationException(
                 String.format("Unsupported type %s (sqlType=%d, size=%d, scale=%d)",
-                    column.getTypeName(), column.getSizeTypeParameter(), column.getScaleTypeParameter()));
+                    column.getTypeName(), column.getSqlType(), column.getSizeTypeParameter(), column.getScaleTypeParameter()));
     }
 }

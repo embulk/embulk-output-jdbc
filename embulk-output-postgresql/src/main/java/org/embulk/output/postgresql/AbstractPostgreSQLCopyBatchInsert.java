@@ -1,4 +1,4 @@
-package org.embulk.output.jdbc.batch;
+package org.embulk.output.postgresql;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,9 +11,9 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.SQLException;
-import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.BatchInsert;
 
 public abstract class AbstractPostgreSQLCopyBatchInsert
         implements BatchInsert
@@ -24,27 +24,15 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
     protected static final String newLineString = "\n";
     protected static final String delimiterString = "\t";
 
-    private final Logger logger = Exec.getLogger(PostgreSQLCopyBatchInsert.class);
-
     protected File file;
     protected BufferedWriter writer;
     protected int index;
     protected int batchRows;
 
-    protected AbstractPostgreSQLCopyBatchInsert() throws IOException
-    {
-        this.index = 0;
-        // TODO create temp file
-    }
-
     protected AbstractPostgreSQLCopyBatchInsert(File file) throws IOException
     {
-        this();
+        this.index = 0;
         reopenFile(file);
-    }
-
-    public void prepare(JdbcSchema insertSchema) throws SQLException
-    {
     }
 
     protected void deleteFile()

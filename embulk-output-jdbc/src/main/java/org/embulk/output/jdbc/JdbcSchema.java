@@ -29,4 +29,9 @@ public class JdbcSchema
     {
         return columns.get(i);
     }
+
+    public String getColumnName(int i)
+    {
+        return columns.get(i).getName();
+    }
 }

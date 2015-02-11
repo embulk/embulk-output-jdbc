@@ -1,39 +1,42 @@
-package org.embulk.output.jdbc.batch;
+package org.embulk.output.jdbc;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.JdbcSchema;
 
 public class StandardBatchInsert
         implements BatchInsert
 {
     private final Logger logger = Exec.getLogger(StandardBatchInsert.class);
 
+    private final JdbcOutputConnector connector;
+
+    private JdbcOutputConnection connection;
     private PreparedStatement batch;
     private int index;
     private int batchWeight;
     private int batchRows;
     private long totalRows;
 
-    public StandardBatchInsert(PreparedStatement batch) throws IOException, SQLException
+    public StandardBatchInsert(JdbcOutputConnector connector) throws IOException, SQLException
     {
-        this.batch = batch;
+        this.connector = connector;
+    }
+
+    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    {
+        this.connection = connector.connect(true);
+        this.batch = connection.prepareInsertSql(loadTable, insertSchema);
         this.index = 1;  // PreparedStatement index begings from 1
         this.batchRows = 0;
         this.totalRows = 0;
         batch.clearBatch();
-    }
-
-    public void prepare(JdbcSchema insertSchema) throws SQLException
-    {
-        // TODO
     }
 
     public int getBatchWeight()
@@ -73,12 +76,6 @@ public class StandardBatchInsert
         if (getBatchWeight() != 0) {
             flush();
         }
-    }
-
-    private void nextColumn(int weight)
-    {
-        index++;
-        batchWeight += weight + 4;  // add weight as overhead of each columns
     }
 
     public void setNull(int sqlType) throws IOException, SQLException
@@ -173,5 +170,11 @@ public class StandardBatchInsert
     {
         batch.setObject(index, v, sqlType);
         nextColumn(32);
+    }
+
+    private void nextColumn(int weight)
+    {
+        index++;
+        batchWeight += weight + 4;  // add weight as overhead of each columns
     }
 }

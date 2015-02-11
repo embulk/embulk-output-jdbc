@@ -1,4 +1,4 @@
-package org.embulk.output.jdbc.batch;
+package org.embulk.output.jdbc;
 
 import java.math.BigDecimal;
 import java.io.IOException;
@@ -7,11 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import org.embulk.output.jdbc.JdbcSchema;
 
 public interface BatchInsert
 {
-    public void prepare(JdbcSchema insertSchema) throws SQLException;
+    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException;
 
     public int getBatchWeight();
 

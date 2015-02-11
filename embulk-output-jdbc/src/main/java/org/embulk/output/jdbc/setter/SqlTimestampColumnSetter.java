@@ -7,7 +7,7 @@ import com.google.common.math.DoubleMath;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
-import org.embulk.output.jdbc.batch.BatchInsert;
+import org.embulk.output.jdbc.BatchInsert;
 
 public class SqlTimestampColumnSetter
         extends ColumnSetter

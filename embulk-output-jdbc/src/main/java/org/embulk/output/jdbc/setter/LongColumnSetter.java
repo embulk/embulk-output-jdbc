@@ -8,7 +8,7 @@ import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
-import org.embulk.output.jdbc.batch.BatchInsert;
+import org.embulk.output.jdbc.BatchInsert;
 
 public class LongColumnSetter
         extends ColumnSetter

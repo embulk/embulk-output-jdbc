@@ -1,17 +1,15 @@
-package org.embulk.output;
+package org.embulk.output.jdbc;
 
 import java.util.List;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.batch.BatchInsert;
-import org.embulk.output.jdbc.JdbcColumn;
-import org.embulk.output.jdbc.JdbcSchema;
 
-public abstract class JdbcOutputConnection
+public class JdbcOutputConnection
         implements AutoCloseable
 {
     private final Logger logger = Exec.getLogger(JdbcOutputConnection.class);
@@ -27,6 +25,9 @@ public abstract class JdbcOutputConnection
         this.schemaName = schemaName;
         this.databaseMetaData = connection.getMetaData();
         this.identifierQuoteString = databaseMetaData.getIdentifierQuoteString();
+        if (schemaName != null) {
+            setSearchPath(schemaName);
+        }
     }
 
     public void close() throws SQLException
@@ -42,6 +43,17 @@ public abstract class JdbcOutputConnection
     public DatabaseMetaData getMetaData() throws SQLException
     {
         return databaseMetaData;
+    }
+
+    private void setSearchPath(String schema) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+            String sql = "SET search_path TO " + quoteIdentifierString(schema);
+            executeUpdate(stmt, sql);
+        } finally {
+            stmt.close();
+        }
     }
 
     public void dropTableIfExists(String tableName) throws SQLException
@@ -126,12 +138,10 @@ public abstract class JdbcOutputConnection
         }
     }
 
-    protected String convertTypeName(String origTypeName)
+    // hook point for subclasses
+    protected String convertTypeName(String typeName)
     {
-        // TODO MySQL: CLOB -> TEXT
-        // TODO PostgreSQL: CLOB -> TEXT
-        // TODO PostgreSQL: BLOB -> BYTEA
-        return origTypeName;
+        return typeName;
     }
 
     // TODO
@@ -224,6 +234,35 @@ public abstract class JdbcOutputConnection
         }
     }
 
+    public PreparedStatement prepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        String insertSql = buildPrepareInsertSql(toTable, toTableSchema);
+        logger.info("Prepared SQL: {}", insertSql);
+        return connection.prepareStatement(insertSql);
+    }
+
+    protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("INSERT INTO ");
+        quoteIdentifierString(sb, toTable);
+
+        sb.append(" (");
+        for (int i=0; i < toTableSchema.getCount(); i++) {
+            if(i != 0) { sb.append(", "); }
+            quoteIdentifierString(sb, toTableSchema.getColumnName(i));
+        }
+        sb.append(") VALUES (");
+        for(int i=0; i < toTableSchema.getCount(); i++) {
+            if(i != 0) { sb.append(", "); }
+            sb.append("?");
+        }
+        sb.append(")");
+
+        return sb.toString();
+    }
+
     // TODO
     //protected void gatherInsertTables(List<String> fromTables, JdbcSchema fromTableSchema, String toTable,
     //        boolean truncateDestinationFirst) throws SQLException
@@ -245,7 +284,7 @@ public abstract class JdbcOutputConnection
     //    }
     //}
 
-    protected void replaceTable(String fromTable, JdbcSchema schema, String toTable) throws SQLException
+    public void replaceTable(String fromTable, JdbcSchema schema, String toTable) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
