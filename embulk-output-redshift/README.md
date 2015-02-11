@@ -28,11 +28,15 @@ Redshift output plugins for Embulk loads records to Redshift.
 ```yaml
 out:
   type: redshift
-  host: localhost
+  host: myinstance.us-west-2.redshift.amazonaws.com
   user: pg
   password: ""
   database: my_database
   table: my_table
+  access_key_id: ABCXYZ123ABCXYZ123
+  secret_access_key: AbCxYz123aBcXyZ123
+  s3_bucket: my-redshift-transfer-bucket
+  iam_user_name: my-s3-read-only
   mode: insert
 ```
 

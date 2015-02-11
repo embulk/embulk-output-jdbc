@@ -14,7 +14,7 @@ See [embulk-output-postgresql/README.md](embulk-output-postgresql/).
 
 See [embulk-output-redshift/README.md](embulk-output-redshift/).
 
-## Generic JDBC databases
+## Generic
 
 ### Overview
 
