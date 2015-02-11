@@ -155,7 +155,7 @@ public abstract class AbstractJdbcOutputPlugin
             task.setMode(Mode.REPLACE_INPLACE);
             break;
         default:
-            new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, replace", task.getModeConfig()));
+            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, replace", task.getModeConfig()));
         }
 
         //switch(task.getModeConfig()) {

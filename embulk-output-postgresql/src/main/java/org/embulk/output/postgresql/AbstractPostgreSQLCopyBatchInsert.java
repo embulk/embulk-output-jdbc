@@ -44,8 +44,8 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
     protected File openNewFile() throws IOException
     {
         File newFile = createTempFile();
-        this.writer = openWriter(newFile);
         File oldFile = closeCurrentFile();
+        this.writer = openWriter(newFile);
         currentFile = newFile;
         return oldFile;
     }
