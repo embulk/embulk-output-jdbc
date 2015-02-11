@@ -24,7 +24,7 @@ public class PostgreSQLCopyBatchInsert
 
     public PostgreSQLCopyBatchInsert(PostgreSQLOutputConnector connector) throws IOException, SQLException
     {
-        super(File.createTempFile("embulk-output-postgres-copy-", ".tsv.tmp"));  // TODO configurable temporary file path
+        super();
         this.connector = connector;
     }
 
@@ -38,20 +38,9 @@ public class PostgreSQLCopyBatchInsert
     }
 
     @Override
-    public void close() throws IOException, SQLException
-    {
-        closeFile();
-        deleteFile();
-        if (connection != null) {
-            connection.close();
-            connection = null;
-        }
-    }
-
-    @Override
     public void flush() throws IOException, SQLException
     {
-        closeFile();  // flush buffered data in writer
+        File file = closeCurrentFile();  // flush buffered data in writer
 
         logger.info(String.format("Loading %,d rows (%,d bytes)", batchRows, file.length()));
         long startTime = System.currentTimeMillis();
@@ -65,16 +54,28 @@ public class PostgreSQLCopyBatchInsert
         double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
 
         totalRows += batchRows;
-        logger.info(String.format("> %.2f seconds (loaded %,d rows in total)", seconds, totalRows));
-        reopenFile();
         batchRows = 0;
+        logger.info(String.format("> %.2f seconds (loaded %,d rows in total)", seconds, totalRows));
+
+        openNewFile();
+        file.delete();
     }
 
     public void finish() throws IOException, SQLException
     {
-        closeFile();  // flush buffered data in writer
+        closeCurrentFile();  // flush buffered data in writer
         if (getBatchWeight() != 0) {
             flush();
+        }
+    }
+
+    @Override
+    public void close() throws IOException, SQLException
+    {
+        closeCurrentFile().delete();
+        if (connection != null) {
+            connection.close();
+            connection = null;
         }
     }
 }

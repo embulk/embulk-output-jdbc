@@ -406,7 +406,7 @@ public class JdbcOutputConnection
         return e;
     }
 
-    public int executeUpdate(Statement stmt, String sql) throws SQLException
+    protected int executeUpdate(Statement stmt, String sql) throws SQLException
     {
         logger.info("SQL: " + sql);
         long startTime = System.currentTimeMillis();

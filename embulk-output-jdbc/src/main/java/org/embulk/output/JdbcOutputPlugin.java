@@ -20,7 +20,7 @@ public class JdbcOutputPlugin
 {
     private final Logger logger = Exec.getLogger(JdbcOutputPlugin.class);
 
-    public interface GenericTask extends PluginTask
+    public interface GenericPluginTask extends PluginTask
     {
         @Config("driver_name")
         public String getDriverName();
@@ -30,9 +30,15 @@ public class JdbcOutputPlugin
     }
 
     @Override
+    protected Class<? extends PluginTask> getTaskClass()
+    {
+        return GenericPluginTask.class;
+    }
+
+    @Override
     protected GenericOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
-        GenericTask g = (GenericTask) task;
+        GenericPluginTask g = (GenericPluginTask) task;
 
         String url;
         if (g.getPort().isPresent()) {

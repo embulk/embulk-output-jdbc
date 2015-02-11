@@ -1,0 +1,9 @@
+dependencies {
+    compile project(':embulk-output-jdbc')
+    compile project(':embulk-output-postgresql')
+
+    compile "com.amazonaws:aws-java-sdk-s3:1.9.17"
+    compile "com.amazonaws:aws-java-sdk-sts:1.9.17"
+
+    testCompile project(':embulk-output-jdbc').sourceSets.test.output
+}

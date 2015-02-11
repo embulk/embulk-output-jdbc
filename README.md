@@ -10,14 +10,19 @@ See [embulk-output-mysql/README.md](embulk-output-mysql/).
 
 See [embulk-output-postgresql/README.md](embulk-output-postgresql/).
 
+## Redshift
+
+See [embulk-output-redshift/README.md](embulk-output-redshift/).
+
 ## Generic JDBC databases
 
 ### Overview
 
 * **Plugin type**: output
-* **Rollback supported**: no
+* **Load all or nothing**: depnds on the mode:
+  * **insert**: no
+  * **replace**: yes
 * **Resume supported**: no
-* **Cleanup supported**: no
 
 ### Configuration
 

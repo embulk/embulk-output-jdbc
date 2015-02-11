@@ -5,9 +5,10 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 ## Overview
 
 * **Plugin type**: output
-* **Rollback supported**: no
+* **Load all or nothing**: depnds on the mode:
+  * **insert**: no
+  * **replace**: yes
 * **Resume supported**: no
-* **Cleanup supported**: no
 
 ## Configuration
 

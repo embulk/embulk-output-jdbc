@@ -2,6 +2,7 @@ package org.embulk.output.postgresql;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.Writer;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
@@ -18,51 +19,54 @@ import org.embulk.output.jdbc.BatchInsert;
 public abstract class AbstractPostgreSQLCopyBatchInsert
         implements BatchInsert
 {
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
+    protected static final Charset FILE_CHARSET = Charset.forName("UTF-8");
 
     protected static final String nullString = "\\N";
     protected static final String newLineString = "\n";
     protected static final String delimiterString = "\t";
 
-    protected File file;
+    protected File currentFile;
     protected BufferedWriter writer;
     protected int index;
     protected int batchRows;
 
-    protected AbstractPostgreSQLCopyBatchInsert(File file) throws IOException
+    protected AbstractPostgreSQLCopyBatchInsert() throws IOException
     {
         this.index = 0;
-        reopenFile(file);
+        openNewFile();
     }
 
-    protected void deleteFile()
+    private File createTempFile() throws IOException
     {
-        file.delete();
+        return File.createTempFile("embulk-output-postgres-copy-", ".tsv.tmp");  // TODO configurable temporary file path
     }
 
-    protected void reopenFile(File newFile) throws IOException
+    protected File openNewFile() throws IOException
     {
-        closeFile();
-        writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newFile), UTF_8));
-        this.file = newFile;
+        File newFile = createTempFile();
+        this.writer = openWriter(newFile);
+        File oldFile = closeCurrentFile();
+        currentFile = newFile;
+        return oldFile;
     }
 
-    protected void reopenFile() throws IOException
-    {
-        reopenFile(file);
-    }
-
-    protected void closeFile() throws IOException
+    protected File closeCurrentFile() throws IOException
     {
         if(writer != null) {
             writer.close();
             writer = null;
         }
+        return currentFile;
+    }
+
+    protected BufferedWriter openWriter(File newFile) throws IOException
+    {
+        return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newFile), FILE_CHARSET));
     }
 
     public int getBatchWeight()
     {
-        long fsize = file.length();
+        long fsize = currentFile.length();
         if (fsize > Integer.MAX_VALUE) {
             return Integer.MAX_VALUE;
         } else {
