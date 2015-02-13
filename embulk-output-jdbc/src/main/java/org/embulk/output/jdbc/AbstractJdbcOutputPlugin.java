@@ -59,6 +59,10 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("\"\"")
         public String getPassword();
 
+        @Config("options")
+        @ConfigDefault("{}")
+        public Properties getOptions();
+
         @Config("database")
         public String getDatabase();
 
@@ -76,10 +80,6 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("16777216")
         // TODO set minimum number
         public int getBatchSize();
-
-        @Config("options")
-        @ConfigDefault("{}")
-        public Properties getOptions();
 
         public void setMode(Mode mode);
         public Mode getMode();

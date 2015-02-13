@@ -4,7 +4,6 @@ import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Connection;
-import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -17,8 +16,6 @@ public class MySQLOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
     private static final int DEFAULT_PORT = 3306;
-
-    private final Logger logger = Exec.getLogger(MySQLOutputPlugin.class);
 
     @Override
     protected MySQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)

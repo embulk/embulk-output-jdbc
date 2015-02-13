@@ -3,7 +3,6 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
@@ -15,8 +14,6 @@ public class PostgreSQLOutputPlugin
 {
     private static final String DEFAULT_SCHEMA = "public";
     private static final int DEFAULT_PORT = 5432;
-
-    private final Logger logger = Exec.getLogger(PostgreSQLOutputPlugin.class);
 
     @Override
     protected PostgreSQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)

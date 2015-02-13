@@ -3,7 +3,6 @@ package org.embulk.output.postgresql;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.slf4j.Logger;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.embulk.spi.Exec;
@@ -14,8 +13,6 @@ import org.embulk.output.jdbc.JdbcSchema;
 public class PostgreSQLOutputConnection
         extends JdbcOutputConnection
 {
-    private final Logger logger = Exec.getLogger(PostgreSQLOutputConnection.class);
-
     public PostgreSQLOutputConnection(Connection connection, String schemaName, boolean autoCommit)
             throws SQLException
     {

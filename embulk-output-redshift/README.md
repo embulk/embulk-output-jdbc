@@ -21,7 +21,7 @@ Redshift output plugins for Embulk loads records to Redshift.
 - **table**: destination name (string, required)
 - **mode**: "replace" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
-- **optoins**: extra connection properties (hash, default: {})
+- **options**: extra connection properties (hash, default: {})
 
 ### Example
 

@@ -4,15 +4,15 @@ JDBC output plugins for Embulk loads records to databases using JDBC drivers.
 
 ## MySQL
 
-See [embulk-output-mysql/README.md](embulk-output-mysql/).
+See [embulk-output-mysql](embulk-output-mysql/).
 
 ## PostgreSQL
 
-See [embulk-output-postgresql/README.md](embulk-output-postgresql/).
+See [embulk-output-postgresql](embulk-output-postgresql/).
 
 ## Redshift
 
-See [embulk-output-redshift/README.md](embulk-output-redshift/).
+See [embulk-output-redshift](embulk-output-redshift/).
 
 ## Generic
 
@@ -31,11 +31,11 @@ See [embulk-output-redshift/README.md](embulk-output-redshift/).
 - **user**: database login user name (string, required)
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required)
-- **schema**: destination name (string, default: null)
+- **schema**: destination name (string, default: use default schema)
 - **table**: destination name (string, required)
 - **mode**: "replace" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
-- **optoins**: extra JDBC properties (hash, default: {})
+- **options**: extra JDBC properties (hash, default: {})
 - **driver_name**: name of the JDBC driver used in connection url (e.g. 'sqlite') (string, required)
 - **driver_name**: class name of the JDBC driver (e.g. 'org.sqlite.JDBC') (string, required)
 

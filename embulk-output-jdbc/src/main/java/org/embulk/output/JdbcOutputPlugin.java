@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import com.google.common.base.Throwables;
-import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -18,8 +17,6 @@ import org.embulk.output.jdbc.JdbcOutputConnection;
 public class JdbcOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private final Logger logger = Exec.getLogger(JdbcOutputPlugin.class);
-
     public interface GenericPluginTask extends PluginTask
     {
         @Config("driver_name")

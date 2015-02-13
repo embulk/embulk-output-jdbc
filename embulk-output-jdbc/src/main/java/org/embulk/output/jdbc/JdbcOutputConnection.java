@@ -30,6 +30,7 @@ public class JdbcOutputConnection
         }
     }
 
+    @Override
     public void close() throws SQLException
     {
         connection.close();
@@ -45,7 +46,7 @@ public class JdbcOutputConnection
         return databaseMetaData;
     }
 
-    private void setSearchPath(String schema) throws SQLException
+    protected void setSearchPath(String schema) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
