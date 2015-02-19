@@ -141,7 +141,7 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     public ConfigDiff transaction(ConfigSource config,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(getTaskClass());
@@ -181,13 +181,13 @@ public abstract class AbstractJdbcOutputPlugin
         //    new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert_direct, replace_inplace", task.getModeConfig()));
         //}
 
-        task = begin(task, schema, processorCount);
+        task = begin(task, schema, taskCount);
         control.run(task.dump());
-        return commit(task, schema, processorCount);
+        return commit(task, schema, taskCount);
     }
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         PluginTask task = taskSource.loadTask(getTaskClass());
@@ -196,9 +196,9 @@ public abstract class AbstractJdbcOutputPlugin
             throw new UnsupportedOperationException("inplace mode is not resumable. You need to delete partially-loaded records from the database and restart the entire transaction.");
         }
 
-        task = begin(task, schema, processorCount);
+        task = begin(task, schema, taskCount);
         control.run(task.dump());
-        return commit(task, schema, processorCount);
+        return commit(task, schema, taskCount);
     }
 
     private String getTransactionUniqueName()
@@ -209,7 +209,7 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     private PluginTask begin(final PluginTask task,
-            final Schema schema, int processorCount)
+            final Schema schema, int taskCount)
     {
         try {
             withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectWrite == true
@@ -230,7 +230,7 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     private ConfigDiff commit(final PluginTask task,
-            Schema schema, final int processorCount)
+            Schema schema, final int taskCount)
     {
         if (!task.getMode().isDirectWrite()) {  // no intermediate data if isDirectWrite == true
             try {
@@ -239,7 +239,7 @@ public abstract class AbstractJdbcOutputPlugin
                     {
                         JdbcOutputConnection con = newConnection(task, false, false);
                         try {
-                            doCommit(con, task, processorCount);
+                            doCommit(con, task, taskCount);
                         } finally {
                             con.close();
                         }
@@ -253,7 +253,7 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, final int processorCount,
+            Schema schema, final int taskCount,
             final List<CommitReport> successCommitReports)
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
@@ -265,7 +265,7 @@ public abstract class AbstractJdbcOutputPlugin
                     {
                         JdbcOutputConnection con = newConnection(task, true, true);
                         try {
-                            doCleanup(con, task, processorCount, successCommitReports);
+                            doCleanup(con, task, taskCount, successCommitReports);
                         } finally {
                             con.close();
                         }
@@ -312,7 +312,7 @@ public abstract class AbstractJdbcOutputPlugin
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
     }
 
-    protected void doCommit(JdbcOutputConnection con, PluginTask task, int processorCount)
+    protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
         switch (task.getMode()) {
@@ -332,7 +332,7 @@ public abstract class AbstractJdbcOutputPlugin
             throw new UnsupportedOperationException("not implemented yet");
             //break;
         case REPLACE:
-            if (processorCount == 1) {
+            if (taskCount == 1) {
                 // swap table
                 con.replaceTable(task.getSwapTable().get(), task.getLoadSchema(), task.getTable());
             } else {
@@ -347,7 +347,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected void doCleanup(JdbcOutputConnection con, PluginTask task, int processorCount,
+    protected void doCleanup(JdbcOutputConnection con, PluginTask task, int taskCount,
             List<CommitReport> successCommitReports)
         throws SQLException
     {
@@ -355,15 +355,15 @@ public abstract class AbstractJdbcOutputPlugin
             con.dropTableIfExists(task.getSwapTable().get());
         }
         if (task.getMultipleLoadTablePrefix().isPresent()) {
-            for (int i=0; i < processorCount; i++) {
+            for (int i=0; i < taskCount; i++) {
                 con.dropTableIfExists(formatMultipleLoadTableName(task, i));
             }
         }
     }
 
-    static String formatMultipleLoadTableName(PluginTask task, int processorIndex)
+    static String formatMultipleLoadTableName(PluginTask task, int taskIndex)
     {
-        return task.getMultipleLoadTablePrefix().get() + String.format("%04x", processorIndex);
+        return task.getMultipleLoadTablePrefix().get() + String.format("%04x", taskIndex);
     }
 
     protected JdbcSchema newJdbcSchemaForNewTable(Schema schema)
@@ -451,7 +451,7 @@ public abstract class AbstractJdbcOutputPlugin
         return targetTableSchema;
     }
 
-    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, final int processorIndex)
+    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, final int taskIndex)
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
         final Mode mode = task.getMode();
@@ -488,7 +488,7 @@ public abstract class AbstractJdbcOutputPlugin
                     boolean createTable;
                     if (mode.usesMultipleLoadTables()) {
                         // insert, truncate_insert, merge, replace
-                        loadTable = formatMultipleLoadTableName(task, processorIndex);
+                        loadTable = formatMultipleLoadTableName(task, taskIndex);
                         JdbcOutputConnection con = newConnection(task, true, true);
                         try {
                             con.createTableIfNotExists(loadTable, insertSchema);
