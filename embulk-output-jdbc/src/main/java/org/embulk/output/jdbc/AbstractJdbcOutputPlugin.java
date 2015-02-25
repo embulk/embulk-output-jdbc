@@ -661,12 +661,12 @@ public abstract class AbstractJdbcOutputPlugin
 
                     public boolean isRetryableException(Throwable exception)
                     {
-                        if (exception instanceof SQLException) {
-                            SQLException ex = (SQLException) exception;
-                            String sqlState = ex.getSQLState();
-                            int errorCode = ex.getErrorCode();
-                            return isRetryableException(ex);
-                        }
+                        //if (exception instanceof SQLException) {
+                        //    SQLException ex = (SQLException) exception;
+                        //    String sqlState = ex.getSQLState();
+                        //    int errorCode = ex.getErrorCode();
+                        //    return isRetryableSQLException(ex);
+                        //}
                         return false;  // TODO
                     }
                 });
