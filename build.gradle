@@ -52,11 +52,11 @@ subprojects {
 Gem::Specification.new do |spec|
   spec.name          = "${project.name}"
   spec.version       = "${project.version}"
-  spec.authors       = ["FURUHASHI Sadayuki"]
+  spec.authors       = ["Sadayuki Furuhashi"]
   spec.summary       = %[JDBC output plugin for Embulk]
-  spec.description   = %[JDBC output plugin is an Embulk plugin that loads records to JDBC read by any input plugins. Search the input plugins by "embulk-input" keyword.]
-  spec.email         = ["frsyuki@users.sourceforge.jp"]
-  spec.license       = "Apache 2.0"
+  spec.description   = %[Inserts or updates records to a table.]
+  spec.email         = ["frsyuki@gmail.com"]
+  spec.licenses      = ["Apache 2.0"]
   spec.homepage      = "https://github.com/embulk/embulk-output-jdbc"
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
