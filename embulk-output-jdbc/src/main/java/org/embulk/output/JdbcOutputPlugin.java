@@ -1,13 +1,19 @@
 package org.embulk.output;
 
+import java.nio.file.Paths;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Properties;
 import java.sql.Driver;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import org.embulk.spi.Exec;
+import org.embulk.spi.PluginClassLoader;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.StandardBatchInsert;
@@ -17,6 +23,8 @@ import org.embulk.output.jdbc.JdbcOutputConnection;
 public class JdbcOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
+    private final static Set<String> loadedJarGlobs = new HashSet<String>();
+
     public interface GenericPluginTask extends PluginTask
     {
         @Config("driver_name")
@@ -24,6 +32,10 @@ public class JdbcOutputPlugin
 
         @Config("driver_class")
         public String getDriverClass();
+
+        @Config("driver_path")
+        @ConfigDefault("null")
+        public Optional<String> getDriverPath();
     }
 
     @Override
@@ -37,12 +49,22 @@ public class JdbcOutputPlugin
     {
         GenericPluginTask g = (GenericPluginTask) task;
 
+        if (g.getDriverPath().isPresent()) {
+            synchronized (loadedJarGlobs) {
+                String glob = g.getDriverPath().get();
+                if (!loadedJarGlobs.contains(glob)) {
+                    loadDriverJar(glob);
+                    loadedJarGlobs.add(glob);
+                }
+            }
+        }
+
         String url;
         if (g.getPort().isPresent()) {
             url = String.format("jdbc:%s://%s:%d/%s",
                     g.getDriverName(), g.getHost(), g.getPort().get(), g.getDatabase());
         } else {
-            url = String.format("jdbc:%s://%s:%d/%s",
+            url = String.format("jdbc:%s://%s/%s",
                     g.getDriverName(), g.getHost(), g.getDatabase());
         }
 
@@ -54,6 +76,14 @@ public class JdbcOutputPlugin
 
         return new GenericOutputConnector(url, props, g.getDriverClass(),
                 g.getSchema().orNull());
+    }
+
+    private void loadDriverJar(String glob)
+    {
+        // TODO match glob
+        PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
+        System.out.println("Adding jar: "+glob);
+        loader.addPath(Paths.get(glob));
     }
 
     private static class GenericOutputConnector
