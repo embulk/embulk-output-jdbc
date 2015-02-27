@@ -82,7 +82,6 @@ public class JdbcOutputPlugin
     {
         // TODO match glob
         PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
-        System.out.println("Adding jar: "+glob);
         loader.addPath(Paths.get(glob));
     }
 
