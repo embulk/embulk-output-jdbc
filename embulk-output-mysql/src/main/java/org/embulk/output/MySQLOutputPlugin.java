@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Connection;
 import org.embulk.spi.Exec;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.BatchInsert;
@@ -15,17 +17,44 @@ import org.embulk.output.mysql.MySQLBatchInsert;
 public class MySQLOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private static final int DEFAULT_PORT = 3306;
+    public interface MySQLPluginTask
+            extends PluginTask
+    {
+        @Config("host")
+        public String getHost();
+
+        @Config("port")
+        @ConfigDefault("3306")
+        public int getPort();
+
+        @Config("user")
+        public String getUser();
+
+        @Config("password")
+        @ConfigDefault("\"\"")
+        public String getPassword();
+
+        @Config("database")
+        public String getDatabase();
+    }
+
+    @Override
+    protected Class<? extends PluginTask> getTaskClass()
+    {
+        return MySQLPluginTask.class;
+    }
 
     @Override
     protected MySQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
+        MySQLPluginTask t = (MySQLPluginTask) task;
+
         String url = String.format("jdbc:mysql://%s:%d/%s",
-                task.getHost(), task.getPort().or(DEFAULT_PORT), task.getDatabase());
+                t.getHost(), t.getPort(), t.getDatabase());
 
         Properties props = new Properties();
-        props.setProperty("user", task.getUser());
-        props.setProperty("password", task.getPassword());
+        props.setProperty("user", t.getUser());
+        props.setProperty("password", t.getPassword());
 
         props.setProperty("rewriteBatchedStatements", "true");
         props.setProperty("useCompression", "true");
@@ -38,7 +67,7 @@ public class MySQLOutputPlugin
         props.setProperty("tcpKeepAlive", "true");
 
         // TODO
-        //switch task.getSssl() {
+        //switch t.getSssl() {
         //when "disable":
         //    break;
         //when "enable":
@@ -59,7 +88,7 @@ public class MySQLOutputPlugin
             props.setProperty("socketTimeout", "2700000");   // milliseconds
         }
 
-        props.putAll(task.getOptions());
+        props.putAll(t.getOptions());
 
         return new MySQLOutputConnector(url, props);
     }

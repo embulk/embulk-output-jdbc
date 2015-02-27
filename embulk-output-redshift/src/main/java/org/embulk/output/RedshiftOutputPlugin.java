@@ -8,6 +8,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.redshift.RedshiftOutputConnector;
@@ -16,13 +17,31 @@ import org.embulk.output.redshift.RedshiftCopyBatchInsert;
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private static final String DEFAULT_SCHEMA = "public";
-    private static final int DEFAULT_PORT = 5439;
-
     private final Logger logger = Exec.getLogger(RedshiftOutputPlugin.class);
 
     public interface RedshiftPluginTask extends PluginTask
     {
+        @Config("host")
+        public String getHost();
+
+        @Config("port")
+        @ConfigDefault("5439")
+        public int getPort();
+
+        @Config("user")
+        public String getUser();
+
+        @Config("password")
+        @ConfigDefault("\"\"")
+        public String getPassword();
+
+        @Config("database")
+        public String getDatabase();
+
+        @Config("schema")
+        @ConfigDefault("\"public\"")
+        public String getSchema();
+
         @Config("access_key_id")
         public String getAccessKeyId();
 
@@ -45,12 +64,14 @@ public class RedshiftOutputPlugin
     @Override
     protected RedshiftOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
+        RedshiftPluginTask t = (RedshiftPluginTask) task;
+
         String url = String.format("jdbc:postgresql://%s:%d/%s",
-                task.getHost(), task.getPort().or(DEFAULT_PORT), task.getDatabase());
+                t.getHost(), t.getPort(), t.getDatabase());
 
         Properties props = new Properties();
-        props.setProperty("user", task.getUser());
-        props.setProperty("password", task.getPassword());
+        props.setProperty("user", t.getUser());
+        props.setProperty("password", t.getPassword());
         props.setProperty("loginTimeout",   "300"); // seconds
         props.setProperty("socketTimeout", "1800"); // seconds
 
@@ -75,18 +96,18 @@ public class RedshiftOutputPlugin
             props.setProperty("socketTimeout", "28800");  // seconds
         }
 
-        props.putAll(task.getOptions());
+        props.putAll(t.getOptions());
 
-        return new RedshiftOutputConnector(url, props, task.getSchema().or(DEFAULT_SCHEMA));
+        return new RedshiftOutputConnector(url, props, t.getSchema());
     }
 
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
-        RedshiftPluginTask rt = (RedshiftPluginTask) task;
+        RedshiftPluginTask t = (RedshiftPluginTask) task;
         AWSCredentials creds = new BasicAWSCredentials(
-                rt.getAccessKeyId(), rt.getSecretAccessKey());
+                t.getAccessKeyId(), t.getSecretAccessKey());
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                creds, rt.getS3Bucket(), rt.getIamUserName());
+                creds, t.getS3Bucket(), t.getIamUserName());
     }
 }

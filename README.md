@@ -26,37 +26,29 @@ See [embulk-output-redshift](embulk-output-redshift/).
 
 ### Configuration
 
-- **host**: database host name (string, required)
-- **port**: database port number (integer, required)
-- **user**: database login user name (string, required)
-- **password**: database login password (string, default: "")
-- **database**: destination database name (string, required)
-- **schema**: destination name (string, default: use default schema)
-- **table**: destination name (string, required)
+- **driver_path**: path to the jar file of the JDBC driver (e.g. 'sqlite-jdbc-3.8.7.jar') (string, optional)
+- **driver_class**: class name of the JDBC driver (e.g. 'org.sqlite.JDBC') (string, required)
+- **url**: URL of the JDBC connection (e.g. 'jdbc:sqlite:mydb.sqlite3') (string, required)
+- **user**: database login user name (string, optional)
+- **password**: database login password (string, optional)
+- **schema**: destination schema name (string, default: use default schema)
+- **table**: destination table name (string, required)
 - **mode**: "replace" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **options**: extra JDBC properties (hash, default: {})
-- **driver_name**: name of the JDBC driver used in connection url (e.g. 'sqlite') (string, required)
-- **driver_class**: class name of the JDBC driver (e.g. 'org.sqlite.JDBC') (string, required)
-- **driver_path**: path to the jar file of the JDBC driver (e.g. 'sqlite-jdbc-3.8.7.jar') (string, optional)
 
 ### Example
-
-In addtion to the configuration, you need to supply -C option to embulk command to add jar files to the classpath.
 
 ```yaml
 out:
   type: jdbc
-  host: localhost
-  port: 1521
+  driver_path: /opt/oracle/ojdbc6.jar
+  driver_class: oracle.jdbc.driver.OracleDriver
+  url: jdbc:oracle:thin:@127.0.0.1:1521:mydb
   user: myuser
-  password: ""
-  database: my_database
+  password: "mypassword"
   table: my_table
   mode: insert
-  driver_name: oracle
-  driver_class: oracle.jdbc.driver.OracleDriver
-  driver_path: /opt/oracle/ojdbc6.jar
 ```
 
 ### Build
