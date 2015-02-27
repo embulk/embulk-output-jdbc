@@ -65,8 +65,7 @@ public class JdbcOutputConnection
             executeUpdate(stmt, sql);
             connection.commit();
         } catch (SQLException ex) {
-            connection.rollback();
-            throw ex;
+            throw safeRollback(connection, ex);
         } finally {
             stmt.close();
         }
@@ -80,8 +79,7 @@ public class JdbcOutputConnection
             executeUpdate(stmt, sql);
             connection.commit();
         } catch (SQLException ex) {
-            connection.rollback();
-            throw ex;
+            throw safeRollback(connection, ex);
         } finally {
             stmt.close();
         }
@@ -278,8 +276,7 @@ public class JdbcOutputConnection
     //        executeUpdate(stmt, sql);
     //        connection.commit();
     //    } catch (SQLException ex) {
-    //        connection.rollback();
-    //        throw ex;
+    //        throw safeRollback(connection, ex);
     //    } finally {
     //        stmt.close();
     //    }
@@ -309,8 +306,7 @@ public class JdbcOutputConnection
 
             connection.commit();
         } catch (SQLException ex) {
-            connection.rollback();
-            throw ex;
+            throw safeRollback(connection, ex);
         } finally {
             stmt.close();
         }
@@ -419,5 +415,21 @@ public class JdbcOutputConnection
             logger.info(String.format("> %.2f seconds (%,d rows)", seconds, count));
         }
         return count;
+    }
+
+    protected SQLException safeRollback(Connection con, SQLException cause)
+    {
+        try {
+            if (!con.getAutoCommit()) {
+                con.rollback();
+            }
+            return cause;
+        } catch (SQLException ex) {
+            if (cause != null) {
+                cause.addSuppressed(ex);
+                return cause;
+            }
+            return ex;
+        }
     }
 }

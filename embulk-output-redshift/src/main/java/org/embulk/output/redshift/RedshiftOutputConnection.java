@@ -34,7 +34,7 @@ public class RedshiftOutputConnection
         } catch (SQLException ex) {
             // ignore errors.
             // TODO here should ignore only 'table "XXX" does not exist' errors.
-            connection.rollback();
+            SQLException ignored = safeRollback(connection, ex);
         } finally {
             stmt.close();
         }
@@ -57,7 +57,7 @@ public class RedshiftOutputConnection
                 // ignore errors.
                 // TODO here should ignore only 'table "XXX" does not exist' errors.
                 // rollback or comimt is required to recover failed transaction
-                connection.rollback();
+                SQLException ignored = safeRollback(connection, ex);
             }
 
             {
@@ -72,8 +72,7 @@ public class RedshiftOutputConnection
 
             connection.commit();
         } catch (SQLException ex) {
-            connection.rollback();
-            throw ex;
+            throw safeRollback(connection, ex);
         } finally {
             stmt.close();
         }
