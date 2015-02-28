@@ -1,0 +1,20 @@
+Release 0.2.0 - 2015-02-27
+
+* Removed invalid commit and rollback calls causing exceptions at cleanup.
+* jdbc: url parameter replaced driver_name, host, port, and database
+parameters. If you are using jdbc input plugin, you need to rewrite config
+file as following:
+
+Old configuration:
+
+  driver_class: com.ibm.db2.jcc.DB2Driver
+  driver_name: db2
+  host: localhost
+  port: 50000
+  database: mydb
+
+New configuration:
+
+  driver_class: com.ibm.db2.jcc.DB2Driver
+  url: jdbc:db2://localhost:50000/mydb
+
