@@ -52,6 +52,7 @@ public class JdbcOutputConnection
         try {
             String sql = "SET search_path TO " + quoteIdentifierString(schema);
             executeUpdate(stmt, sql);
+            commitIfNecessary(connection);
         } finally {
             stmt.close();
         }
@@ -63,7 +64,7 @@ public class JdbcOutputConnection
         try {
             String sql = String.format("DROP TABLE IF EXISTS %s", quoteIdentifierString(tableName));
             executeUpdate(stmt, sql);
-            connection.commit();
+            commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
         } finally {
@@ -77,7 +78,7 @@ public class JdbcOutputConnection
         try {
             String sql = buildCreateTableIfNotExistsSql(tableName, schema);
             executeUpdate(stmt, sql);
-            connection.commit();
+            commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
         } finally {
@@ -224,7 +225,7 @@ public class JdbcOutputConnection
             }
             String sql = buildInsertTableSql(fromTable, fromTableSchema, toTable);
             executeUpdate(stmt, sql);
-            connection.commit();
+            commitIfNecessary(connection);
         } catch (SQLException ex) {
             connection.rollback();
             throw ex;
@@ -274,7 +275,7 @@ public class JdbcOutputConnection
     //        }
     //        String sql = buildGatherInsertTables(fromTable, fromTableSchema, toTable);
     //        executeUpdate(stmt, sql);
-    //        connection.commit();
+    //        commitIfNecessary(connection);
     //    } catch (SQLException ex) {
     //        throw safeRollback(connection, ex);
     //    } finally {
@@ -304,7 +305,7 @@ public class JdbcOutputConnection
                 executeUpdate(stmt, sql);
             }
 
-            connection.commit();
+            commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
         } finally {
@@ -415,6 +416,13 @@ public class JdbcOutputConnection
             logger.info(String.format("> %.2f seconds (%,d rows)", seconds, count));
         }
         return count;
+    }
+
+    protected void commitIfNecessary(Connection con) throws SQLException
+    {
+        if (!con.getAutoCommit()) {
+            con.commit();
+        }
     }
 
     protected SQLException safeRollback(Connection con, SQLException cause)

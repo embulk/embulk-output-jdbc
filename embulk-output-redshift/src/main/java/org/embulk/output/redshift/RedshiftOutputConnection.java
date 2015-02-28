@@ -30,7 +30,7 @@ public class RedshiftOutputConnection
         try {
             String sql = String.format("DROP TABLE IF EXISTS %s", quoteIdentifierString(tableName));
             executeUpdate(stmt, sql);
-            connection.commit();
+            commitIfNecessary(connection);
         } catch (SQLException ex) {
             // ignore errors.
             // TODO here should ignore only 'table "XXX" does not exist' errors.
@@ -70,7 +70,7 @@ public class RedshiftOutputConnection
                 executeUpdate(stmt, sql);
             }
 
-            connection.commit();
+            commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
         } finally {
