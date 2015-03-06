@@ -62,14 +62,38 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = String.format("DROP TABLE IF EXISTS %s", quoteIdentifierString(tableName));
-            executeUpdate(stmt, sql);
+        	dropTableIfExists(stmt, tableName);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
         } finally {
             stmt.close();
         }
+    }
+
+    protected void dropTableIfExists(Statement stmt, String tableName) throws SQLException
+    {
+        String sql = String.format("DROP TABLE IF EXISTS %s", quoteIdentifierString(tableName));
+        executeUpdate(stmt, sql);
+    }
+
+    public void dropTable(String tableName) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+        	dropTable(stmt, tableName);
+            commitIfNecessary(connection);
+        } catch (SQLException ex) {
+            throw safeRollback(connection, ex);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    protected void dropTable(Statement stmt, String tableName) throws SQLException
+    {
+        String sql = String.format("DROP TABLE %s", quoteIdentifierString(tableName));
+        executeUpdate(stmt, sql);
     }
 
     public void createTableIfNotExists(String tableName, JdbcSchema schema) throws SQLException
@@ -287,23 +311,15 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append("DROP TABLE IF EXISTS ");
-                quoteIdentifierString(sb, toTable);
-                String sql = sb.toString();
-                executeUpdate(stmt, sql);
-            }
+        	dropTableIfExists(stmt, toTable);
 
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append("ALTER TABLE ");
-                quoteIdentifierString(sb, fromTable);
-                sb.append(" RENAME TO ");
-                quoteIdentifierString(sb, toTable);
-                String sql = sb.toString();
-                executeUpdate(stmt, sql);
-            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("ALTER TABLE ");
+            quoteIdentifierString(sb, fromTable);
+            sb.append(" RENAME TO ");
+            quoteIdentifierString(sb, toTable);
+            String sql = sb.toString();
+            executeUpdate(stmt, sql);
 
             commitIfNecessary(connection);
         } catch (SQLException ex) {
