@@ -1,8 +1,5 @@
 package org.embulk.output;
 
-import java.nio.file.Paths;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Properties;
 import java.sql.Driver;
 import java.io.IOException;
@@ -10,8 +7,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import org.embulk.spi.Exec;
-import org.embulk.spi.PluginClassLoader;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -23,8 +18,6 @@ import org.embulk.output.jdbc.JdbcOutputConnection;
 public class JdbcOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private final static Set<String> loadedJarGlobs = new HashSet<String>();
-
     public interface GenericPluginTask extends PluginTask
     {
         @Config("driver_path")
@@ -62,13 +55,7 @@ public class JdbcOutputPlugin
         GenericPluginTask t = (GenericPluginTask) task;
 
         if (t.getDriverPath().isPresent()) {
-            synchronized (loadedJarGlobs) {
-                String glob = t.getDriverPath().get();
-                if (!loadedJarGlobs.contains(glob)) {
-                    loadDriverJar(glob);
-                    loadedJarGlobs.add(glob);
-                }
-            }
+            loadDriverJar(t.getDriverPath().get());
         }
 
         Properties props = new Properties();
@@ -83,13 +70,6 @@ public class JdbcOutputPlugin
 
         return new GenericOutputConnector(t.getUrl(), props, t.getDriverClass(),
                 t.getSchema().orNull());
-    }
-
-    private void loadDriverJar(String glob)
-    {
-        // TODO match glob
-        PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
-        loader.addPath(Paths.get(glob));
     }
 
     private static class GenericOutputConnector

@@ -1,19 +1,25 @@
 package org.embulk.output.jdbc;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Types;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
 import org.slf4j.Logger;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -27,19 +33,24 @@ import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.PageOutput;
+import org.embulk.spi.PluginClassLoader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.RetryExecutor.IdempotentOperation;
+
 import static org.embulk.output.jdbc.RetryExecutor.retryExecutor;
 
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
 {
+    private final static Set<String> loadedJarGlobs = new HashSet<String>();
+
     private final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
@@ -71,6 +82,18 @@ public abstract class AbstractJdbcOutputPlugin
 
         public Optional<String> getMultipleLoadTablePrefix();
         public void setMultipleLoadTablePrefix(Optional<String> prefix);
+    }
+
+    protected void loadDriverJar(String glob)
+    {
+        synchronized (loadedJarGlobs) {
+            if (!loadedJarGlobs.contains(glob)) {
+                // TODO match glob
+                PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
+                loader.addPath(Paths.get(glob));
+                loadedJarGlobs.add(glob);
+            }
+        }
     }
 
     // for subclasses to add @Config
@@ -266,7 +289,7 @@ public abstract class AbstractJdbcOutputPlugin
             // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // swapTableName = "xyz__0000000054d92dee1e452158_bulk_load_temp"
-            String swapTableName = task.getTable() + "_" + getTransactionUniqueName() + "_bulk_load_temp";
+            String swapTableName = generateSwapTableName(task);
             con.dropTableIfExists(swapTableName);
             con.createTableIfNotExists(swapTableName, newJdbcSchemaForNewTable(schema));
             targetTableSchema = newJdbcSchemaFromExistentTable(con, swapTableName);
@@ -289,6 +312,11 @@ public abstract class AbstractJdbcOutputPlugin
         }
 
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
+    }
+
+    protected String generateSwapTableName(PluginTask task)
+    {
+    	return task.getTable() + "_" + getTransactionUniqueName() + "_bulk_load_temp";
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
@@ -443,7 +471,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
         try {
             PageReader reader = new PageReader(schema);
-            ColumnSetterFactory factory = new ColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
+            ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
 
             JdbcSchema loadSchema = task.getLoadSchema();
 
@@ -505,6 +533,12 @@ public abstract class AbstractJdbcOutputPlugin
                 }
             }
         }
+    }
+
+    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
+            TimestampFormatter timestampFormatter)
+    {
+    	return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
     }
 
     public static class PluginPageOutput
