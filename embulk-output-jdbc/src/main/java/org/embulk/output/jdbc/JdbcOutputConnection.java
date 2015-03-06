@@ -4,8 +4,10 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 
@@ -58,6 +60,13 @@ public class JdbcOutputConnection
         }
     }
 
+    protected boolean tableExists(String tableName) throws SQLException
+    {
+        try (ResultSet rs = connection.getMetaData().getTables(null, schemaName, tableName, null)) {
+            return rs.next();
+        }
+    }
+    
     public void dropTableIfExists(String tableName) throws SQLException
     {
         Statement stmt = connection.createStatement();
