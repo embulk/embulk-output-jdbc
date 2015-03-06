@@ -1,19 +1,25 @@
 package org.embulk.output.jdbc;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Types;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
 import org.slf4j.Logger;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -27,6 +33,7 @@ import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.PageOutput;
+import org.embulk.spi.PluginClassLoader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
@@ -35,11 +42,14 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.RetryExecutor.IdempotentOperation;
+
 import static org.embulk.output.jdbc.RetryExecutor.retryExecutor;
 
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
 {
+    private final static Set<String> loadedJarGlobs = new HashSet<String>();
+
     private final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
@@ -71,6 +81,18 @@ public abstract class AbstractJdbcOutputPlugin
 
         public Optional<String> getMultipleLoadTablePrefix();
         public void setMultipleLoadTablePrefix(Optional<String> prefix);
+    }
+
+    protected void loadDriverJar(String glob)
+    {
+        synchronized (loadedJarGlobs) {
+            if (!loadedJarGlobs.contains(glob)) {
+                // TODO match glob
+                PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
+                loader.addPath(Paths.get(glob));
+                loadedJarGlobs.add(glob);
+            }
+        }
     }
 
     // for subclasses to add @Config
@@ -290,7 +312,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
     }
-
+    
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
