@@ -62,7 +62,7 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-        	dropTableIfExists(stmt, tableName);
+            dropTableIfExists(stmt, tableName);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -81,7 +81,7 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-        	dropTable(stmt, tableName);
+            dropTable(stmt, tableName);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -311,7 +311,7 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-        	dropTableIfExists(stmt, toTable);
+            dropTableIfExists(stmt, toTable);
 
             StringBuilder sb = new StringBuilder();
             sb.append("ALTER TABLE ");
