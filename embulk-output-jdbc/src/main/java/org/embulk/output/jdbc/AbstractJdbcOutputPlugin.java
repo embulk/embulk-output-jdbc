@@ -266,7 +266,7 @@ public abstract class AbstractJdbcOutputPlugin
             // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // swapTableName = "xyz__0000000054d92dee1e452158_bulk_load_temp"
-            String swapTableName = task.getTable() + "_" + getTransactionUniqueName() + "_bulk_load_temp";
+            String swapTableName = generateSwapTableName(task);
             con.dropTableIfExists(swapTableName);
             con.createTableIfNotExists(swapTableName, newJdbcSchemaForNewTable(schema));
             targetTableSchema = newJdbcSchemaFromExistentTable(con, swapTableName);
@@ -289,6 +289,11 @@ public abstract class AbstractJdbcOutputPlugin
         }
 
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
+    }
+    
+    protected String generateSwapTableName(PluginTask task)
+    {
+    	return task.getTable() + "_" + getTransactionUniqueName() + "_bulk_load_temp";
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
