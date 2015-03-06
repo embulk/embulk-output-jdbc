@@ -60,7 +60,7 @@ public class JdbcOutputConnection
         }
     }
 
-    protected boolean tableExists(String tableName) throws SQLException
+    public boolean tableExists(String tableName) throws SQLException
     {
         try (ResultSet rs = connection.getMetaData().getTables(null, schemaName, tableName, null)) {
             return rs.next();
