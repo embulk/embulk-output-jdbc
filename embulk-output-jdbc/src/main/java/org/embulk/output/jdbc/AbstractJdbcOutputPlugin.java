@@ -32,6 +32,7 @@ import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.RetryExecutor.IdempotentOperation;
@@ -443,7 +444,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
         try {
             PageReader reader = new PageReader(schema);
-            ColumnSetterFactory factory = new ColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
+            ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
 
             JdbcSchema loadSchema = task.getLoadSchema();
 
@@ -507,6 +508,12 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
+    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
+            TimestampFormatter timestampFormatter)
+    {
+    	return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
+    }
+    
     public static class PluginPageOutput
             implements TransactionalPageOutput
     {
