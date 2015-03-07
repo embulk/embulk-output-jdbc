@@ -1,0 +1,25 @@
+in:
+  type: file
+  path_prefix: 'data/test1'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: id, type: string}
+    - {name: varchar2_item, type: string}
+    - {name: integer_item, type: long}
+    - {name: number_item, type: double}
+    - {name: date_item, type: timestamp, format: '%Y/%m/%d'}
+    - {name: timestamp_item, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
+out: 
+    type: mysql
+    host: localhost
+    database: embulk
+    user: embulk_user
+    password: embulk_pw
+    table: test1
+    mode: insert
+
