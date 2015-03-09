@@ -6,26 +6,42 @@ package org.embulk.output.oracle;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.embulk.cli.Main;
-
 public class EmbulkPluginTest {
 	
-	protected static void execute(String... args) {
+	// TODO:assert output
+	protected static void execute(String... args) throws Exception{
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].endsWith(".yml")) {
 				args[i] = convert(args[i]);
 			}
 		}
 		
-		Main.main(args);
+		Class<?> mainClass = EmbulkPluginTest.class.getClassLoader().loadClass("org.embulk.cli.Main");
+		Method mainMethod = mainClass.getMethod("main", args.getClass());
+		mainMethod.invoke(null, new Object[]{args});
 	}
+	
+	private static File searchEmbulk() throws FileNotFoundException {
+		for (String path : System.getProperty("java.library.path").split(System.getProperty("path.separator"))) {
+			for (String fileName : new String[]{"embulk", "embulk.bat"}) {
+				File file = new File(new File(path), fileName);
+				if (file.exists() && file.isFile()) {
+					return file;
+				}
+			}
+		}
+		throw new FileNotFoundException("Neither embulk nor embulk.bat is found.");
+	}
+	
 	
 	private static String convert(String yml) {
 		try {
