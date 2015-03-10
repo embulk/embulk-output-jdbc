@@ -314,7 +314,7 @@ public abstract class AbstractJdbcOutputPlugin
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
     }
 
-    protected String generateSwapTableName(PluginTask task)
+    protected String generateSwapTableName(PluginTask task) throws SQLException
     {
     	return task.getTable() + "_" + getTransactionUniqueName() + "_bulk_load_temp";
     }
