@@ -72,6 +72,10 @@ public class OracleOutputPlugin
 
         String url;
         if (oracleTask.getUrl().isPresent()) {
+            if (oracleTask.getHost().isPresent() || oracleTask.getDatabase().isPresent()) {
+                throw new IllegalArgumentException("'host', 'port' and 'database' parameters are invalid if 'url' parameter is set.");
+            }
+            
             url = oracleTask.getUrl().get();
         } else {
             if (!oracleTask.getHost().isPresent()) {
