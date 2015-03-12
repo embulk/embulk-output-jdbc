@@ -113,39 +113,36 @@ public class OracleOutputPlugin
     @Override
     protected String generateSwapTableName(PluginTask task) throws SQLException
     {
-        OracleOutputConnector connector = getConnector(task, true);
+        return generateSwapTableName(task, "_bl_tmp", MAX_TABLE_NAME_LENGTH);
+    }
 
-        int minLength = 3;
-        String tablePrefix = task.getTable();
-        if (tablePrefix.length() > MAX_TABLE_NAME_LENGTH - minLength) {
-            tablePrefix = tablePrefix.substring(0, MAX_TABLE_NAME_LENGTH - minLength);
+    // TODO move this method to AbstractJdbcOutputPlugin
+    protected String generateSwapTableName(PluginTask task, String suffix, int maxTableNameLength) throws SQLException
+    {
+        Stirng tableName = task.getTable();
+        String uniqueSuffix = getTransactionUniqueName() + suffix;
+
+        if (tableName.length() + uniqueSuffix.length() + 1 > maxTableNameLength) {  // + 1 for '_'
+            // truncate transaction unique name
+            int suffixLength = Math.max(maxTableNameLength - tableName.length() - 1, suffix.size() + 8);  // include 8 characters of the transaction name at least
+            uniqueSuffix = uniqueSuffix.substring(uniqueSuffix.length() - suffixLength);
         }
 
-        try (OracleOutputConnection connection = connector.connect(true)) {
-            for (int i = 0; ; i++) {
-                String s = Integer.toString(i);
-                if (tablePrefix.length() + s.length() > MAX_TABLE_NAME_LENGTH) {
-                    break;
+        if (tableName.length() + uniqueSuffix.length() + 1 > maxTableNameLength) {
+            // use truncated table name
+            int truncLength = maxTableNameLength - uniqueSuffix.length() - 1;
+            while (true) {
+                truncLength--;
+                if (truncLength <= 0) {
+                    throw new ConfigException("Table name is too long to generate temporary table name");
                 }
-
-                StringBuilder sb = new StringBuilder();
-                sb.append(tablePrefix);
-                for (int j = tablePrefix.length(); j < MAX_TABLE_NAME_LENGTH - s.length(); j++) {
-                    sb.append("0");
-                }
-                sb.append(s);
-
-                String table = sb.toString();
-                if (!connection.tableExists(table)) {
-                    return table;
-                }
-
-                if (i == Integer.MAX_VALUE) {
-                	break;
+                tableName = tableName.substring(0, truncLength);
+                if (!connection.tableExists(tableName)) {
+                    return tableName + "_" + uniqueSuffix;
                 }
             }
         }
 
-        throw new SQLException("Cannot generate a swap table name.");
+        return tableName + "_" + uniqueSuffix;
     }
 }
