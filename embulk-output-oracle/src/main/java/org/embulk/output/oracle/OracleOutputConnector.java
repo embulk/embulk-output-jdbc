@@ -32,12 +32,12 @@ public class OracleOutputConnector
         	// driver.connect returns null when url is "jdbc:mysql://...".
         	throw new SQLException("Invalid url : " + url);
         }
-        
+
         try {
             OracleOutputConnection con = new OracleOutputConnection(c, autoCommit);
             c = null;
             return con;
-            
+
         } finally {
             if (c != null) {
                 c.close();

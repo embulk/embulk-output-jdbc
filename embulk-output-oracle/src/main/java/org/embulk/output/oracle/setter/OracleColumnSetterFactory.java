@@ -10,23 +10,22 @@ import org.embulk.output.jdbc.setter.StringColumnSetter;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.TimestampFormatter;
 
-public class OracleColumnSetterFactory extends ColumnSetterFactory {
-
+public class OracleColumnSetterFactory extends ColumnSetterFactory
+{
 	public OracleColumnSetterFactory(BatchInsert batch, PageReader pageReader,
-			TimestampFormatter timestampFormatter) 
+			TimestampFormatter timestampFormatter)
 	{
 		super(batch, pageReader, timestampFormatter);
 	}
 	
 	@Override
-	public ColumnSetter newColumnSetter(JdbcColumn column) {
+	public ColumnSetter newColumnSetter(JdbcColumn column)
+    {
 		switch (column.getSqlType()) {
 			case Types.DECIMAL:
 	            return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
-	            
             default:
         		return super.newColumnSetter(column);
 		}
 	}
-	
 }

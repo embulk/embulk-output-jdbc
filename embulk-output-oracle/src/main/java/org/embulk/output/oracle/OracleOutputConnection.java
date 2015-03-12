@@ -29,13 +29,13 @@ public class OracleOutputConnection
             return typeName;
         }
     }
-    
+
     @Override
     protected void setSearchPath(String schema) throws SQLException {
         // NOP
     }
-    
-    
+
+
     @Override
     public void dropTableIfExists(String tableName) throws SQLException
     {
@@ -43,7 +43,7 @@ public class OracleOutputConnection
             dropTable(tableName);
         }
     }
-    
+
     @Override
     protected void dropTableIfExists(Statement stmt, String tableName) throws SQLException {
         if (tableExists(tableName)) {
@@ -59,9 +59,9 @@ public class OracleOutputConnection
         }
     }
 
-    private static String getSchema(Connection connection) throws SQLException 
+    private static String getSchema(Connection connection) throws SQLException
     {
-        // Because old Oracle JDBC drivers don't support Connection#getSchema method. 
+        // Because old Oracle JDBC drivers don't support Connection#getSchema method.
         String sql = "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
         try (Statement statement = connection.createStatement()) {
             try (ResultSet resultSet = statement.executeQuery(sql)) {
@@ -72,5 +72,4 @@ public class OracleOutputConnection
             }
         }
     }
-    
 }
