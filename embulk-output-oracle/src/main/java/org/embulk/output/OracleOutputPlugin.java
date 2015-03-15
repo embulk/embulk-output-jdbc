@@ -137,9 +137,14 @@ public class OracleOutputPlugin
                     throw new ConfigException("Table name is too long to generate temporary table name");
                 }
                 tableName = tableName.substring(0, truncLength);
-                if (!connection.tableExists(tableName)) {
+                //if (!connection.tableExists(tableName)) {
+                    // TODO this doesn't help. Rather than truncating more characters,
+                    //      here needs to replace characters with random characters. But
+                    //      to make the result deterministic. So, an idea is replacing
+                    //      the last character to the first (second, third, ... for each loop)
+                    //      of md5(original table name).
                     return tableName + "_" + uniqueSuffix;
-                }
+                //}
             }
         }
 
