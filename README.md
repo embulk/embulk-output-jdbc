@@ -10,6 +10,10 @@ See [embulk-output-mysql](embulk-output-mysql/).
 
 See [embulk-output-postgresql](embulk-output-postgresql/).
 
+## Oracle
+
+See [embulk-output-oracle](embulk-output-oracle/).
+
 ## Redshift
 
 See [embulk-output-redshift](embulk-output-redshift/).

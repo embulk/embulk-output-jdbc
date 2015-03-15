@@ -30,6 +30,7 @@ Oracle output plugins for Embulk loads records to Oracle.
 ```yaml
 out:
   type: oracle
+  driver_path: /opt/oracle/ojdbc6.jar
   host: localhost
   user: root
   password: ""
