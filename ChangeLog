@@ -1,3 +1,8 @@
+Release 0.2.1 - 2015-03-15
+
+* Added embulk-output-oracle (by @hito4t)
+
+
 Release 0.2.0 - 2015-02-27
 
 * Removed invalid commit and rollback calls causing exceptions at cleanup.
