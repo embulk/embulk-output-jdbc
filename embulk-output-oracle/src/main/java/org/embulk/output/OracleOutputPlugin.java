@@ -3,8 +3,9 @@ package org.embulk.output;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
-
+import com.google.common.base.Optional;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
@@ -15,9 +16,6 @@ import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.TimestampFormatter;
-
-import com.google.common.base.Optional;
-
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -119,12 +117,12 @@ public class OracleOutputPlugin
     // TODO move this method to AbstractJdbcOutputPlugin
     protected String generateSwapTableName(PluginTask task, String suffix, int maxTableNameLength) throws SQLException
     {
-        Stirng tableName = task.getTable();
+        String tableName = task.getTable();
         String uniqueSuffix = getTransactionUniqueName() + suffix;
 
         if (tableName.length() + uniqueSuffix.length() + 1 > maxTableNameLength) {  // + 1 for '_'
             // truncate transaction unique name
-            int suffixLength = Math.max(maxTableNameLength - tableName.length() - 1, suffix.size() + 8);  // include 8 characters of the transaction name at least
+            int suffixLength = Math.max(maxTableNameLength - tableName.length() - 1, suffix.length() + 8);  // include 8 characters of the transaction name at least
             uniqueSuffix = uniqueSuffix.substring(uniqueSuffix.length() - suffixLength);
         }
 

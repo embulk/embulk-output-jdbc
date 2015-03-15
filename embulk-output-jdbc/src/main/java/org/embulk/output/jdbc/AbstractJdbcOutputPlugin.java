@@ -203,7 +203,7 @@ public abstract class AbstractJdbcOutputPlugin
         return commit(task, schema, taskCount);
     }
 
-    private String getTransactionUniqueName()
+    protected String getTransactionUniqueName()
     {
         // TODO use uuid?
         Timestamp t = Exec.session().getTransactionTime();
