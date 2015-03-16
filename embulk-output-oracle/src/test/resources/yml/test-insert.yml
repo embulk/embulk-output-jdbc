@@ -1,0 +1,25 @@
+in:
+  type: file
+  path_prefix: '/data/test1/test1.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: id, type: string}
+    - {name: varchar2_item, type: string}
+    - {name: integer_item, type: long}
+    - {name: number_item, type: string}
+    - {name: date_item, type: timestamp, format: '%Y/%m/%d'}
+    - {name: timestamp_item, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
+out:
+    type: oracle
+    host: localhost
+    database: XE
+    user: EMBULK_ORACLE_TEST
+    password: embulk_oracle_test
+    table: TEST1
+    mode: insert
+    #driver_path: driver/ojdbc7.jar

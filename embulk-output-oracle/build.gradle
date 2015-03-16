@@ -1,3 +1,10 @@
+repositories {
+    flatDir {
+    	dirs 'driver'
+    }
+}
+
 dependencies {
     compile project(':embulk-output-jdbc')
+    testCompile name:'ojdbc7'
 }
