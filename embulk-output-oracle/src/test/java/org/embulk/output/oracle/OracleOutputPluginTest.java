@@ -80,7 +80,40 @@ public class OracleOutputPluginTest
 
         run("/yml/test-insert.yml");
 
-        List<List<Object>> rows = select("TEST1");
+        assertTable("TEST1");
+    }
+
+    @Test
+    public void testCreate() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        executeSQL(dropTable, true);
+
+        run("/yml/test-insert.yml");
+
+        assertGeneratedTable("TEST1");
+    }
+
+    @Test
+    public void testUrl() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        executeSQL(dropTable, true);
+        executeSQL(createTable);
+
+        run("/yml/test-url.yml");
+
+        assertTable("TEST1");
+    }
+
+
+    private void assertTable(String table) throws Exception
+    {
+        List<List<Object>> rows = select(table);
 
         /*
         A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
@@ -119,7 +152,50 @@ public class OracleOutputPluginTest
         }
     }
 
-    private Timestamp toTimestamp(String s) {
+    private void assertGeneratedTable(String table) throws Exception
+    {
+        List<List<Object>> rows = select(table);
+
+        /*
+        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
+        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
+        A003,,,,,
+        */
+
+        assertEquals(3, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals("ABCDE", i2.next());
+            assertEquals(new BigDecimal("0"), i2.next());
+            assertEquals("123.45", i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 00:00:00"), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 12:34:56"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals("あいうえお", i2.next());
+            assertEquals(new BigDecimal("-9999"), i2.next());
+            assertEquals("-99999999.99", i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 00:00:00"), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 23:59:59"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+    }
+
+
+    private Timestamp toTimestamp(String s)
+    {
         for (String formatString : new String[]{"yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd"}) {
             DateFormat dateFormat = new SimpleDateFormat(formatString);
             dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -133,7 +209,8 @@ public class OracleOutputPluginTest
         throw new IllegalArgumentException(s);
     }
 
-    private Object toOracleTimestamp(String s) throws Exception {
+    private Object toOracleTimestamp(String s) throws Exception
+    {
         Class<?> timestampClass = Class.forName("oracle.sql.TIMESTAMP");
         Constructor<?> constructor = timestampClass.getConstructor(Timestamp.class);
         return constructor.newInstance(toTimestamp(s));
@@ -149,7 +226,11 @@ public class OracleOutputPluginTest
                     while (resultSet.next()) {
                         List<Object> row = new ArrayList<Object>();
                         for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-                            row.add(resultSet.getObject(i));
+                            Object value = resultSet.getObject(i);
+                            if (value != null && value.getClass().getName().equals("oracle.sql.CLOB")) {
+                                value = resultSet.getString(i);
+                            }
+                            row.add(value);
                         }
                         rows.add(row);
                     }
