@@ -1,16 +1,30 @@
 package org.embulk.output.oracle;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +32,7 @@ import org.embulk.output.OracleOutputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 
 public class OracleOutputPluginTest
 {
@@ -58,6 +73,86 @@ public class OracleOutputPluginTest
         executeSQL(createTable);
 
         run("/yml/test-insert.yml");
+
+        List<List<Object>> rows = select("TEST1");
+
+        System.out.println(rows);
+
+        /*
+        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
+        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
+        A003,,,,,
+        */
+
+        assertEquals(3, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals("ABCDE", i2.next());
+            assertEquals(new BigDecimal("0"), i2.next());
+            assertEquals(new BigDecimal("123.45"), i2.next());
+            assertEquals(toTimestamp("2015/03/05 00:00:00"), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 12:34:56"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals("あいうえお", i2.next());
+            assertEquals(new BigDecimal("-9999"), i2.next());
+            assertEquals(new BigDecimal("-99999999.99"), i2.next());
+            assertEquals(toTimestamp("2015/03/06 00:00:00"), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 23:59:59"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+    }
+
+    private Timestamp toTimestamp(String s) {
+        for (String formatString : new String[]{"yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd"}) {
+            DateFormat dateFormat = new SimpleDateFormat(formatString);
+            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+            try {
+                Date date = dateFormat.parse(s);
+                return new Timestamp(date.getTime());
+            } catch (ParseException e) {
+                // NOP
+            }
+        }
+        throw new IllegalArgumentException(s);
+    }
+
+    private Object toOracleTimestamp(String s) throws Exception {
+        Class<?> timestampClass = Class.forName("oracle.sql.TIMESTAMP");
+        Constructor<?> constructor = timestampClass.getConstructor(Timestamp.class);
+        return constructor.newInstance(toTimestamp(s));
+    }
+
+
+    private List<List<Object>> select(String table) throws SQLException
+    {
+        try (Connection connection = connect()) {
+            try (Statement statement = connection.createStatement()) {
+                List<List<Object>> rows = new ArrayList<List<Object>>();
+                try (ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table)) {
+                    while (resultSet.next()) {
+                        List<Object> row = new ArrayList<Object>();
+                        for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+                            row.add(resultSet.getObject(i));
+                        }
+                        rows.add(row);
+                    }
+                }
+                return rows;
+            }
+        }
 
     }
 
