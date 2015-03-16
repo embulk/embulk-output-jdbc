@@ -84,7 +84,7 @@ public class OracleOutputPluginTest
     }
 
     @Test
-    public void testCreate() throws Exception {
+    public void testInsertCreate() throws Exception {
         if (!test) {
             return;
         }
@@ -108,6 +108,33 @@ public class OracleOutputPluginTest
         run("/yml/test-url.yml");
 
         assertTable("TEST1");
+    }
+
+    @Test
+    public void testReplace() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        executeSQL(dropTable, true);
+        executeSQL(createTable);
+
+        run("/yml/test-replace.yml");
+
+        assertGeneratedTable("TEST1");
+    }
+
+    @Test
+    public void testReplaceCreate() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        executeSQL(dropTable, true);
+
+        run("/yml/test-replace.yml");
+
+        assertGeneratedTable("TEST1");
     }
 
 
