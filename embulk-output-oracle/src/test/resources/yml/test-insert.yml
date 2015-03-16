@@ -17,9 +17,9 @@ in:
 out:
     type: oracle
     host: localhost
-    database: XE
-    user: EMBULK_ORACLE_TEST
-    password: embulk_oracle_test
+    database: EMBULKDB
+    user: EMBULK_USER
+    password: embulk_pw
     table: TEST1
     mode: insert
     #driver_path: driver/ojdbc7.jar

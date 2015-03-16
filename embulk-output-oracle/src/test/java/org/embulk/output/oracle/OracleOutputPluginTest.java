@@ -184,13 +184,13 @@ public class OracleOutputPluginTest
     private static Connection connect()
     {
         try {
-            return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", "EMBULK_ORACLE_TEST", "embulk_oracle_test");
+            return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:EMBULKDB", "EMBULK_USER", "embulk_pw");
 
         } catch (SQLException e) {
-            throw new RuntimeException("You should prepare a schema on Oracle (service = 'XE', schema = 'EMBULK_ORACLE_TEST', password = 'embulk_oracle_test').");
+            throw new RuntimeException("You should prepare a schema on Oracle (database = 'EMBULKDB', user = 'EMBULK_USER', password = 'embulk_pw').");
             // for example
-            //   CREATE USER EMBULK_ORACLE_TEST IDENTIFIED BY "embulk_oracle_test";
-            //   GRANT DBA TO EMBULK_ORACLE_TEST;
+            //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
+            //   GRANT DBA TO EMBULK_USER;
         }
     }
 
