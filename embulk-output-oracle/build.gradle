@@ -1,10 +1,13 @@
+[compileTestJava]*.options*.encoding = 'UTF-8'
+
 repositories {
     flatDir {
-    	dirs 'driver'
+      dirs 'driver'
     }
 }
 
 dependencies {
     compile project(':embulk-output-jdbc')
+    testCompile 'org.embulk:embulk-standards:0.4.10'
     testCompile name:'ojdbc7'
 }

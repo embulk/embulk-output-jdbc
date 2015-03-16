@@ -36,7 +36,7 @@ import org.junit.Test;
 
 public class OracleOutputPluginTest
 {
-
+    private static boolean test;
     private EmbulkPluginTester tester = new EmbulkPluginTester(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
 
     private String dropTable = "DROP TABLE TEST1";
@@ -54,29 +54,33 @@ public class OracleOutputPluginTest
     {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("You should put Oracle JDBC driver on 'driver' directory.");
-        }
+            test = true;
 
-        try (Connection connection = connect()) {
-            // NOP
-        } catch (SQLException e) {
-            // NOP
+            try (Connection connection = connect()) {
+                // NOP
+            } catch (SQLException e) {
+                // NOP
+            }
+        } catch (ClassNotFoundException e) {
+            //throw new RuntimeException("You should put Oracle JDBC driver on 'driver' directory.");
+            test = false;
+            System.err.println("Warning: put Oracle JDBC driver on 'driver' directory in order to test embulk-output-oracle plugin.");
         }
     }
 
 
     @Test
     public void testInsert() throws Exception {
-        //execute("run", "/yml/test-insert.yml");
+        if (!test) {
+            return;
+        }
+
         executeSQL(dropTable, true);
         executeSQL(createTable);
 
         run("/yml/test-insert.yml");
 
         List<List<Object>> rows = select("TEST1");
-
-        System.out.println(rows);
 
         /*
         A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
