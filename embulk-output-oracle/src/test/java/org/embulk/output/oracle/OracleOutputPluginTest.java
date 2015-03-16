@@ -16,14 +16,27 @@ import java.util.regex.Pattern;
 
 import org.embulk.output.OracleOutputPlugin;
 import org.embulk.spi.OutputPlugin;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-public class OracleOutputPluginTest extends EmbulkPluginTester
+public class OracleOutputPluginTest
 {
 
-    public OracleOutputPluginTest()
-    {
-        super(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
+    private EmbulkPluginTester tester = new EmbulkPluginTester(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
 
+    private String dropTable = "DROP TABLE TEST1";
+    private String createTable = "CREATE TABLE TEST1 ("
+            + "ID              CHAR(4),"
+            + "VARCHAR2_ITEM   VARCHAR2(20),"
+            + "INTEGER_ITEM     NUMBER(4,0),"
+            + "NUMBER_ITEM     NUMBER(10,2),"
+            + "DATE_ITEM       DATE,"
+            + "TIMESTAMP_ITEM  TIMESTAMP,"
+            + "PRIMARY KEY (ID))";
+
+    @BeforeClass
+    public static void beforeClass()
+    {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (ClassNotFoundException e) {
@@ -37,12 +50,24 @@ public class OracleOutputPluginTest extends EmbulkPluginTester
         }
     }
 
-    public void executeSQL(String sql) throws SQLException
+
+    @Test
+    public void testInsert() throws Exception {
+        //execute("run", "/yml/test-insert.yml");
+        executeSQL(dropTable, true);
+        executeSQL(createTable);
+
+        run("/yml/test-insert.yml");
+
+    }
+
+
+    private void executeSQL(String sql) throws SQLException
     {
         executeSQL(sql, false);
     }
 
-    public void executeSQL(String sql, boolean ignoreError) throws SQLException
+    private void executeSQL(String sql, boolean ignoreError) throws SQLException
     {
         try (Connection connection = connect()) {
             try {
@@ -61,7 +86,7 @@ public class OracleOutputPluginTest extends EmbulkPluginTester
         }
     }
 
-    private Connection connect()
+    private static Connection connect()
     {
         try {
             return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", "EMBULK_ORACLE_TEST", "embulk_oracle_test");
@@ -74,11 +99,9 @@ public class OracleOutputPluginTest extends EmbulkPluginTester
         }
     }
 
-
-    @Override
-    public void run(String ymlName) throws Exception
+    private void run(String ymlName) throws Exception
     {
-        super.run(convertYml(ymlName));
+        tester.run(convertYml(ymlName));
     }
 
     private String convertYml(String ymlName)
