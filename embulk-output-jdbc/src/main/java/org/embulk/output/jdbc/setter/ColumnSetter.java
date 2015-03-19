@@ -24,6 +24,11 @@ public abstract class ColumnSetter
         this.column = column;
     }
 
+    public JdbcColumn getColumn()
+    {
+        return column;
+    }
+
     public int getSqlType()
     {
         return column.getSqlType();

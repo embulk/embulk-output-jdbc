@@ -104,6 +104,9 @@ public class RedshiftOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
+        if (task.getMode().isMerge()) {
+            throw new UnsupportedOperationException("mode 'merge' is not implemented for this type");
+        }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         AWSCredentials creds = new BasicAWSCredentials(
                 t.getAccessKeyId(), t.getSecretAccessKey());

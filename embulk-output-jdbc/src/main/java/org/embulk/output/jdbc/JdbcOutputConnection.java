@@ -306,6 +306,13 @@ public class JdbcOutputConnection
         return connection.prepareStatement(insertSql);
     }
 
+    public PreparedStatement prepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        String upsertSql = buildPrepareUpsertSql(toTable, toTableSchema);
+        logger.info("Prepared SQL: {}", upsertSql);
+        return connection.prepareStatement(upsertSql);
+    }
+
     protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
@@ -326,6 +333,11 @@ public class JdbcOutputConnection
         sb.append(")");
 
         return sb.toString();
+    }
+
+    protected String buildPrepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
     // TODO

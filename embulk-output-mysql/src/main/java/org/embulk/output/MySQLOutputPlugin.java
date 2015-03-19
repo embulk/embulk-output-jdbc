@@ -4,6 +4,8 @@ import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Connection;
+
+import org.embulk.output.mysql.MySQLBatchUpsert;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -96,6 +98,7 @@ public class MySQLOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
-        return new MySQLBatchInsert(getConnector(task, true));
+        MySQLOutputConnector connector = getConnector(task, true);
+        return task.getMode().isMerge() ? new MySQLBatchUpsert(connector) : new MySQLBatchInsert(connector);
     }
 }

@@ -1,6 +1,7 @@
 package org.embulk.output;
 
 import java.io.IOException;
+import java.lang.UnsupportedOperationException;
 import java.sql.SQLException;
 import java.util.Properties;
 import com.google.common.base.Optional;
@@ -98,6 +99,9 @@ public class OracleOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
+        if (task.getMode().isMerge()) {
+            throw new UnsupportedOperationException("mode 'merge' is not implemented for this type");
+        }
         return new StandardBatchInsert(getConnector(task, true));
     }
 
