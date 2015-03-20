@@ -296,10 +296,10 @@ public class OracleOutputPluginTest
     private static Connection connect()
     {
         try {
-            return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:EMBULKDB", "EMBULK_USER", "embulk_pw");
+            return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
 
         } catch (SQLException e) {
-            throw new RuntimeException("You should prepare a schema on Oracle (database = 'EMBULKDB', user = 'EMBULK_USER', password = 'embulk_pw').");
+            throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;

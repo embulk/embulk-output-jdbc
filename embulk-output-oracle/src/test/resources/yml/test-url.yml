@@ -16,9 +16,9 @@ in:
     - {name: timestamp_item, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
 out:
     type: oracle
-    user: EMBULK_USER
-    password: embulk_pw
+    user: TEST_USER
+    password: test_pw
     table: TEST1
     mode: insert
     #driver_path: driver/ojdbc7.jar
-    url: jdbc:oracle:thin:@localhost:1521:EMBULKDB
+    url: jdbc:oracle:thin:@localhost:1521:TESTDB
