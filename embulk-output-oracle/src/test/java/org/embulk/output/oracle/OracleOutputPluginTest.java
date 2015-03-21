@@ -97,6 +97,11 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testOracle() throws Exception {
+        run("/yml/oracle.yml");
+    }
+
+    @Test
     public void testUrl() throws Exception {
         if (!test) {
             return;
@@ -344,6 +349,8 @@ public class OracleOutputPluginTest
     }
 
     private File convertPath(String name) throws URISyntaxException {
+        if (getClass().getResource(name) == null)
+        return new File(name);
         return new File(getClass().getResource(name).toURI());
     }
 

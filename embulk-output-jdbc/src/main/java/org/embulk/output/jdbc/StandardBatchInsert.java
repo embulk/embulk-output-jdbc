@@ -46,11 +46,18 @@ public class StandardBatchInsert
 
     public void add() throws IOException, SQLException
     {
+        System.out.println("##addBatch");
         batch.addBatch();
         index = 1;  // PreparedStatement index begins from 1
         batchRows++;
         batchWeight += 32;  // add weight as overhead of each rows
+
+        n++;
+        //if (n == 2)
+        //flush();
     }
+
+    int n = 0;
 
     public void close() throws IOException, SQLException
     {
@@ -80,54 +87,63 @@ public class StandardBatchInsert
 
     public void setNull(int sqlType) throws IOException, SQLException
     {
+        System.out.println("setNull(" + index + ", \"" + sqlType + "\"");
         batch.setNull(index, sqlType);
         nextColumn(0);
     }
 
     public void setBoolean(boolean v) throws IOException, SQLException
     {
+        System.out.println("setBoolean(" + index + ", \"" + v + "\"");
         batch.setBoolean(index, v);
         nextColumn(1);
     }
 
     public void setByte(byte v) throws IOException, SQLException
     {
+        System.out.println("setByte(" + index + ", \"" + v + "\"");
         batch.setByte(index, v);
         nextColumn(1);
     }
 
     public void setShort(short v) throws IOException, SQLException
     {
+        System.out.println("setShort(" + index + ", \"" + v + "\"");
         batch.setShort(index, v);
         nextColumn(2);
     }
 
     public void setInt(int v) throws IOException, SQLException
     {
+        System.out.println("setInt(" + index + ", \"" + v + "\"");
         batch.setInt(index, v);
         nextColumn(4);
     }
 
     public void setLong(long v) throws IOException, SQLException
     {
+        System.out.println("setLong(" + index + ", \"" + v + "\"");
         batch.setLong(index, v);
         nextColumn(8);
     }
 
     public void setFloat(float v) throws IOException, SQLException
     {
+        System.out.println("setFloat(" + index + ", \"" + v + "\"");
         batch.setFloat(index, v);
         nextColumn(4);
     }
 
     public void setDouble(double v) throws IOException, SQLException
     {
+        System.out.println("setDouble(" + index + ", \"" + v + "\"");
         batch.setDouble(index, v);
         nextColumn(8);
     }
 
     public void setBigDecimal(BigDecimal v) throws IOException, SQLException
     {
+        System.out.println("setBigDecimal(" + index + ", \"" + v + "\"");
         // use estimated number of necessary bytes + 8 byte for the weight
         // assuming one place needs 4 bits. ceil(v.precision() / 2.0) + 8
         batch.setBigDecimal(index, v);
@@ -136,6 +152,7 @@ public class StandardBatchInsert
 
     public void setString(String v) throws IOException, SQLException
     {
+        System.out.println("setString(" + index + ", \"" + v + "\"");
         batch.setString(index, v);
         // estimate all chracters use 2 bytes; almost enough for the worst case
         nextColumn(v.length() * 2 + 4);
@@ -143,6 +160,7 @@ public class StandardBatchInsert
 
     public void setNString(String v) throws IOException, SQLException
     {
+        System.out.println("setNString(" + index + ", \"" + v + "\"");
         batch.setNString(index, v);
         // estimate all chracters use 2 bytes; almost enough for the worst case
         nextColumn(v.length() * 2 + 4);
@@ -156,18 +174,21 @@ public class StandardBatchInsert
 
     public void setSqlDate(Date v, int sqlType) throws IOException, SQLException
     {
+        System.out.println("setSqlDate(" + index + ", \"" + v + "\"");
         batch.setObject(index, v, sqlType);
         nextColumn(32);
     }
 
     public void setSqlTime(Time v, int sqlType) throws IOException, SQLException
     {
+        System.out.println("setSqlTime(" + index + ", \"" + v + "\"");
         batch.setObject(index, v, sqlType);
         nextColumn(32);
     }
 
     public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException
     {
+        System.out.println("setSqlTimestamp(" + index + ", \"" + v + "\"");
         batch.setObject(index, v, sqlType);
         nextColumn(32);
     }

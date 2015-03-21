@@ -72,4 +72,13 @@ public class OracleOutputConnection
             }
         }
     }
+
+    @Override
+    protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        String sql = super.buildPrepareInsertSql(toTable, toTableSchema);
+        sql = sql.replaceAll("^INSERT ", "INSERT /*+ APPEND_VALUES */ ");
+        return sql;
+    }
+
 }

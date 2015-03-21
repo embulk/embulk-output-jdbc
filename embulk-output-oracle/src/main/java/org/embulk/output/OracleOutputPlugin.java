@@ -3,19 +3,22 @@ package org.embulk.output;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
-import com.google.common.base.Optional;
+
 import org.embulk.config.Config;
-import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.jdbc.StandardBatchInsert;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
-import org.embulk.output.oracle.OracleOutputConnection;
+import org.embulk.output.oracle.DirectBatchInsert;
 import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.TimestampFormatter;
+
+import com.google.common.base.Optional;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -98,7 +101,12 @@ public class OracleOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
-        return new StandardBatchInsert(getConnector(task, true));
+        OraclePluginTask oracleTask = (OraclePluginTask) task;
+        return new DirectBatchInsert(
+                String.format("%s:%s/%d", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
+                oracleTask.getUser(),
+                oracleTask.getPassword(),
+                oracleTask.getTable());
     }
 
     @Override
