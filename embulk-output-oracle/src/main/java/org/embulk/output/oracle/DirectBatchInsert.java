@@ -35,18 +35,22 @@ public class DirectBatchInsert implements BatchInsert
     private final String user;
     private final String password;
     private final String table;
+    private final int batchSize;
     private RowBuffer buffer;
     private long totalRows;
+    private int rowSize;
+    private int batchWeight;
 
     private DateFormat[] formats;
 
 
-    public DirectBatchInsert(String database, String user, String password, String table)
+    public DirectBatchInsert(String database, String user, String password, String table, int batchSize)
     {
         this.database = database;
         this.user = user;
         this.password = password;
         this.table = table;
+        this.batchSize = batchSize;
     }
 
     @Override
@@ -72,6 +76,7 @@ public class DirectBatchInsert implements BatchInsert
 
         formats = new DateFormat[insertSchema.getCount()];
         List<ColumnDefinition> columns = new ArrayList<ColumnDefinition>();
+        Timestamp dummy = new Timestamp(System.currentTimeMillis());
         for (int i = 0; i < insertSchema.getCount(); i++) {
             JdbcColumn insertColumn = insertSchema.getColumn(i);
             switch (insertColumn.getSqlType()) {
@@ -80,7 +85,9 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.LONGVARCHAR:
                 case Types.CLOB:
                     // TODO: CHAR(n CHAR)
-                    columns.add(new ColumnDefinition(insertColumn.getName(), ColumnDefinition.SQLT_CHR, insertColumn.getSizeTypeParameter()));
+                    columns.add(new ColumnDefinition(insertColumn.getName(),
+                            ColumnDefinition.SQLT_CHR,
+                            insertColumn.getSizeTypeParameter()));
                     break;
 
                 case Types.DECIMAL:
@@ -90,22 +97,30 @@ public class DirectBatchInsert implements BatchInsert
                         // decimal point
                         size += 1;
                     }
-                    columns.add(new ColumnDefinition(insertColumn.getName(), ColumnDefinition.SQLT_CHR, size));
+                    columns.add(new ColumnDefinition(insertColumn.getName(),
+                            ColumnDefinition.SQLT_CHR,
+                            size));
                     break;
 
                 case Types.DATE:
                     break;
 
                 case Types.TIMESTAMP:
+                    String oracleFormat;
+                    DateFormat javaFormat;
                     if (insertColumn.getTypeName().equals("DATE")) {
-                        String datePattern = "yy-MM-dd";
-                        formats[i] = new SimpleDateFormat(datePattern);
-                        columns.add(new ColumnDefinition(insertColumn.getName(), ColumnDefinition.SQLT_CHR, datePattern.length()));
+                        oracleFormat = "YYYY-MM-DD HH24:MI:SS";
+                        javaFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     } else {
-                        String timestampPattern = "yy-MM-dd HH:mm:ss";
-                        formats[i] = new SimpleDateFormat(timestampPattern);
-                        columns.add(new ColumnDefinition(insertColumn.getName(), ColumnDefinition.SQLT_CHR, timestampPattern.length() + 10));
+                        oracleFormat = "YYYY-MM-DD HH24:MI:SS.FF9";
+                        oracleFormat = "YYYY-MM-DD HH24:MI:SS";
+                        javaFormat = new TimestampFormat("yyyy-MM-dd HH:mm:ss", 9);
                     }
+                    formats[i] = javaFormat;
+                    columns.add(new ColumnDefinition(insertColumn.getName(),
+                            ColumnDefinition.SQLT_CHR,
+                            javaFormat.format(dummy).length(),
+                            oracleFormat));
                     break;
 
                 default:
@@ -114,43 +129,12 @@ public class DirectBatchInsert implements BatchInsert
 
         }
 
-        int rowSize = 0;
+        rowSize = 0;
         for (ColumnDefinition column : columns) {
             rowSize += column.columnSize;
         }
 
-
-
-        /*
-        JdbcOutputConnection connection = connector.connect(true);
-        try {
-            connection.
-
-        } finally {
-            connection.close();
-        }
-        */
-
-
         TableDefinition tableDefinition = new TableDefinition(table, columns);
-        /*
-                "EXAMPLE",
-                //new ColumnDefinition("ID", ColumnDefinition.SQLT_INT, 4),
-                //new ColumnDefinition("NUM", ColumnDefinition.SQLT_INT, 4),
-                new ColumnDefinition("ID", ColumnDefinition.SQLT_CHR, 8),
-                new ColumnDefinition("NUM", ColumnDefinition.SQLT_CHR, 12),
-                new ColumnDefinition("VALUE1", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE2", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE3", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE4", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE5", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE6", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE7", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE8", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE9", ColumnDefinition.SQLT_CHR, 60),
-                new ColumnDefinition("VALUE10", ColumnDefinition.SQLT_CHR, 60)
-                );
-*/
         synchronized (oci) {
             if (open == 0) {
                 oci.open(database, user, password);
@@ -159,17 +143,17 @@ public class DirectBatchInsert implements BatchInsert
             open++;
         }
 
-        buffer = new RowBuffer(tableDefinition, 10000, Charset.forName("MS932"));
+        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), Charset.forName("MS932"));
     }
 
     @Override
     public int getBatchWeight() {
-        // TODO 自動生成されたメソッド・スタブ
-        return 1000000;
+        return batchWeight;
     }
 
     @Override
     public void add() throws IOException, SQLException {
+        batchWeight += rowSize;
         if (buffer.isFull()) {
             flush();
         }
@@ -204,6 +188,7 @@ public class DirectBatchInsert implements BatchInsert
 
             } finally {
                 buffer.clear();
+                batchWeight = 0;
             }
         }
     }
@@ -291,25 +276,6 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException {
         buffer.addValue(formats[buffer.getCurrentColumn()].format(v));
-        /*
-        if (sqlType == Types.DATE) {
-            buffer.addValue(formats[buffer.getCurrentColumn()].format(v));
-        } else if (sqlType == Types.TIMESTAMP) {
-            buffer.addValue(formats[buffer.getCurrentColumn()].format(v) + ".000000000");
-        }
-        */
-
-        /*
-        if (v.getHours() == 0) {
-            DateFormat df = new SimpleDateFormat("yy-MM-dd");
-            buffer.addValue(df.format(v));
-        } else {
-            DateFormat df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
-            buffer.addValue(df.format(v));
-        }
-        */
-        //DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        //buffer.addValue(df.format(v) + "000000");
     }
 
 }

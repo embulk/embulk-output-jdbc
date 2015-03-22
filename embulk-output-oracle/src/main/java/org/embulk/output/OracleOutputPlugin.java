@@ -2,6 +2,9 @@ package org.embulk.output;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.embulk.config.Config;
@@ -9,8 +12,10 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.oracle.DirectBatchInsert;
 import org.embulk.output.oracle.OracleOutputConnector;
@@ -101,12 +106,15 @@ public class OracleOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
+
+        //return new StandardBatchInsert(getConnector(task, true));
         OraclePluginTask oracleTask = (OraclePluginTask) task;
         return new DirectBatchInsert(
-                String.format("%s:%s/%d", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
+                String.format("%s:%d/%s", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
                 oracleTask.getUser(),
                 oracleTask.getPassword(),
-                oracleTask.getTable());
+                oracleTask.getTable(),
+                oracleTask.getBatchSize());
     }
 
     @Override
@@ -156,4 +164,26 @@ public class OracleOutputPlugin
 
         return tableName + "_" + uniqueSuffix;
     }
+
+    /*
+    @Override
+    public JdbcSchema newJdbcSchemaFromExistentTable(JdbcOutputConnection connection, String tableName) throws SQLException {
+        JdbcSchema schema = super.newJdbcSchemaFromExistentTable(connection, tableName);
+        List<JdbcColumn> columns = new ArrayList<JdbcColumn>();
+        for (JdbcColumn column : schema.getColumns()) {
+            if (column.getTypeName().equals("DATE")) {
+                // Types.TIMESTAMP -> Types.DATE
+                columns.add(new JdbcColumn(column.getName(),
+                        column.getTypeName(),
+                        Types.DATE,
+                        column.getSizeTypeParameter(),
+                        column.getScaleTypeParameter()));
+            } else {
+                columns.add(column);
+            }
+        }
+
+        return new JdbcSchema(columns);
+    }
+    */
 }

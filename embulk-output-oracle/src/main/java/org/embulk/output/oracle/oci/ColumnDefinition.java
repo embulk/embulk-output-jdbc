@@ -8,15 +8,15 @@ public class ColumnDefinition
     public final String columnName;
     public final int columnType;
     public final int columnSize;
-    public final String dateFormat;
+    public final String columnDateFormat;
 
 
-    public ColumnDefinition(String columnName, int columnType, int columnSize, String dateFormat)
+    public ColumnDefinition(String columnName, int columnType, int columnSize, String columnDateFormat)
     {
         this.columnName = columnName;
         this.columnType = columnType;
         this.columnSize = columnSize;
-        this.dateFormat = dateFormat;
+        this.columnDateFormat = columnDateFormat;
     }
 
     public ColumnDefinition(String columnName, int columnType, int columnSize)
