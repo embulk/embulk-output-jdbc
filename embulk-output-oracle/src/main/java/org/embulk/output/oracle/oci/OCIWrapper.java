@@ -1,19 +1,20 @@
 package org.embulk.output.oracle.oci;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
-
 
 
 public class OCIWrapper implements AutoCloseable
 {
     private final OCI oci = new OCI();
+    private final Charset charset;
     private byte[] context;
 
 
-    public OCIWrapper()
+    public OCIWrapper(Charset charset)
     {
         context = oci.createContext();
+        this.charset = charset;
     }
 
     public void open(String dbName, String userName, String password) throws SQLException
@@ -37,25 +38,24 @@ public class OCIWrapper implements AutoCloseable
         }
     }
 
-    public void commit() throws SQLException {
+    public void commit() throws SQLException
+    {
         if (!oci.commit(context)) {
             throwException();
         }
     }
 
-    public void rollback() throws SQLException {
+    public void rollback() throws SQLException
+    {
         if (!oci.rollback(context)) {
             throwException();
         }
     }
 
-    private void throwException() throws SQLException {
+    private void throwException() throws SQLException
+    {
         byte[] message = oci.getLasetMessage(context);
-        try {
-            throw new SQLException(new String(message, "MS932"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        throw new SQLException(new String(message, charset));
     }
 
 

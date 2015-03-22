@@ -11,12 +11,14 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.oracle.oci.ColumnDefinition;
+import org.embulk.output.oracle.oci.OCIManager;
 import org.embulk.output.oracle.oci.OCIWrapper;
 import org.embulk.output.oracle.oci.RowBuffer;
 import org.embulk.output.oracle.oci.TableDefinition;
@@ -28,13 +30,16 @@ public class DirectBatchInsert implements BatchInsert
 
     private final Logger logger = Exec.getLogger(DirectBatchInsert.class);
 
-    private static OCIWrapper oci = new OCIWrapper();
-    private static int open;
+    //private static OCIWrapper oci = new OCIWrapper();
 
+    private static OCIManager ociManager = new OCIManager();
+
+    private final List<String> ociKey;
     private final String database;
     private final String user;
     private final String password;
     private final String table;
+    private final Charset charset;
     private final int batchSize;
     private RowBuffer buffer;
     private long totalRows;
@@ -44,17 +49,21 @@ public class DirectBatchInsert implements BatchInsert
     private DateFormat[] formats;
 
 
-    public DirectBatchInsert(String database, String user, String password, String table, int batchSize)
+    public DirectBatchInsert(String database, String user, String password, String table, Charset charset, int batchSize)
     {
         this.database = database;
         this.user = user;
         this.password = password;
         this.table = table;
+        this.charset = charset;
         this.batchSize = batchSize;
+
+        ociKey = Arrays.asList(database, user, table);
     }
 
     @Override
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException {
+    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    {
 
         /*
          * available mappings
@@ -113,7 +122,6 @@ public class DirectBatchInsert implements BatchInsert
                         javaFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     } else {
                         oracleFormat = "YYYY-MM-DD HH24:MI:SS.FF9";
-                        oracleFormat = "YYYY-MM-DD HH24:MI:SS";
                         javaFormat = new TimestampFormat("yyyy-MM-dd HH:mm:ss", 9);
                     }
                     formats[i] = javaFormat;
@@ -135,24 +143,20 @@ public class DirectBatchInsert implements BatchInsert
         }
 
         TableDefinition tableDefinition = new TableDefinition(table, columns);
-        synchronized (oci) {
-            if (open == 0) {
-                oci.open(database, user, password);
-                oci.prepareLoad(tableDefinition);
-            }
-            open++;
-        }
+        ociManager.open(ociKey, database, user, password, charset, tableDefinition);
 
-        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), Charset.forName("MS932"));
+        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset);
     }
 
     @Override
-    public int getBatchWeight() {
+    public int getBatchWeight()
+    {
         return batchWeight;
     }
 
     @Override
-    public void add() throws IOException, SQLException {
+    public void add() throws IOException, SQLException
+    {
         batchWeight += rowSize;
         if (buffer.isFull()) {
             flush();
@@ -160,24 +164,21 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
-    public void close() throws IOException, SQLException {
-        synchronized (oci) {
-            open--;
-            if (open == 0) {
-                oci.commit();
-                oci.close();
-            }
-        }
+    public void close() throws IOException, SQLException
+    {
+        ociManager.close(ociKey);
     }
 
     @Override
-    public void flush() throws IOException, SQLException {
+    public void flush() throws IOException, SQLException
+    {
         if (buffer.getRowCount() > 0) {
             try {
                 logger.info(String.format("Loading %,d rows", buffer.getRowCount()));
 
                 long startTime = System.currentTimeMillis();
 
+                OCIWrapper oci = ociManager.get(ociKey);
                 synchronized (oci) {
                     oci.loadBuffer(buffer.getBuffer(), buffer.getRowCount());
                 }
@@ -194,7 +195,8 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
-    public void finish() throws IOException, SQLException {
+    public void finish() throws IOException, SQLException
+    {
         flush();
         /*
         synchronized (oci) {
@@ -204,77 +206,92 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
-    public void setNull(int sqlType) throws IOException, SQLException {
+    public void setNull(int sqlType) throws IOException, SQLException
+    {
         buffer.addValue("");
     }
 
     @Override
-    public void setBoolean(boolean v) throws IOException, SQLException {
+    public void setBoolean(boolean v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setByte(byte v) throws IOException, SQLException {
+    public void setByte(byte v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setShort(short v) throws IOException, SQLException {
+    public void setShort(short v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setInt(int v) throws IOException, SQLException {
+    public void setInt(int v) throws IOException, SQLException
+    {
         buffer.addValue(v);
     }
 
     @Override
-    public void setLong(long v) throws IOException, SQLException {
+    public void setLong(long v) throws IOException, SQLException
+    {
         buffer.addValue(Long.toString(v));
     }
 
     @Override
-    public void setFloat(float v) throws IOException, SQLException {
+    public void setFloat(float v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setDouble(double v) throws IOException, SQLException {
+    public void setDouble(double v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setBigDecimal(BigDecimal v) throws IOException, SQLException {
+    public void setBigDecimal(BigDecimal v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setString(String v) throws IOException, SQLException {
+    public void setString(String v) throws IOException, SQLException
+    {
         buffer.addValue(v);
     }
 
     @Override
-    public void setNString(String v) throws IOException, SQLException {
+    public void setNString(String v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setBytes(byte[] v) throws IOException, SQLException {
+    public void setBytes(byte[] v) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlDate(Date v, int sqlType) throws IOException, SQLException {
+    public void setSqlDate(Date v, int sqlType) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlTime(Time v, int sqlType) throws IOException, SQLException {
+    public void setSqlTime(Time v, int sqlType) throws IOException, SQLException
+    {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException {
+    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException
+    {
         buffer.addValue(formats[buffer.getCurrentColumn()].format(v));
     }
 

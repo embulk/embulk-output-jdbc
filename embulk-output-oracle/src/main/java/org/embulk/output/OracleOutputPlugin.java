@@ -1,6 +1,7 @@
 package org.embulk.output;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -14,10 +15,12 @@ import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.oracle.DirectBatchInsert;
+import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
@@ -106,6 +109,11 @@ public class OracleOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
+        JdbcOutputConnector connector = getConnector(task, true);
+        Charset charset;
+        try (JdbcOutputConnection connection = connector.connect(true)) {
+            charset = ((OracleOutputConnection)connection).getCharset();
+        }
 
         //return new StandardBatchInsert(getConnector(task, true));
         OraclePluginTask oracleTask = (OraclePluginTask) task;
@@ -114,6 +122,7 @@ public class OracleOutputPlugin
                 oracleTask.getUser(),
                 oracleTask.getPassword(),
                 oracleTask.getTable(),
+                charset,
                 oracleTask.getBatchSize());
     }
 

@@ -1,10 +1,13 @@
 package org.embulk.output.oracle;
 
 
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
@@ -12,6 +15,18 @@ import org.embulk.output.jdbc.JdbcSchema;
 public class OracleOutputConnection
         extends JdbcOutputConnection
 {
+    private static final Map<String, String> CHARSET_NAMES = new HashMap<String, String>();
+    static {
+        CHARSET_NAMES.put("JA16SJIS", "Shift_JIS");
+        CHARSET_NAMES.put("JA16SJISTILDE", "Shift_JIS");
+        CHARSET_NAMES.put("JA16EUC", "EUC-JP");
+        CHARSET_NAMES.put("JA16EUCTILDE", "EUC-JP");
+        CHARSET_NAMES.put("AL32UTF8", "UTF-8");
+        CHARSET_NAMES.put("UTF8", "UTF-8");
+        CHARSET_NAMES.put("AL16UTF16", "UTF-16");
+    }
+
+
     public OracleOutputConnection(Connection connection, boolean autoCommit)
             throws SQLException
     {
@@ -79,6 +94,23 @@ public class OracleOutputConnection
         String sql = super.buildPrepareInsertSql(toTable, toTableSchema);
         sql = sql.replaceAll("^INSERT ", "INSERT /*+ APPEND_VALUES */ ");
         return sql;
+    }
+
+    public Charset getCharset() throws SQLException
+    {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet resultSet = statement.executeQuery("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER='NLS_CHARACTERSET'")) {
+                if (resultSet.next()) {
+                    String nlsCharacterSet = resultSet.getString(1);
+                    if (CHARSET_NAMES.containsKey(nlsCharacterSet)) {
+                        return Charset.forName(CHARSET_NAMES.get(nlsCharacterSet));
+                    }
+                }
+            }
+        }
+
+        return Charset.forName("UTF-8");
+
     }
 
 }

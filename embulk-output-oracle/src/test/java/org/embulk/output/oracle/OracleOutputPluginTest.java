@@ -102,6 +102,11 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testOracleSplit() throws Exception {
+        run("/yml/oracle-split.yml");
+    }
+
+    @Test
     public void testUrl() throws Exception {
         if (!test) {
             return;
