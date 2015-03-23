@@ -50,7 +50,7 @@ public class RowBuffer
 
         ByteBuffer bytes = charset.encode(value);
         int length = bytes.remaining();
-        // TODO:オーバーフロー
+        // TODO:warning or error if truncated
         bytes.get(buffer, currentPosition, length);
         if (length < table.columns[currentColumn].columnSize) {
             buffer[currentPosition + length] = 0;

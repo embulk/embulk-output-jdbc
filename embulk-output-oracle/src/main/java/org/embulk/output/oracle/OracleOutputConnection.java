@@ -26,12 +26,16 @@ public class OracleOutputConnection
         CHARSET_NAMES.put("AL16UTF16", "UTF-16");
     }
 
+    private final boolean direct;
 
-    public OracleOutputConnection(Connection connection, boolean autoCommit)
+
+    public OracleOutputConnection(Connection connection, boolean autoCommit, boolean direct)
             throws SQLException
     {
         super(connection, getSchema(connection));
         connection.setAutoCommit(autoCommit);
+
+        this.direct = direct;
     }
 
     @Override
@@ -92,7 +96,9 @@ public class OracleOutputConnection
     protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         String sql = super.buildPrepareInsertSql(toTable, toTableSchema);
-        sql = sql.replaceAll("^INSERT ", "INSERT /*+ APPEND_VALUES */ ");
+        if (direct) {
+            sql = sql.replaceAll("^INSERT ", "INSERT /*+ APPEND_VALUES */ ");
+        }
         return sql;
     }
 

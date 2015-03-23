@@ -3,9 +3,6 @@ package org.embulk.output;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import org.embulk.config.Config;
@@ -13,13 +10,12 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
-import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.oracle.DirectBatchInsert;
+import org.embulk.output.oracle.InsertMethod;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
@@ -62,6 +58,10 @@ public class OracleOutputPlugin
         @Config("password")
         @ConfigDefault("\"\"")
         public String getPassword();
+
+        @Config("insert-method")
+        @ConfigDefault("\"normal\"")
+        public InsertMethod getInsertMethod();
     }
 
     @Override
@@ -103,27 +103,31 @@ public class OracleOutputPlugin
         props.setProperty("password", oracleTask.getPassword());
         props.putAll(oracleTask.getOptions());
 
-        return new OracleOutputConnector(url, props);
+        return new OracleOutputConnector(url, props, oracleTask.getInsertMethod() == InsertMethod.direct);
     }
 
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
+        OraclePluginTask oracleTask = (OraclePluginTask) task;
         JdbcOutputConnector connector = getConnector(task, true);
-        Charset charset;
-        try (JdbcOutputConnection connection = connector.connect(true)) {
-            charset = ((OracleOutputConnection)connection).getCharset();
+
+        if (oracleTask.getInsertMethod() != InsertMethod.normal) {
+            Charset charset;
+            try (JdbcOutputConnection connection = connector.connect(true)) {
+                charset = ((OracleOutputConnection)connection).getCharset();
+            }
+
+            return new DirectBatchInsert(
+                    String.format("%s:%d/%s", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
+                    oracleTask.getUser(),
+                    oracleTask.getPassword(),
+                    oracleTask.getTable(),
+                    charset,
+                    oracleTask.getBatchSize());
         }
 
-        //return new StandardBatchInsert(getConnector(task, true));
-        OraclePluginTask oracleTask = (OraclePluginTask) task;
-        return new DirectBatchInsert(
-                String.format("%s:%d/%s", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
-                oracleTask.getUser(),
-                oracleTask.getPassword(),
-                oracleTask.getTable(),
-                charset,
-                oracleTask.getBatchSize());
+        return new StandardBatchInsert(getConnector(task, true));
     }
 
     @Override
