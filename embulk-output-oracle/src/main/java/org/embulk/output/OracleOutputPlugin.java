@@ -112,7 +112,7 @@ public class OracleOutputPlugin
         OraclePluginTask oracleTask = (OraclePluginTask) task;
         JdbcOutputConnector connector = getConnector(task, true);
 
-        if (oracleTask.getInsertMethod() != InsertMethod.normal) {
+        if (oracleTask.getInsertMethod() == InsertMethod.oci) {
             Charset charset;
             try (JdbcOutputConnection connection = connector.connect(true)) {
                 charset = ((OracleOutputConnection)connection).getCharset();

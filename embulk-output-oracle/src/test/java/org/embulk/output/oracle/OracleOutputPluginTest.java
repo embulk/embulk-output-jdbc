@@ -97,6 +97,20 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testInsertDirect() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        executeSQL(dropTable, true);
+        executeSQL(createTable);
+
+        run("/yml/test-insert-direct.yml");
+
+        assertTable("TEST1");
+    }
+
+    @Test
     public void testOracle() throws Exception {
         run("/yml/oracle.yml");
     }

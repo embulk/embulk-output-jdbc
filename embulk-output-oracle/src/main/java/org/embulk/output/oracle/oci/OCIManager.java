@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.embulk.spi.Exec;
+import org.slf4j.Logger;
+
 public class OCIManager
 {
     private static class OCIWrapperAndCounter {
@@ -12,6 +15,8 @@ public class OCIManager
         public int counter;
     }
 
+
+    private final Logger logger = Exec.getLogger(getClass());
 
     private Map<Object, OCIWrapperAndCounter> ociAndCounters = new HashMap<Object, OCIWrapperAndCounter>();
 
@@ -23,6 +28,7 @@ public class OCIManager
             if (ociAndCounters.containsKey(key)) {
                 ociAndCounter = ociAndCounters.get(key);
             } else {
+                logger.info(String.format("Open OCI for %s.", key));
                 ociAndCounter = new OCIWrapperAndCounter();
                 ociAndCounter.oci = new OCIWrapper(charset);
                 ociAndCounter.oci.open(dbName, userName, password);
@@ -45,11 +51,15 @@ public class OCIManager
     {
         synchronized(ociAndCounters) {
             OCIWrapperAndCounter ociAndCounter = ociAndCounters.get(key);
-            ociAndCounter.counter--;
-            if (ociAndCounter.counter == 0) {
-                ociAndCounter.oci.commit();
-                ociAndCounter.oci.close();
-                ociAndCounters.remove(key);
+            if (ociAndCounter != null) {
+                ociAndCounter.counter--;
+                if (ociAndCounter.counter == 0) {
+                    logger.info(String.format("Close OCI for %s.", key));
+                    // rollback when?
+                    ociAndCounter.oci.commit();
+                    ociAndCounter.oci.close();
+                    ociAndCounters.remove(key);
+                }
             }
         }
     }
