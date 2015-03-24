@@ -143,7 +143,7 @@ public class DirectBatchInsert implements BatchInsert
         }
 
         TableDefinition tableDefinition = new TableDefinition(table, columns);
-        ociManager.open(ociKey, database, user, password, charset, tableDefinition);
+        ociManager.open(ociKey, database, user, password, tableDefinition);
 
         buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset);
     }

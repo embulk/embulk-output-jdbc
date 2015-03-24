@@ -3,18 +3,25 @@ package org.embulk.output.oracle.oci;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
+import org.embulk.spi.Exec;
+import org.slf4j.Logger;
+
 
 public class OCIWrapper implements AutoCloseable
 {
+    private final Logger logger = Exec.getLogger(getClass());
+
     private final OCI oci = new OCI();
-    private final Charset charset;
+    // used for messages
+    private final Charset defaultCharset;
     private byte[] context;
 
 
-    public OCIWrapper(Charset charset)
+    public OCIWrapper()
     {
+        // enable to change default encoding for test
+        defaultCharset = Charset.forName(System.getProperty("file.encoding"));
         context = oci.createContext();
-        this.charset = charset;
     }
 
     public void open(String dbName, String userName, String password) throws SQLException
@@ -54,8 +61,9 @@ public class OCIWrapper implements AutoCloseable
 
     private void throwException() throws SQLException
     {
-        byte[] message = oci.getLasetMessage(context);
-        throw new SQLException(new String(message, charset));
+        String message = new String(oci.getLasetMessage(context), defaultCharset);
+        logger.error(message);
+        throw new SQLException(message);
     }
 
 

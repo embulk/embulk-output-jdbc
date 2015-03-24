@@ -1,6 +1,5 @@
 package org.embulk.output.oracle.oci;
 
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class OCIManager
     private Map<Object, OCIWrapperAndCounter> ociAndCounters = new HashMap<Object, OCIWrapperAndCounter>();
 
 
-    public OCIWrapper open(Object key, String dbName, String userName, String password, Charset charset, TableDefinition tableDefinition) throws SQLException
+    public OCIWrapper open(Object key, String dbName, String userName, String password, TableDefinition tableDefinition) throws SQLException
     {
         synchronized(ociAndCounters) {
             OCIWrapperAndCounter ociAndCounter;
@@ -30,7 +29,7 @@ public class OCIManager
             } else {
                 logger.info(String.format("Open OCI for %s.", key));
                 ociAndCounter = new OCIWrapperAndCounter();
-                ociAndCounter.oci = new OCIWrapper(charset);
+                ociAndCounter.oci = new OCIWrapper();
                 ociAndCounter.oci.open(dbName, userName, password);
                 ociAndCounter.oci.prepareLoad(tableDefinition);
                 ociAndCounters.put(key, ociAndCounter);
