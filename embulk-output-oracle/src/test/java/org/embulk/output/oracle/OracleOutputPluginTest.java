@@ -21,6 +21,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +30,9 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
 import org.embulk.output.OracleOutputPlugin;
+import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -111,13 +115,33 @@ public class OracleOutputPluginTest
     }
 
     @Test
-    public void testOracle() throws Exception {
-        run("/yml/oracle.yml");
+    public void testInsertOCI() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        executeSQL(dropTable, true);
+        executeSQL(createTable);
+
+        run("/yml/test-insert-oci.yml");
+
+        assertTable("TEST1");
     }
 
     @Test
-    public void testOracleSplit() throws Exception {
-        run("/yml/oracle-split.yml");
+    public void testInsertOCISplit() throws Exception {
+        if (!test) {
+            return;
+        }
+
+        tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
+
+        executeSQL(dropTable, true);
+        executeSQL(createTable);
+
+        run("/yml/test-insert-oci-split.yml");
+
+        assertTable("TEST1");
     }
 
     @Test
@@ -273,7 +297,9 @@ public class OracleOutputPluginTest
         try (Connection connection = connect()) {
             try (Statement statement = connection.createStatement()) {
                 List<List<Object>> rows = new ArrayList<List<Object>>();
-                try (ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table)) {
+                String sql = "SELECT * FROM " + table;
+                System.out.println(sql);
+                try (ResultSet resultSet = statement.executeQuery(sql)) {
                     while (resultSet.next()) {
                         List<Object> row = new ArrayList<Object>();
                         for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
@@ -286,6 +312,13 @@ public class OracleOutputPluginTest
                         rows.add(row);
                     }
                 }
+                // cannot sort by CLOB, so sort by Java
+                Collections.sort(rows, new Comparator<List<Object>>() {
+                    @Override
+                    public int compare(List<Object> o1, List<Object> o2) {
+                        return o1.toString().compareTo(o2.toString());
+                    }
+                });
                 return rows;
             }
         }
@@ -367,7 +400,8 @@ public class OracleOutputPluginTest
         }
     }
 
-    private File convertPath(String name) throws URISyntaxException {
+    private File convertPath(String name) throws URISyntaxException
+    {
         if (getClass().getResource(name) == null)
         return new File(name);
         return new File(getClass().getResource(name).toURI());

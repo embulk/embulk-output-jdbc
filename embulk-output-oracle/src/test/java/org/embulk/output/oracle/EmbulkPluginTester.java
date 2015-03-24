@@ -7,7 +7,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,17 +27,38 @@ import com.google.inject.Module;
 
 public class EmbulkPluginTester
 {
+    private static class PluginDefinition
+    {
+        public final Class<?> iface;
+        public final String name;
+        public final Class<?> impl;
 
-    private final Class<?> iface;
-    private final String name;
-    private final Class<?> impl;
 
+        public PluginDefinition(Class<?> iface, String name, Class<?> impl)
+        {
+            this.iface = iface;
+            this.name = name;
+            this.impl = impl;
+        }
+
+    }
+
+    private final List<PluginDefinition> plugins = new ArrayList<PluginDefinition>();
+
+
+
+    public EmbulkPluginTester()
+    {
+    }
 
     public EmbulkPluginTester(Class<?> iface, String name, Class<?> impl)
     {
-        this.iface = iface;
-        this.name = name;
-        this.impl = impl;
+        addPlugin(iface, name, impl);
+    }
+
+    public void addPlugin(Class<?> iface, String name, Class<?> impl)
+    {
+        plugins.add(new PluginDefinition(iface, name, impl));
     }
 
     public void run(String ymlPath) throws Exception
@@ -48,7 +71,9 @@ public class EmbulkPluginTester
                     @Override
                     public void configure(Binder binder)
                     {
-                        InjectedPluginSource.registerPluginTo(binder, iface, name, impl);
+                        for (PluginDefinition plugin : plugins) {
+                            InjectedPluginSource.registerPluginTo(binder, plugin.iface, plugin.name, plugin.impl);
+                        }
                     }
                 });
             }
