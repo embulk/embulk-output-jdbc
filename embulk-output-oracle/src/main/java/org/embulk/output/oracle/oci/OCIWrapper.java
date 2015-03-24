@@ -15,6 +15,8 @@ public class OCIWrapper implements AutoCloseable
     // used for messages
     private final Charset defaultCharset;
     private byte[] context;
+    private boolean errorOccured;
+    private boolean committedOrRollbacked;
 
 
     public OCIWrapper()
@@ -47,6 +49,8 @@ public class OCIWrapper implements AutoCloseable
 
     public void commit() throws SQLException
     {
+        committedOrRollbacked = true;
+        logger.info("OCI : start to commit.");
         if (!oci.commit(context)) {
             throwException();
         }
@@ -54,6 +58,8 @@ public class OCIWrapper implements AutoCloseable
 
     public void rollback() throws SQLException
     {
+        committedOrRollbacked = true;
+        logger.info("OCI : start to rollback.");
         if (!oci.rollback(context)) {
             throwException();
         }
@@ -61,6 +67,7 @@ public class OCIWrapper implements AutoCloseable
 
     private void throwException() throws SQLException
     {
+        errorOccured = true;
         String message = new String(oci.getLasetMessage(context), defaultCharset);
         logger.error(message);
         throw new SQLException(message);
@@ -68,11 +75,21 @@ public class OCIWrapper implements AutoCloseable
 
 
     @Override
-    public void close()
+    public void close() throws SQLException
     {
         if (context != null) {
-            oci.close(context);
-            context = null;
+            try {
+                if (!committedOrRollbacked) {
+                    if (errorOccured) {
+                        rollback();
+                    } else {
+                        commit();
+                    }
+                }
+            } finally {
+                oci.close(context);
+                context = null;
+            }
         }
     }
 

@@ -27,7 +27,7 @@ public class OCIManager
             if (ociAndCounters.containsKey(key)) {
                 ociAndCounter = ociAndCounters.get(key);
             } else {
-                logger.info(String.format("Open OCI for %s.", key));
+                logger.info(String.format("OCI : open for %s.", key));
                 ociAndCounter = new OCIWrapperAndCounter();
                 ociAndCounter.oci = new OCIWrapper();
                 ociAndCounter.oci.open(dbName, userName, password);
@@ -53,9 +53,7 @@ public class OCIManager
             if (ociAndCounter != null) {
                 ociAndCounter.counter--;
                 if (ociAndCounter.counter == 0) {
-                    logger.info(String.format("Close OCI for %s.", key));
-                    // rollback when?
-                    ociAndCounter.oci.commit();
+                    logger.info(String.format("OCI : close for %s.", key));
                     ociAndCounter.oci.close();
                     ociAndCounters.remove(key);
                 }
