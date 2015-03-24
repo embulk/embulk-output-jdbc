@@ -1,7 +1,6 @@
 package org.embulk.output;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -16,6 +15,7 @@ import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.oracle.DirectBatchInsert;
 import org.embulk.output.oracle.InsertMethod;
+import org.embulk.output.oracle.OracleCharset;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
@@ -113,7 +113,7 @@ public class OracleOutputPlugin
         JdbcOutputConnector connector = getConnector(task, true);
 
         if (oracleTask.getInsertMethod() == InsertMethod.oci) {
-            Charset charset;
+            OracleCharset charset;
             try (JdbcOutputConnection connection = connector.connect(true)) {
                 charset = ((OracleOutputConnection)connection).getCharset();
             }

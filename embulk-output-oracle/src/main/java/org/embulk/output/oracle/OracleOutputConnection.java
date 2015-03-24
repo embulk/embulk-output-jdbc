@@ -3,6 +3,7 @@ package org.embulk.output.oracle;
 
 import java.nio.charset.Charset;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -102,21 +103,34 @@ public class OracleOutputConnection
         return sql;
     }
 
-    public Charset getCharset() throws SQLException
+    public OracleCharset getCharset() throws SQLException
     {
+        String charsetName = "UTF8";
         try (Statement statement = connection.createStatement()) {
             try (ResultSet resultSet = statement.executeQuery("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER='NLS_CHARACTERSET'")) {
                 if (resultSet.next()) {
                     String nlsCharacterSet = resultSet.getString(1);
                     if (CHARSET_NAMES.containsKey(nlsCharacterSet)) {
-                        return Charset.forName(CHARSET_NAMES.get(nlsCharacterSet));
+                        charsetName = nlsCharacterSet;
                     }
                 }
             }
         }
 
-        return Charset.forName("UTF-8");
+        //return Charset.forName("UTF-8");
 
+        try (PreparedStatement statement = connection.prepareStatement("SELECT NLS_CHARSET_ID(?) FROM DUAL")) {
+            statement.setString(1, charsetName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("Unknown NLS_CHARACTERSET : " + charsetName);
+                }
+
+                return new OracleCharset(charsetName,
+                        resultSet.getShort(1),
+                        Charset.forName(CHARSET_NAMES.get(charsetName)));
+            }
+        }
     }
 
 }

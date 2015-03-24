@@ -46,7 +46,7 @@ public class OracleOutputPluginTest
     private String dropTable = "DROP TABLE TEST1";
     private String createTable = "CREATE TABLE TEST1 ("
             + "ID              CHAR(4),"
-            + "VARCHAR2_ITEM   VARCHAR2(20),"
+            + "VARCHAR2_ITEM   VARCHAR2(40),"
             + "INTEGER_ITEM     NUMBER(4,0),"
             + "NUMBER_ITEM     NUMBER(10,2),"
             + "DATE_ITEM       DATE,"
@@ -56,6 +56,11 @@ public class OracleOutputPluginTest
     @BeforeClass
     public static void beforeClass()
     {
+        if (System.getProperty("path.separator").equals(";")) {
+            // forw Windows
+            System.setProperty("file.encoding", "MS932");
+        }
+
         try {
             Class.forName("oracle.jdbc.OracleDriver");
             test = true;

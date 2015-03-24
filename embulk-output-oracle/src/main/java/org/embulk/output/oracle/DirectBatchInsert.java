@@ -2,7 +2,6 @@ package org.embulk.output.oracle;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -39,7 +38,7 @@ public class DirectBatchInsert implements BatchInsert
     private final String user;
     private final String password;
     private final String table;
-    private final Charset charset;
+    private final OracleCharset charset;
     private final int batchSize;
     private RowBuffer buffer;
     private long totalRows;
@@ -49,7 +48,7 @@ public class DirectBatchInsert implements BatchInsert
     private DateFormat[] formats;
 
 
-    public DirectBatchInsert(String database, String user, String password, String table, Charset charset, int batchSize)
+    public DirectBatchInsert(String database, String user, String password, String table, OracleCharset charset, int batchSize)
     {
         this.database = database;
         this.user = user;
@@ -142,10 +141,10 @@ public class DirectBatchInsert implements BatchInsert
             rowSize += column.columnSize;
         }
 
-        TableDefinition tableDefinition = new TableDefinition(table, columns);
+        TableDefinition tableDefinition = new TableDefinition(table, charset.charstId, columns);
         ociManager.open(ociKey, database, user, password, tableDefinition);
 
-        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset);
+        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset.javaCharset);
     }
 
     @Override
