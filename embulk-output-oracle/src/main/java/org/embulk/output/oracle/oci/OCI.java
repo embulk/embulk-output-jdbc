@@ -5,9 +5,16 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.embulk.spi.Exec;
+import org.slf4j.Logger;
+
 
 public class OCI
 {
+    private static final Logger logger = Exec.getLogger(OCI.class);
+
+    private static final String PLUGIN_NAME = "embulk-output-oracle";
+
     static {
         try {
             loadLibrary();
@@ -41,29 +48,25 @@ public class OCI
         File folder = new File(url.toURI()).getParentFile();
         for (;; folder = folder.getParentFile()) {
             if (folder == null) {
-                throw new RuntimeException("embulk-oracle library not found.");
+                throw new RuntimeException(String.format("%s library not found.", PLUGIN_NAME));
             }
 
-            if (folder.getName().startsWith("embulk-output-oracle")) {
+            if (folder.getName().startsWith(PLUGIN_NAME)) {
                 break;
             }
         }
 
-
-
-
-        System.out.println(folder);
-
         if (!loadLibrary(folder)) {
-            throw new RuntimeException("embulk-oracle library not found.");
+            throw new RuntimeException(String.format("%s library not found.", PLUGIN_NAME));
         }
     }
 
     private static boolean loadLibrary(File folder) {
-        String libraryName = System.mapLibraryName("embulk-oracle");
+        String libraryName = System.mapLibraryName(PLUGIN_NAME);
         for (File child : folder.listFiles()) {
             if (child.isFile()) {
                 if (child.getName().equals(libraryName)) {
+                    logger.info(String.format("OCI : load \"%s\".", child.getAbsolutePath()));
                     System.load(child.getAbsolutePath());
                     return true;
                 }
