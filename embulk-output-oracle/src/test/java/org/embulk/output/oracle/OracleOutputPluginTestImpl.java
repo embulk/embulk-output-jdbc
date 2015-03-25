@@ -50,13 +50,19 @@ public class OracleOutputPluginTestImpl
 
             try (Connection connection = connect()) {
                 // NOP
-            } catch (SQLException e) {
-                // NOP
             }
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             //throw new RuntimeException("You should put Oracle JDBC driver on 'driver' directory.");
             test = false;
             System.err.println("Warning: put Oracle JDBC driver on 'driver' directory in order to test embulk-output-oracle plugin.");
+
+        } catch (SQLException e) {
+            //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
+            test = false;
+            System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
+            // for example
+            //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
+            //   GRANT DBA TO EMBULK_USER;
         }
     }
 
@@ -389,17 +395,9 @@ public class OracleOutputPluginTestImpl
         }
     }
 
-    private static Connection connect()
+    private static Connection connect() throws SQLException
     {
-        try {
-            return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
-
-        } catch (SQLException e) {
-            throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
-            // for example
-            //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
-            //   GRANT DBA TO EMBULK_USER;
-        }
+        return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
     }
 
     private void run(String ymlName) throws Exception
