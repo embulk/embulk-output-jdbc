@@ -98,6 +98,8 @@ public class OracleOutputPlugin
                     oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get());
         }
 
+      ClassLoader   cl = getClass().getClassLoader();
+
         Properties props = new Properties();
         props.setProperty("user", oracleTask.getUser());
         props.setProperty("password", oracleTask.getPassword());

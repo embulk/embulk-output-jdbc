@@ -1,415 +1,109 @@
 package org.embulk.output.oracle;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.math.BigDecimal;
-import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
-import org.embulk.output.OracleOutputPlugin;
-import org.embulk.spi.InputPlugin;
-import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 
 public class OracleOutputPluginTest
 {
-    private static boolean test;
-    private EmbulkPluginTester tester = new EmbulkPluginTester(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
-
-    private String dropTable = "DROP TABLE TEST1";
-    private String createTable = "CREATE TABLE TEST1 ("
-            + "ID              CHAR(4),"
-            + "VARCHAR2_ITEM   VARCHAR2(40),"
-            + "INTEGER_ITEM     NUMBER(4,0),"
-            + "NUMBER_ITEM     NUMBER(10,2),"
-            + "DATE_ITEM       DATE,"
-            + "TIMESTAMP_ITEM  TIMESTAMP,"
-            + "PRIMARY KEY (ID))";
+    private static Object impl;
 
     @BeforeClass
-    public static void beforeClass()
+    public static void beforeClass() throws Exception
     {
         if (System.getProperty("path.separator").equals(";")) {
             // forw Windows
             System.setProperty("file.encoding", "MS932");
         }
 
-        try {
-            Class.forName("oracle.jdbc.OracleDriver");
-            test = true;
+        String[] classPaths = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
+        List<URL> urls = new ArrayList<URL>();
+        for (String classPath : classPaths) {
+            urls.add(new File(classPath).toURI().toURL());
+        }
+        // load Oracle JDBC driver dynamically, in order to enable to build without the driver.
+        URL url = OracleOutputPluginTest.class.getResource("/driver/ojdbc6.jar");
+        if (url == null) {
+            System.out.println("Warning: you should put ojdbc6.jar on 'test/resources/driver' directory.");
+            return;
+        }
 
-            try (Connection connection = connect()) {
-                // NOP
-            } catch (SQLException e) {
-                // NOP
-            }
-        } catch (ClassNotFoundException e) {
-            //throw new RuntimeException("You should put Oracle JDBC driver on 'driver' directory.");
-            test = false;
-            System.err.println("Warning: put Oracle JDBC driver on 'driver' directory in order to test embulk-output-oracle plugin.");
+        urls.add(url);
+        ClassLoader classLoader = new ChildFirstClassLoader(urls, OracleOutputPluginTest.class.getClassLoader());
+        Thread.currentThread().setContextClassLoader(classLoader);
+
+        Class<?> implClass = classLoader.loadClass(OracleOutputPluginTest.class.getName() + "Impl");
+        impl = implClass.newInstance();
+        invoke("beforeClass");
+    }
+
+    private static void invoke(String methodName) throws Exception
+    {
+        if (impl != null) {
+            Method method = impl.getClass().getMethod(methodName);
+            method.invoke(impl);
         }
     }
 
 
     @Test
-    public void testInsert() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-        executeSQL(createTable);
-
-        run("/yml/test-insert.yml");
-
-        assertTable("TEST1");
+    public void testInsert() throws Exception
+    {
+        invoke("testInsert");
     }
 
     @Test
-    public void testInsertCreate() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-
-        run("/yml/test-insert.yml");
-
-        assertGeneratedTable("TEST1");
+    public void testInsertCreate() throws Exception
+    {
+        invoke("testInsertCreate");
     }
 
     @Test
-    public void testInsertDirect() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-        executeSQL(createTable);
-
-        run("/yml/test-insert-direct.yml");
-
-        assertTable("TEST1");
+    public void testInsertDirect() throws Exception
+    {
+        invoke("testInsertDirect");
     }
 
     @Test
-    public void testInsertOCI() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-        executeSQL(createTable);
-
-        run("/yml/test-insert-oci.yml");
-
-        assertTable("TEST1");
+    public void testInsertOCI() throws Exception
+    {
+        invoke("testInsertOCI");
     }
 
     @Test
-    public void testInsertOCISplit() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
-
-        executeSQL(dropTable, true);
-        executeSQL(createTable);
-
-        run("/yml/test-insert-oci-split.yml");
-
-        assertTable("TEST1");
+    public void testInsertOCISplit() throws Exception
+    {
+        invoke("testInsertOCISplit");
     }
 
     @Test
-    public void testUrl() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-        executeSQL(createTable);
-
-        run("/yml/test-url.yml");
-
-        assertTable("TEST1");
+    public void testUrl() throws Exception
+    {
+        invoke("testUrl");
     }
 
     @Test
-    public void testReplace() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-        executeSQL(createTable);
-
-        run("/yml/test-replace.yml");
-
-        assertGeneratedTable("TEST1");
+    public void testReplace() throws Exception
+    {
+        invoke("testReplace");
     }
 
     @Test
-    public void testReplaceCreate() throws Exception {
-        if (!test) {
-            return;
-        }
-
-        executeSQL(dropTable, true);
-
-        run("/yml/test-replace.yml");
-
-        assertGeneratedTable("TEST1");
+    public void testReplaceLongName() throws Exception
+    {
+        invoke("testReplaceLongName");
     }
 
-
-    private void assertTable(String table) throws Exception
+    @Test
+    public void testReplaceCreate() throws Exception
     {
-        List<List<Object>> rows = select(table);
-
-        /*
-        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
-        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
-        A003,,,,,
-        */
-
-        assertEquals(3, rows.size());
-        Iterator<List<Object>> i1 = rows.iterator();
-        {
-            Iterator<Object> i2 = i1.next().iterator();
-            assertEquals("A001", i2.next());
-            assertEquals("ABCDE", i2.next());
-            assertEquals(new BigDecimal("0"), i2.next());
-            assertEquals(new BigDecimal("123.45"), i2.next());
-            assertEquals(toTimestamp("2015/03/05 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/05 12:34:56"), i2.next());
-        }
-        {
-            Iterator<Object> i2 = i1.next().iterator();
-            assertEquals("A002", i2.next());
-            assertEquals("あいうえお", i2.next());
-            assertEquals(new BigDecimal("-9999"), i2.next());
-            assertEquals(new BigDecimal("-99999999.99"), i2.next());
-            assertEquals(toTimestamp("2015/03/06 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/06 23:59:59"), i2.next());
-        }
-        {
-            Iterator<Object> i2 = i1.next().iterator();
-            assertEquals("A003", i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-        }
-    }
-
-    private void assertGeneratedTable(String table) throws Exception
-    {
-        List<List<Object>> rows = select(table);
-
-        /*
-        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
-        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
-        A003,,,,,
-        */
-
-        assertEquals(3, rows.size());
-        Iterator<List<Object>> i1 = rows.iterator();
-        {
-            Iterator<Object> i2 = i1.next().iterator();
-            assertEquals("A001", i2.next());
-            assertEquals("ABCDE", i2.next());
-            assertEquals(new BigDecimal("0"), i2.next());
-            assertEquals("123.45", i2.next());
-            assertEquals(toOracleTimestamp("2015/03/05 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/05 12:34:56"), i2.next());
-        }
-        {
-            Iterator<Object> i2 = i1.next().iterator();
-            assertEquals("A002", i2.next());
-            assertEquals("あいうえお", i2.next());
-            assertEquals(new BigDecimal("-9999"), i2.next());
-            assertEquals("-99999999.99", i2.next());
-            assertEquals(toOracleTimestamp("2015/03/06 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/06 23:59:59"), i2.next());
-        }
-        {
-            Iterator<Object> i2 = i1.next().iterator();
-            assertEquals("A003", i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-            assertEquals(null, i2.next());
-        }
-    }
-
-
-    private Timestamp toTimestamp(String s)
-    {
-        for (String formatString : new String[]{"yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd"}) {
-            DateFormat dateFormat = new SimpleDateFormat(formatString);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-            try {
-                Date date = dateFormat.parse(s);
-                return new Timestamp(date.getTime());
-            } catch (ParseException e) {
-                // NOP
-            }
-        }
-        throw new IllegalArgumentException(s);
-    }
-
-    private Object toOracleTimestamp(String s) throws Exception
-    {
-        Class<?> timestampClass = Class.forName("oracle.sql.TIMESTAMP");
-        Constructor<?> constructor = timestampClass.getConstructor(Timestamp.class);
-        return constructor.newInstance(toTimestamp(s));
-    }
-
-
-    private List<List<Object>> select(String table) throws SQLException
-    {
-        try (Connection connection = connect()) {
-            try (Statement statement = connection.createStatement()) {
-                List<List<Object>> rows = new ArrayList<List<Object>>();
-                String sql = "SELECT * FROM " + table;
-                System.out.println(sql);
-                try (ResultSet resultSet = statement.executeQuery(sql)) {
-                    while (resultSet.next()) {
-                        List<Object> row = new ArrayList<Object>();
-                        for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-                            Object value = resultSet.getObject(i);
-                            if (value != null && value.getClass().getName().equals("oracle.sql.CLOB")) {
-                                value = resultSet.getString(i);
-                            }
-                            row.add(value);
-                        }
-                        rows.add(row);
-                    }
-                }
-                // cannot sort by CLOB, so sort by Java
-                Collections.sort(rows, new Comparator<List<Object>>() {
-                    @Override
-                    public int compare(List<Object> o1, List<Object> o2) {
-                        return o1.toString().compareTo(o2.toString());
-                    }
-                });
-                return rows;
-            }
-        }
-
-    }
-
-
-    private void executeSQL(String sql) throws SQLException
-    {
-        executeSQL(sql, false);
-    }
-
-    private void executeSQL(String sql, boolean ignoreError) throws SQLException
-    {
-        try (Connection connection = connect()) {
-            try {
-                connection.setAutoCommit(true);
-
-                try (Statement statement = connection.createStatement()) {
-                    System.out.println(String.format("Execute SQL : \"%s\".", sql));
-                    statement.execute(sql);
-                }
-
-            } catch (SQLException e) {
-                if (!ignoreError) {
-                    throw e;
-                }
-            }
-        }
-    }
-
-    private static Connection connect()
-    {
-        try {
-            return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
-
-        } catch (SQLException e) {
-            throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
-            // for example
-            //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
-            //   GRANT DBA TO EMBULK_USER;
-        }
-    }
-
-    private void run(String ymlName) throws Exception
-    {
-        tester.run(convertYml(ymlName));
-    }
-
-    private String convertYml(String ymlName)
-    {
-        try {
-            File ymlPath = convertPath(ymlName);
-            File tempYmlPath = new File(ymlPath.getParentFile(), "temp-" + ymlPath.getName());
-            Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-            try (BufferedReader reader = new BufferedReader(new FileReader(ymlPath))) {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempYmlPath))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        Matcher matcher = pathPrefixPattern.matcher(line);
-                        if (matcher.matches()) {
-                            int group = 2;
-                            writer.write(line.substring(0, matcher.start(group)));
-                            writer.write(convertPath(matcher.group(group)).getAbsolutePath());
-                            writer.write(line.substring(matcher.end(group)));
-                        } else {
-                            writer.write(line);
-                        }
-                        writer.newLine();
-                    }
-                }
-            }
-            return tempYmlPath.getAbsolutePath();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private File convertPath(String name) throws URISyntaxException
-    {
-        if (getClass().getResource(name) == null)
-        return new File(name);
-        return new File(getClass().getResource(name).toURI());
+        invoke("testReplaceCreate");
     }
 
 }
