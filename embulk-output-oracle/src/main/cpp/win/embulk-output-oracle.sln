@@ -30,7 +30,8 @@ Global
 		{C14B433B-122A-4BDB-BF50-0673A57E5716}.Debug|x64.Build.0 = Debug|x64
 		{C14B433B-122A-4BDB-BF50-0673A57E5716}.Release|Win32.ActiveCfg = Release|Win32
 		{C14B433B-122A-4BDB-BF50-0673A57E5716}.Release|Win32.Build.0 = Release|Win32
-		{C14B433B-122A-4BDB-BF50-0673A57E5716}.Release|x64.ActiveCfg = Release|Win32
+		{C14B433B-122A-4BDB-BF50-0673A57E5716}.Release|x64.ActiveCfg = Release|x64
+		{C14B433B-122A-4BDB-BF50-0673A57E5716}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

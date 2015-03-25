@@ -22,5 +22,5 @@ out:
     password: test_pw
     table: TEST1
     mode: insert
-    insert-method: direct
+    insert_method: direct
     #driver_path: driver/ojdbc7.jar

@@ -59,7 +59,7 @@ public class OracleOutputPlugin
         @ConfigDefault("\"\"")
         public String getPassword();
 
-        @Config("insert-method")
+        @Config("insert_method")
         @ConfigDefault("\"normal\"")
         public InsertMethod getInsertMethod();
     }
@@ -97,8 +97,6 @@ public class OracleOutputPlugin
             url = String.format("jdbc:oracle:thin:@%s:%d:%s",
                     oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get());
         }
-
-      ClassLoader   cl = getClass().getClassLoader();
 
         Properties props = new Properties();
         props.setProperty("user", oracleTask.getUser());
@@ -180,25 +178,4 @@ public class OracleOutputPlugin
         return tableName + "_" + uniqueSuffix;
     }
 
-    /*
-    @Override
-    public JdbcSchema newJdbcSchemaFromExistentTable(JdbcOutputConnection connection, String tableName) throws SQLException {
-        JdbcSchema schema = super.newJdbcSchemaFromExistentTable(connection, tableName);
-        List<JdbcColumn> columns = new ArrayList<JdbcColumn>();
-        for (JdbcColumn column : schema.getColumns()) {
-            if (column.getTypeName().equals("DATE")) {
-                // Types.TIMESTAMP -> Types.DATE
-                columns.add(new JdbcColumn(column.getName(),
-                        column.getTypeName(),
-                        Types.DATE,
-                        column.getSizeTypeParameter(),
-                        column.getScaleTypeParameter()));
-            } else {
-                columns.add(column);
-            }
-        }
-
-        return new JdbcSchema(columns);
-    }
-    */
 }

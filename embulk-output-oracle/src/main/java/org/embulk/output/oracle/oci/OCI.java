@@ -48,15 +48,16 @@ public class OCI
         File folder = new File(url.toURI()).getParentFile();
         for (;; folder = folder.getParentFile()) {
             if (folder == null) {
-                throw new RuntimeException(String.format("%s library not found.", PLUGIN_NAME));
+                logger.error(String.format("OCI : %s folder not found.", PLUGIN_NAME));
+                throw new RuntimeException(String.format("%s folder not found.", PLUGIN_NAME));
             }
-
             if (folder.getName().startsWith(PLUGIN_NAME)) {
                 break;
             }
         }
 
         if (!loadLibrary(folder)) {
+            logger.error(String.format("OCI : %s library not found.", PLUGIN_NAME));
             throw new RuntimeException(String.format("%s library not found.", PLUGIN_NAME));
         }
     }
