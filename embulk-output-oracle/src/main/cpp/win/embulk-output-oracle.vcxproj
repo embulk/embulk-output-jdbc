@@ -149,11 +149,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dir-path-load.h" />
-    <ClInclude Include="org_embulk_output_oracle_oci_OCI.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="dir-path-load.cpp" />
+    <ClCompile Include="..\common\dir-path-load.cpp" />
+    <ClCompile Include="..\common\embulk-output-oracle.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -168,7 +165,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="embulk-output-oracle.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\dir-path-load.h" />
+    <ClInclude Include="..\common\org_embulk_output_oracle_oci_OCI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

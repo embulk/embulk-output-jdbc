@@ -25,12 +25,14 @@ Oracle output plugins for Embulk loads records to Oracle.
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **options**: extra connection properties (hash, default: {})
 
-'insert_method' supports three options.
+insert_method supports three options.
 
-'normal' means normal insert (default). It requires Oracle Thin JDBC driver.
-'direct' means direct path insert. It is faster than 'normal.
+"normal" means normal insert (default). It requires Oracle Thin JDBC driver.
+
+"direct" means direct path insert. It is faster than 'normal.
 It requires Oracle thin JDBC driver too, but ojdbc7.jar doesn't work.
-'oci' means direct path insert using OCI(Oracle Call Interface). It is fastest.
+
+"oci" means direct path insert using OCI(Oracle Call Interface). It is fastest.
 It requires both Oracle thin JDBC driver and Oracle Instant Client.
 
 

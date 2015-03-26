@@ -18,6 +18,13 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\main\cpp\common\dir-path-load.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\main\cpp\common\dir-path-load.cpp" />
+    <ClCompile Include="..\common\embulk-output-oracle-test.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C14B433B-122A-4BDB-BF50-0673A57E5716}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -80,7 +87,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\win</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -95,7 +102,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\win</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,7 +119,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\win</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,7 +138,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\win</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OCI_SDK_PATH)\include;..\..\..\main\cpp\common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,10 +149,6 @@
       <AdditionalDependencies>oci.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\main\cpp\win\dir-path-load.cpp" />
-    <ClCompile Include="embulk-output-oracle-test.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

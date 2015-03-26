@@ -1,7 +1,6 @@
 // embulk-oracle.cpp : DLL アプリケーション用にエクスポートされる関数を定義します。
 //
 
-//#include "stdafx.h"
 #include "org_embulk_output_oracle_oci_OCI.h"
 #include "dir-path-load.h"
 
