@@ -1,13 +1,6 @@
 [compileTestJava]*.options*.encoding = 'UTF-8'
 
-repositories {
-    flatDir {
-      dirs 'testlib'
-    }
-}
-
 dependencies {
     compile project(':embulk-output-jdbc')
     testCompile 'org.embulk:embulk-standards:0.4.10'
-    testCompile name:'embulk-input-filesplit-0.1.1'
 }
