@@ -117,8 +117,6 @@ public class OracleOutputConnection
             }
         }
 
-        //return Charset.forName("UTF-8");
-
         try (PreparedStatement statement = connection.prepareStatement("SELECT NLS_CHARSET_ID(?) FROM DUAL")) {
             statement.setString(1, charsetName);
             try (ResultSet resultSet = statement.executeQuery()) {

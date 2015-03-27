@@ -26,12 +26,9 @@ import org.slf4j.Logger;
 
 public class DirectBatchInsert implements BatchInsert
 {
+    private static OCIManager ociManager = new OCIManager();
 
     private final Logger logger = Exec.getLogger(DirectBatchInsert.class);
-
-    //private static OCIWrapper oci = new OCIWrapper();
-
-    private static OCIManager ociManager = new OCIManager();
 
     private final List<String> ociKey;
     private final String database;
@@ -197,11 +194,6 @@ public class DirectBatchInsert implements BatchInsert
     public void finish() throws IOException, SQLException
     {
         flush();
-        /*
-        synchronized (oci) {
-            oci.commit();
-        }
-        */
     }
 
     @Override

@@ -12,20 +12,20 @@ import org.embulk.spi.time.TimestampFormatter;
 
 public class OracleColumnSetterFactory extends ColumnSetterFactory
 {
-	public OracleColumnSetterFactory(BatchInsert batch, PageReader pageReader,
-			TimestampFormatter timestampFormatter)
-	{
-		super(batch, pageReader, timestampFormatter);
-	}
-	
-	@Override
-	public ColumnSetter newColumnSetter(JdbcColumn column)
+    public OracleColumnSetterFactory(BatchInsert batch, PageReader pageReader,
+            TimestampFormatter timestampFormatter)
     {
-		switch (column.getSqlType()) {
-			case Types.DECIMAL:
-	            return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
+        super(batch, pageReader, timestampFormatter);
+    }
+    
+    @Override
+    public ColumnSetter newColumnSetter(JdbcColumn column)
+    {
+        switch (column.getSqlType()) {
+            case Types.DECIMAL:
+                return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
             default:
-        		return super.newColumnSetter(column);
-		}
-	}
+                return super.newColumnSetter(column);
+        }
+    }
 }
