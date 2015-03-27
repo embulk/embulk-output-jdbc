@@ -3,36 +3,38 @@
 #include <malloc.h>
 #include "dir-path-load.h"
 
+#pragma warning (disable: 4996)
+
 
 static int check(OCI_CONTEXT *context, const char* message, sword result)
 {
-	strcpy_s(context->message, "");
+	strcpy(context->message, "");
 
 	if (result == OCI_ERROR) {
-		sprintf_s(context->message, "OCI : %s failed.", message);
+		sprintf(context->message, "OCI : %s failed.", message);
 		sb4 errCode;
 		OraText text[512];
 		if (OCIErrorGet(context->err, 1, NULL, &errCode, text, sizeof(text) / sizeof(OraText), OCI_HTYPE_ERROR) != OCI_SUCCESS) {
-			strcat_s(context->message, " OCIErrorGet failed.");
+			strcat(context->message, " OCIErrorGet failed.");
 		} else {
-			strcat_s(context->message, " ");
-			strncat_s(context->message, (const char*)text, sizeof(context->message) - strlen(context->message) - 1);
+			strcat(context->message, " ");
+			strncat(context->message, (const char*)text, sizeof(context->message) - strlen(context->message) - 1);
 		}
 		return OCI_ERROR;
 	}
 
 	if (result == OCI_INVALID_HANDLE) {
-		sprintf_s(context->message, "OCI : %s failed : invalid handle.", message);
+		sprintf(context->message, "OCI : %s failed : invalid handle.", message);
 		return OCI_ERROR;
 	}
 
 	if (result == OCI_NO_DATA) {
-		sprintf_s(context->message, "OCI : %s failed : no data.", message);
+		sprintf(context->message, "OCI : %s failed : no data.", message);
 		return OCI_ERROR;
 	}
 
 	if (result != OCI_SUCCESS) {
-		sprintf_s(context->message, "OCI : %s failed : %d.", message, result);
+		sprintf(context->message, "OCI : %s failed : %d.", message, result);
 		return OCI_ERROR;
 	}
 
@@ -303,7 +305,8 @@ int loadBuffer(OCI_CONTEXT *context, COL_DEF *colDefs, const char *buffer, int r
 int loadCSV(OCI_CONTEXT *context, COL_DEF *colDefs, const char *csvFileName)
 {
 	printf("load csv file \"%s\".\r\n", csvFileName);
-	if (fopen_s(&context->csv, csvFileName, "r")) {
+	if ((context->csv = fopen(csvFileName, "r")) == NULL) {
+		printf("Cannot open file.");
 		return OCI_ERROR;
 	}
 
@@ -319,6 +322,7 @@ int loadCSV(OCI_CONTEXT *context, COL_DEF *colDefs, const char *csvFileName)
 
 	// + 1 for '\0'
 	if ((context->buffer = (char*)malloc(rowSize * maxRowCount + 1)) == NULL) {
+		printf("Cannot alloc memory.");
 		return OCI_ERROR;
 	}
 	char *current = context->buffer;
@@ -350,8 +354,7 @@ int loadCSV(OCI_CONTEXT *context, COL_DEF *colDefs, const char *csvFileName)
 				}
 				size = colDefs[col].size;
 			} else if (colDefs[col].type == SQLT_CHR) {
-				// + 1 for '\0'
-				strncpy_s(current, size + 1, p, size);
+				strncpy(current, p, size);
 			} else {
 				printf("Unsupported type : %d\r\n", colDefs[col].type);
 				return OCI_ERROR;
