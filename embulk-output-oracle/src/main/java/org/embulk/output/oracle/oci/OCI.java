@@ -39,7 +39,13 @@ public class OCI
 
     public native void close(byte[] context);
 
-    private static void loadLibrary() throws MalformedURLException, URISyntaxException {
+    private static void loadLibrary() throws MalformedURLException, URISyntaxException
+    {
+        loadLibrary(getPluginRoot());
+    }
+
+    private static File getPluginRoot() throws MalformedURLException, URISyntaxException
+    {
         URL url = OCI.class.getResource("/" + OCI.class.getName().replace('.', '/') + ".class");
         if (url.toString().startsWith("jar:")) {
             url = new URL(url.toString().replaceAll("^jar:", "").replaceAll("![^!]*$", ""));
@@ -48,36 +54,50 @@ public class OCI
         File folder = new File(url.toURI()).getParentFile();
         for (;; folder = folder.getParentFile()) {
             if (folder == null) {
-                logger.error(String.format("OCI : %s folder not found.", PLUGIN_NAME));
-                throw new RuntimeException(String.format("%s folder not found.", PLUGIN_NAME));
+                String message = String.format("OCI : %s folder not found.", PLUGIN_NAME);
+                throw new RuntimeException(message);
             }
-            if (folder.getName().startsWith(PLUGIN_NAME)) {
-                break;
-            }
-        }
 
-        if (!loadLibrary(folder)) {
-            logger.error(String.format("OCI : %s library not found.", PLUGIN_NAME));
-            throw new RuntimeException(String.format("%s library not found.", PLUGIN_NAME));
+            if (folder.getName().startsWith(PLUGIN_NAME)) {
+                return folder;
+            }
         }
     }
 
-    private static boolean loadLibrary(File folder) {
+    private static void loadLibrary(File folder)
+    {
+        File lib = new File(folder, "lib");
+
+        String osName = System.getProperty("os.name");
+        String osArch = System.getProperty("os.arch");
+
         String libraryName = System.mapLibraryName(PLUGIN_NAME);
-        for (File child : folder.listFiles()) {
-            if (child.isFile()) {
-                if (child.getName().equals(libraryName)) {
-                    logger.info(String.format("OCI : load \"%s\".", child.getAbsolutePath()));
-                    System.load(child.getAbsolutePath());
-                    return true;
-                }
+        File libFolder = null;
+
+        if (osName.startsWith("Windows")) {
+            if (osArch.endsWith("64")) {
+                libFolder = new File(lib, "win_x64");
+            } else if (osArch.equals("x86")) {
+                libFolder = new File(lib, "win_x86");
             }
-            if (child.isDirectory()) {
-                if (loadLibrary(child)) {
-                    return true;
-                }
+        } else if (osName.equals("Linux")) {
+            if (osArch.endsWith("64")) {
+                libFolder = new File(lib, "linux_x64");
+            } else if (osArch.equals("x86")) {
+                libFolder = new File(lib, "linux_x86");
             }
         }
-        return false;
+
+        if (libFolder != null) {
+            File libFile = new File(libFolder, libraryName);
+            if (libFile.exists()) {
+                logger.info(String.format("OCI : load library \"%s\".", libFile.getAbsolutePath()));
+                System.load(libFile.getAbsolutePath());
+                return;
+            }
+        }
+
+        logger.info(String.format("OCI : library \"%s\" for %s %s doesn't exist in lib folder.", libraryName, osName, osArch));
+        System.loadLibrary(PLUGIN_NAME);
     }
 }

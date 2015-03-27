@@ -107,7 +107,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OCI_SDK_PATH)\lib\msvc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>oci.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\..\..\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>..\..\..\..\lib\win_x64\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -145,7 +145,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(OCI_SDK_PATH)\lib\msvc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>oci.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\..\..\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>..\..\..\..\lib\win_x64\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
