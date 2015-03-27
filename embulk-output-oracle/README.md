@@ -17,7 +17,7 @@ Oracle output plugins for Embulk loads records to Oracle.
 - **port**: database port number (integer, default: 1521)
 - **user**: database login user name (string, required)
 - **password**: database login password (string, default: "")
-- **database**: destination database name (string, required if url is not set or insert_method is 'oci')
+- **database**: destination database name (string, required if url is not set or insert_method is "oci")
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
 - **mode**: "replace" or "insert" (string, required)
@@ -36,7 +36,7 @@ It requires Oracle JDBC driver too, but ojdbc7.jar doesn't work.
 It requires both Oracle JDBC driver and Oracle Instant Client.
 You must set the library loading path to the OCI library.
 
-If you use "oci" insert method, platform dependent library written in cpp is required.
+If you use "oci", platform dependent library written in cpp is required.
 Windows(x64) library and Linux(x64) are bundled, but others are not bundled.
 You should build by yourself and set the library loading path to it.
 
@@ -62,6 +62,6 @@ out:
 $ ./gradlew gem
 ```
 
-For Windows, you can build cpp library by "src/main/cpp/win/build.bat".
+For Windows(x64), you can build cpp library by "src/main/cpp/win/build.bat".
 
 For Linux, you can build cpp library by "src/main/cpp/linux/build.sh".
