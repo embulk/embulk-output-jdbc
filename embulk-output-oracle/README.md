@@ -33,7 +33,7 @@ insert_method supports three options.
 It requires Oracle JDBC driver too, but ojdbc7.jar doesn't work.
 
 "oci" means direct path insert using OCI(Oracle Call Interface). It is fastest.
-It requires both Oracle JDBC driver and Oracle Instant Client.
+It requires both Oracle JDBC driver and Oracle Instant Client (version 12.1.0.2.0).
 You must set the library loading path to the OCI library.
 
 If you use "oci", platform dependent library written in cpp is required.
