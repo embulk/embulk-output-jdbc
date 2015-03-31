@@ -1,6 +1,3 @@
-// embulk-output-oracle-test.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
-//
-
 #include <stdio.h>
 #include <string.h>
 #include <dir-path-load.h>
