@@ -9,7 +9,7 @@ static int test(OCI_CONTEXT *context, const char *db, const char *user, const ch
 		return OCI_ERROR;
 	}
 
-	COL_DEF colDefs[] = {
+	OCI_COL_DEF colDefs[] = {
 		{"ID", SQLT_INT, 4},
 		//{"ID", SQLT_CHR, 8},
 		{"NUM", SQLT_INT, 4},
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	if (result == OCI_ERROR) {
 		printf("%s\r\n", context.message);
 	}
-	freeHandles(&context);
+	freeDirPathHandles(&context);
 	return result;
 }
 

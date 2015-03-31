@@ -41,7 +41,7 @@ static int check(OCI_CONTEXT *context, const char* message, sword result)
 	return OCI_SUCCESS;
 }
 
-void freeHandles(OCI_CONTEXT *context)
+void freeDirPathHandles(OCI_CONTEXT *context)
 {
 	if (context->csv != NULL) fclose(context->csv);
 	if (context->buffer != NULL) free(context->buffer);
@@ -112,11 +112,11 @@ int prepareDirPathCtx(OCI_CONTEXT *context, const char *dbName, const char *user
 	return OCI_SUCCESS;
 }
 
-static int isValid(COL_DEF &colDef) {
+static int isValid(OCI_COL_DEF &colDef) {
 	return colDef.type != 0;
 }
 
-int prepareDirPathStream(OCI_CONTEXT *context, const char *tableName, short charsetId, COL_DEF *colDefs) {
+int prepareDirPathStream(OCI_CONTEXT *context, const char *tableName, short charsetId, OCI_COL_DEF *colDefs) {
 	// load table name
 	if (check(context, "OCIAttrSet(OCI_ATTR_NAME)", OCIAttrSet(context->dp, OCI_HTYPE_DIRPATH_CTX, (void*)tableName, (ub4)strlen(tableName), OCI_ATTR_NAME, context->err))) {
 		return OCI_ERROR;
@@ -140,7 +140,7 @@ int prepareDirPathStream(OCI_CONTEXT *context, const char *tableName, short char
 	}
 
 	for (int i = 0; i < cols; i++) {
-		COL_DEF &colDef = colDefs[i];
+		OCI_COL_DEF &colDef = colDefs[i];
 		OCIParam *column;
 		if (check(context, "OCIParamGet(OCI_DTYPE_PARAM)", OCIParamGet(columns, OCI_DTYPE_PARAM, context->err, (void**)&column, i + 1))) {
 			return OCI_ERROR;
@@ -255,7 +255,7 @@ static int loadRows(OCI_CONTEXT *context, ub4 rowCount)
 }
 
 
-int loadBuffer(OCI_CONTEXT *context, COL_DEF *colDefs, const char *buffer, int rowCount)
+int loadBuffer(OCI_CONTEXT *context, OCI_COL_DEF *colDefs, const char *buffer, int rowCount)
 {
 	ub4 maxRowCount = 0;
 	if (check(context, "OCIAttrGet(OCI_ATTR_NUM_ROWS)", OCIAttrGet(context->dpca, OCI_HTYPE_DIRPATH_COLUMN_ARRAY, &maxRowCount, 0, OCI_ATTR_NUM_ROWS, context->err))) {
@@ -302,7 +302,7 @@ int loadBuffer(OCI_CONTEXT *context, COL_DEF *colDefs, const char *buffer, int r
 }
 
 
-int loadCSV(OCI_CONTEXT *context, COL_DEF *colDefs, const char *csvFileName)
+int loadCSV(OCI_CONTEXT *context, OCI_COL_DEF *colDefs, const char *csvFileName)
 {
 	printf("load csv file \"%s\".\r\n", csvFileName);
 	if ((context->csv = fopen(csvFileName, "r")) == NULL) {
@@ -397,7 +397,7 @@ int loadCSV(OCI_CONTEXT *context, COL_DEF *colDefs, const char *csvFileName)
 	return OCI_SUCCESS;
 }
 
-int commit(OCI_CONTEXT *context) 
+int commitDirPath(OCI_CONTEXT *context) 
 {
 	if (check(context, "OCIDirPathFinish", OCIDirPathFinish(context->dp, context->err))) {
 		return OCI_ERROR;
@@ -410,9 +410,9 @@ int commit(OCI_CONTEXT *context)
 	return OCI_SUCCESS;
 }
 
-int rollback(OCI_CONTEXT *context) 
+int rollbackDirPath(OCI_CONTEXT *context) 
 {
-	if (check(context, "OCIDirPathFinish", OCIDirPathAbort(context->dp, context->err))) {
+	if (check(context, "OCIDirPathAbort", OCIDirPathAbort(context->dp, context->err))) {
 		return OCI_ERROR;
 	}
 

@@ -9,9 +9,9 @@ static OCI_CONTEXT *toContext(JNIEnv *env, jbyteArray addrs)
 	return context;
 }
 
-static COL_DEF *toColDefs(JNIEnv *env, jbyteArray addrs)
+static OCI_COL_DEF *toColDefs(JNIEnv *env, jbyteArray addrs)
 {
-	COL_DEF *colDefs;
+	OCI_COL_DEF *colDefs;
 	env->GetByteArrayRegion(addrs, sizeof(OCI_CONTEXT*), sizeof(colDefs), (jbyte*)&colDefs);
 	return colDefs;
 }
@@ -20,7 +20,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_embulk_output_oracle_oci_OCI_createContext
   (JNIEnv *env, jobject)
 {
 	OCI_CONTEXT *context = new OCI_CONTEXT();
-	jbyteArray addrs = env->NewByteArray(sizeof(OCI_CONTEXT*) + sizeof(COL_DEF*));
+	jbyteArray addrs = env->NewByteArray(sizeof(OCI_CONTEXT*) + sizeof(OCI_COL_DEF*));
 	env->SetByteArrayRegion(addrs, 0, sizeof(OCI_CONTEXT*), (jbyte*)&context);
 	return addrs;
 }
@@ -82,9 +82,9 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 	jfieldID columnSizeFieldID = env->GetFieldID(columnClass, "columnSize", "I");
 	jfieldID columnDateFormatID = env->GetFieldID(columnClass, "columnDateFormat", "Ljava/lang/String;");
 
-	COL_DEF *colDefs = new COL_DEF[columnCount + 1];
+	OCI_COL_DEF *colDefs = new OCI_COL_DEF[columnCount + 1];
 	for (int i = 0; i < columnCount; i++) {
-		COL_DEF &colDef = colDefs[i];
+		OCI_COL_DEF &colDef = colDefs[i];
 
 		jobject column = env->GetObjectArrayElement(columnArray, i);
 		jstring columnName = (jstring)env->GetObjectField(column, columnNameFieldID);
@@ -109,7 +109,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 	int result = prepareDirPathStream(context, tableName, charsetId, colDefs);
 
 	for (int i = 0; i < columnCount; i++) {
-		COL_DEF &colDef = colDefs[i];
+		OCI_COL_DEF &colDef = colDefs[i];
 		jobject column = env->GetObjectArrayElement(columnArray, i);
 
 		jstring columnName = (jstring)env->GetObjectField(column, columnNameFieldID);
@@ -139,7 +139,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_loadBuffer
   (JNIEnv *env, jobject, jbyteArray addrs, jbyteArray buffer, jint rowCount)
 {
 	OCI_CONTEXT *context = toContext(env, addrs);
-	COL_DEF *colDefs = toColDefs(env, addrs);
+	OCI_COL_DEF *colDefs = toColDefs(env, addrs);
 
 	jbyte *bytes = env->GetByteArrayElements(buffer, NULL);
 
@@ -159,7 +159,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_commit
   (JNIEnv *env, jobject, jbyteArray addrs)
 {
 	OCI_CONTEXT *context = toContext(env, addrs);
-	if (commit(context) !=OCI_SUCCESS) {
+	if (commitDirPath(context) !=OCI_SUCCESS) {
 		return JNI_FALSE;
 	}
 
@@ -171,7 +171,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_rollback
   (JNIEnv *env, jobject, jbyteArray addrs)
 {
 	OCI_CONTEXT *context = toContext(env, addrs);
-	if (rollback(context) !=OCI_SUCCESS) {
+	if (rollbackDirPath(context) !=OCI_SUCCESS) {
 		return JNI_FALSE;
 	}
 
@@ -184,11 +184,11 @@ JNIEXPORT void JNICALL Java_org_embulk_output_oracle_oci_OCI_close
 {
 	OCI_CONTEXT *context = toContext(env, addrs);
 	if (context != NULL) {
-		freeHandles(context);
+		freeDirPathHandles(context);
 		delete context;
 	}
 
-	COL_DEF *colDefs = toColDefs(env, addrs);
+	OCI_COL_DEF *colDefs = toColDefs(env, addrs);
 	if (colDefs != NULL) {
 		delete[] colDefs;
 	}
