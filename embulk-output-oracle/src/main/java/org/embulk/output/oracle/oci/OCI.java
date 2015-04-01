@@ -66,7 +66,7 @@ public class OCI
 
     private static void loadLibrary(File folder)
     {
-        File lib = new File(folder, "lib");
+        File lib = new File(new File(folder, "lib"), "embulk");
 
         String osName = System.getProperty("os.name");
         String osArch = System.getProperty("os.arch");
