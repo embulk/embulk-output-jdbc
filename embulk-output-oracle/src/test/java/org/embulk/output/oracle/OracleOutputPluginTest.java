@@ -12,7 +12,8 @@ import org.junit.Test;
 
 public class OracleOutputPluginTest
 {
-    private static Object impl;
+    private static Object test12c;
+    private static Object test11g;
 
     @BeforeClass
     public static void beforeClass() throws Exception
@@ -22,35 +23,55 @@ public class OracleOutputPluginTest
             System.setProperty("file.encoding", "MS932");
         }
 
+        test12c = createTest("/driver/12c/ojdbc7.jar");
+        if (test12c == null) {
+            System.out.println("Warning: you should put ojdbc7.jar (version 12c) on 'test/resources/driver/12c' directory.");
+            return;
+        }
+
+        test11g = createTest("/driver/11g/ojdbc6.jar");
+        if (test11g == null) {
+            System.out.println("Warning: you should put ojdbc6.jar (version 11g) on 'test/resources/driver/11g' directory.");
+            return;
+        }
+    }
+
+    private static Object createTest(String jdbcDriverPath) throws Exception
+    {
         String[] classPaths = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
         List<URL> urls = new ArrayList<URL>();
         for (String classPath : classPaths) {
             urls.add(new File(classPath).toURI().toURL());
         }
         // load Oracle JDBC driver dynamically, in order to enable to build without the driver.
-        URL url = OracleOutputPluginTest.class.getResource("/driver/ojdbc6.jar");
+        URL url = OracleOutputPluginTest.class.getResource(jdbcDriverPath);
         if (url == null) {
-            System.out.println("Warning: you should put ojdbc6.jar on 'test/resources/driver' directory.");
-            return;
+            return null;
         }
 
         urls.add(url);
         ClassLoader classLoader = new ChildFirstClassLoader(urls, OracleOutputPluginTest.class.getClassLoader());
         Thread.currentThread().setContextClassLoader(classLoader);
 
-        Class<?> implClass = classLoader.loadClass(OracleOutputPluginTest.class.getName() + "Impl");
-        impl = implClass.newInstance();
-        invoke("beforeClass");
+        Class<?> testClass = classLoader.loadClass(OracleOutputPluginTest.class.getName() + "Impl");
+        Object test = testClass.newInstance();
+        invoke(test, "beforeClass");
+        return test;
     }
 
     private static void invoke(String methodName) throws Exception
     {
-        if (impl != null) {
-            Method method = impl.getClass().getMethod(methodName);
-            method.invoke(impl);
-        }
+        invoke(test12c, methodName);
     }
 
+    private static void invoke(Object test, String methodName) throws Exception
+    {
+        if (test != null) {
+            Thread.currentThread().setContextClassLoader(test.getClass().getClassLoader());
+            Method method = test.getClass().getMethod(methodName);
+            method.invoke(test);
+        }
+    }
 
     @Test
     public void testInsert() throws Exception
@@ -67,7 +88,8 @@ public class OracleOutputPluginTest
     @Test
     public void testInsertDirect() throws Exception
     {
-        invoke("testInsertDirect");
+        // ArrayIndexOutOfBoundsException thrown if using 12c driver.
+        invoke(test11g, "testInsertDirect");
     }
 
     @Test
