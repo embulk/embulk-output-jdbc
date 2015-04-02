@@ -38,41 +38,39 @@ import org.embulk.spi.OutputPlugin;
 
 public class OracleOutputPluginTestImpl
 {
-    private static boolean test;
     private EmbulkPluginTester tester = new EmbulkPluginTester(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
 
 
-    public void beforeClass()
+    public String beforeClass()
     {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
-            test = true;
 
             try (Connection connection = connect()) {
-                // NOP
+                String version = connection.getMetaData().getDriverVersion();
+                System.out.println("Driver version = " + version);
+                return version;
             }
+
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             //throw new RuntimeException("You should put Oracle JDBC driver on 'driver' directory.");
-            test = false;
             System.err.println("Warning: put Oracle JDBC driver on 'driver' directory in order to test embulk-output-oracle plugin.");
 
         } catch (SQLException e) {
+            System.err.println(e);
             //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
-            test = false;
             System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;
         }
+
+        return null;
     }
 
 
     public void testInsert() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -85,10 +83,6 @@ public class OracleOutputPluginTestImpl
 
     public void testInsertCreate() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -100,10 +94,6 @@ public class OracleOutputPluginTestImpl
 
     public void testInsertDirect() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -116,10 +106,6 @@ public class OracleOutputPluginTestImpl
 
     public void testInsertOCI() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -132,10 +118,6 @@ public class OracleOutputPluginTestImpl
 
     public void testInsertOCISplit() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
 
         String table = "TEST1";
@@ -150,10 +132,6 @@ public class OracleOutputPluginTestImpl
 
     public void testUrl() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -166,10 +144,6 @@ public class OracleOutputPluginTestImpl
 
     public void testReplace() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -182,10 +156,6 @@ public class OracleOutputPluginTestImpl
 
     public void testReplaceCreate() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
@@ -198,10 +168,6 @@ public class OracleOutputPluginTestImpl
 
     public void testReplaceLongName() throws Exception
     {
-        if (!test) {
-            return;
-        }
-
         String table = "TEST12345678901234567890123456";
 
         dropTable(table);

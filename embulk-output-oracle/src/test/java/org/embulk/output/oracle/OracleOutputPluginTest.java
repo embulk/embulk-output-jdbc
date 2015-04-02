@@ -12,8 +12,20 @@ import org.junit.Test;
 
 public class OracleOutputPluginTest
 {
-    private static Object test12c;
-    private static Object test11g;
+    private static class NamedObject
+    {
+        public final String name;
+        public final Object value;
+        public NamedObject(String name, Object value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    private static List<NamedObject> testObjects = new ArrayList<NamedObject>();
+    private static NamedObject test12c;
+    private static NamedObject test11g;
 
     @BeforeClass
     public static void beforeClass() throws Exception
@@ -26,17 +38,19 @@ public class OracleOutputPluginTest
         test12c = createTest("/driver/12c/ojdbc7.jar");
         if (test12c == null) {
             System.out.println("Warning: you should put ojdbc7.jar (version 12c) on 'test/resources/driver/12c' directory.");
-            return;
+        } else {
+            testObjects.add(test12c);
         }
 
         test11g = createTest("/driver/11g/ojdbc6.jar");
         if (test11g == null) {
-            System.out.println("Warning: you should put ojdbc6.jar (version 11g) on 'test/resources/driver/11g' directory.");
-            return;
+            System.out.println("Warning: you should put ojdbc6.jar (version 11g Release 2) on 'test/resources/driver/11g' directory.");
+        } else {
+            testObjects.add(test11g);
         }
     }
 
-    private static Object createTest(String jdbcDriverPath) throws Exception
+    private static NamedObject createTest(String jdbcDriverPath) throws Exception
     {
         String[] classPaths = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
         List<URL> urls = new ArrayList<URL>();
@@ -54,23 +68,39 @@ public class OracleOutputPluginTest
         Thread.currentThread().setContextClassLoader(classLoader);
 
         Class<?> testClass = classLoader.loadClass(OracleOutputPluginTest.class.getName() + "Impl");
-        Object test = testClass.newInstance();
-        invoke(test, "beforeClass");
-        return test;
+        final Object testObject = testClass.newInstance();
+        final String version = (String)invoke(testObject, "beforeClass");
+        if (version == null) {
+            return null;
+        }
+        return new NamedObject(version, testObject);
     }
 
     private static void invoke(String methodName) throws Exception
     {
-        invoke(test12c, methodName);
+        //invoke(test12c, methodName);
+        for (NamedObject testObject : testObjects) {
+            invoke(testObject, methodName);
+        }
     }
 
-    private static void invoke(Object test, String methodName) throws Exception
+    private static Object invoke(NamedObject testObject, String methodName) throws Exception
     {
-        if (test != null) {
-            Thread.currentThread().setContextClassLoader(test.getClass().getClassLoader());
-            Method method = test.getClass().getMethod(methodName);
-            method.invoke(test);
+        if (testObject != null) {
+            System.out.println("*** " + testObject.name + " ***");
+            return invoke(testObject.value, methodName);
         }
+        return null;
+    }
+
+    private static Object invoke(Object testObject, String methodName) throws Exception
+    {
+        if (testObject != null) {
+            Thread.currentThread().setContextClassLoader(testObject.getClass().getClassLoader());
+            Method method = testObject.getClass().getMethod(methodName);
+            return method.invoke(testObject);
+        }
+        return null;
     }
 
     @Test
