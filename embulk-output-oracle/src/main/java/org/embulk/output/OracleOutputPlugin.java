@@ -87,19 +87,11 @@ public class OracleOutputPlugin
             if (!oracleTask.getDatabase().isPresent()) {
                 throw new IllegalArgumentException("Field 'database' is not set.");
             }
-
-            if (oracleTask.getUrl().isPresent()) {
-                url = oracleTask.getUrl().get();
-            } else {
-                url = String.format("jdbc:oracle:oci:@%s:%d:%s",
-                        oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get());
-            }
         } else {
             if (oracleTask.getUrl().isPresent()) {
                 if (oracleTask.getHost().isPresent() || oracleTask.getDatabase().isPresent()) {
                     throw new IllegalArgumentException("'host', 'port' and 'database' parameters are invalid if 'url' parameter is set.");
                 }
-                url = oracleTask.getUrl().get();
             } else {
                 if (!oracleTask.getHost().isPresent()) {
                     throw new IllegalArgumentException("Field 'host' is not set.");
@@ -107,10 +99,14 @@ public class OracleOutputPlugin
                 if (!oracleTask.getDatabase().isPresent()) {
                     throw new IllegalArgumentException("Field 'database' is not set.");
                 }
-
-                url = String.format("jdbc:oracle:thin:@%s:%d:%s",
-                        oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get());
             }
+        }
+
+        if (oracleTask.getUrl().isPresent()) {
+            url = oracleTask.getUrl().get();
+        } else {
+            url = String.format("jdbc:oracle:thin:@%s:%d:%s",
+                    oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get());
         }
 
         Properties props = new Properties();
