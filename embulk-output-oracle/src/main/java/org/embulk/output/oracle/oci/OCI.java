@@ -97,41 +97,43 @@ public class OCI
         }
 
         File libFile = new File(libFolder, libraryName);
-        if (libFile.exists()) {
-            logger.info(String.format("OCI : load library \"%s\".", libFile.getAbsolutePath()));
-
-            File tempFolder = new File(lib, "temp");
-            tempFolder.mkdirs();
-
-            long currentTime = System.currentTimeMillis();
-            File[] files = tempFolder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    // delete old temporary files.
-                    // if another plugin is using a file, it cannot be deleted.
-                    // don't delete a recent file because another plugin may intend to use it.
-                    if (file.isFile() && file.getName().startsWith(PLUGIN_NAME) && file.lastModified() < currentTime - 60000) {
-                        file.delete();
-                    }
-                }
-            }
-
-            String extension = libraryName.replaceAll("^[^\\.]*", "");
-            for (int i = 0; i < 10; i++) {
-                File tempLibFile = new File(tempFolder, PLUGIN_NAME + "-" + currentTime + "-" + i + extension);
-                if (tempLibFile.createNewFile()) {
-                    // copy and load the library because different plugins cannot load the same library.
-                    logger.info(String.format("OCI : create temporary library \"%s\".", tempLibFile.getAbsolutePath()));
-                    Files.copy(libFile, tempLibFile);
-                    System.load(tempLibFile.getAbsolutePath());
-                    tempLibFile.deleteOnExit();
-                    // but may not be deleted because loaded as a library.
-                    return;
-                }
-            }
-
-            logger.error("OCI : cannot create temporary library.");
+        if (!libFile.exists()) {
+            logger.error(String.format("OCI : library \"%s\" doesn't exist.", libFile.getAbsolutePath()));
+            return;
         }
 
+        logger.info(String.format("OCI : load library \"%s\".", libFile.getAbsolutePath()));
+
+        File tempFolder = new File(lib, "temp");
+        tempFolder.mkdirs();
+
+        long currentTime = System.currentTimeMillis();
+        File[] files = tempFolder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                // delete old temporary files.
+                // if another plugin is using a file, it cannot be deleted.
+                // don't delete a recent file because another plugin may intend to use it.
+                if (file.isFile() && file.getName().startsWith(PLUGIN_NAME) && file.lastModified() < currentTime - 60000) {
+                    file.delete();
+                }
+            }
+        }
+
+        String extension = libraryName.replaceAll("^[^\\.]*", "");
+        for (int i = 0; i < 10; i++) {
+            File tempLibFile = new File(tempFolder, PLUGIN_NAME + "-" + currentTime + "-" + i + extension);
+            if (tempLibFile.createNewFile()) {
+                // copy and load the library because different plugins cannot load the same library.
+                logger.info(String.format("OCI : create temporary library \"%s\".", tempLibFile.getAbsolutePath()));
+                Files.copy(libFile, tempLibFile);
+                System.load(tempLibFile.getAbsolutePath());
+                tempLibFile.deleteOnExit();
+                // but may not be deleted because loaded as a library.
+                return;
+            }
+        }
+
+        logger.error("OCI : cannot create temporary library.");
     }
 }
