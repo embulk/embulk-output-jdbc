@@ -1,12 +1,15 @@
 package org.embulk.output.oracle.oci;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+
+import com.google.common.io.Files;
 
 
 public class OCI
@@ -18,7 +21,7 @@ public class OCI
     static {
         try {
             loadLibrary();
-        } catch (MalformedURLException | URISyntaxException e) {
+        } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -39,7 +42,7 @@ public class OCI
 
     public native void close(byte[] context);
 
-    private static void loadLibrary() throws MalformedURLException, URISyntaxException
+    private static void loadLibrary() throws URISyntaxException, IOException
     {
         loadLibrary(getPluginRoot());
     }
@@ -64,7 +67,7 @@ public class OCI
         }
     }
 
-    private static void loadLibrary(File folder)
+    private static void loadLibrary(File folder) throws IOException
     {
         File lib = new File(new File(folder, "lib"), "embulk");
 
@@ -88,16 +91,47 @@ public class OCI
             }
         }
 
-        if (libFolder != null) {
-            File libFile = new File(libFolder, libraryName);
-            if (libFile.exists()) {
-                logger.info(String.format("OCI : load library \"%s\".", libFile.getAbsolutePath()));
-                System.load(libFile.getAbsolutePath());
-                return;
-            }
+        if (libFolder == null) {
+            logger.error(String.format("OCI : library \"%s\" for %s %s doesn't exist in lib folder.", libraryName, osName, osArch));
+            return;
         }
 
-        logger.info(String.format("OCI : library \"%s\" for %s %s doesn't exist in lib folder.", libraryName, osName, osArch));
-        System.loadLibrary(PLUGIN_NAME);
+        File libFile = new File(libFolder, libraryName);
+        if (libFile.exists()) {
+            logger.info(String.format("OCI : load library \"%s\".", libFile.getAbsolutePath()));
+
+            File tempFolder = new File(lib, "temp");
+            tempFolder.mkdirs();
+
+            long currentTime = System.currentTimeMillis();
+            File[] files = tempFolder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    // delete old temporary files.
+                    // if another plugin is using a file, it cannot be deleted.
+                    // don't delete a recent file because another plugin may intend to use it.
+                    if (file.isFile() && file.getName().startsWith(PLUGIN_NAME) && file.lastModified() < currentTime - 60000) {
+                        file.delete();
+                    }
+                }
+            }
+
+            String extension = libraryName.replaceAll("^[^\\.]*", "");
+            for (int i = 0; i < 10; i++) {
+                File tempLibFile = new File(tempFolder, PLUGIN_NAME + "-" + currentTime + "-" + i + extension);
+                if (tempLibFile.createNewFile()) {
+                    // copy and load the library because different plugins cannot load the same library.
+                    logger.info(String.format("OCI : create temporary library \"%s\".", tempLibFile.getAbsolutePath()));
+                    Files.copy(libFile, tempLibFile);
+                    System.load(tempLibFile.getAbsolutePath());
+                    tempLibFile.deleteOnExit();
+                    // but may not be deleted because loaded as a library.
+                    return;
+                }
+            }
+
+            logger.error("OCI : cannot create temporary library.");
+        }
+
     }
 }
