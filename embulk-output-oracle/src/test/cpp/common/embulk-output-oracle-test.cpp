@@ -34,7 +34,7 @@ static int test(OCI_CONTEXT *context, const char *db, const char *user, const ch
 		return OCI_ERROR;
 	}
 
-	if (commit(context)) {
+	if (commitDirPath(context)) {
 		return OCI_ERROR;
 	}
 
@@ -44,6 +44,14 @@ static int test(OCI_CONTEXT *context, const char *db, const char *user, const ch
 
 int main(int argc, char* argv[])
 {
+	sword major_version;
+    sword minor_version; 
+    sword update_num;
+    sword patch_num;
+    sword port_update_num;
+	OCIClientVersion(&major_version, &minor_version, &update_num, &patch_num, &port_update_num);
+	printf("OCI client version = %d.%d.%d.%d.%d\r\n", major_version, minor_version, update_num, patch_num, port_update_num);
+
 	if (argc < 5) {
 		printf("embulk-output-oracle-test <db> <user> <password> <csv file name>\r\n");
 		return OCI_ERROR;
