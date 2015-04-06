@@ -3,19 +3,26 @@ package org.embulk.output;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
-import com.google.common.base.Optional;
+
 import org.embulk.config.Config;
-import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
+import org.embulk.output.oracle.DirectBatchInsert;
+import org.embulk.output.oracle.InsertMethod;
+import org.embulk.output.oracle.OracleCharset;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.TimestampFormatter;
+
+import com.google.common.base.Optional;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -51,6 +58,10 @@ public class OracleOutputPlugin
         @Config("password")
         @ConfigDefault("\"\"")
         public String getPassword();
+
+        @Config("insert_method")
+        @ConfigDefault("\"normal\"")
+        public InsertMethod getInsertMethod();
     }
 
     @Override
@@ -69,20 +80,31 @@ public class OracleOutputPlugin
         }
 
         String url;
-        if (oracleTask.getUrl().isPresent()) {
-            if (oracleTask.getHost().isPresent() || oracleTask.getDatabase().isPresent()) {
-                throw new IllegalArgumentException("'host', 'port' and 'database' parameters are invalid if 'url' parameter is set.");
-            }
-
-            url = oracleTask.getUrl().get();
-        } else {
+        if (oracleTask.getInsertMethod() == InsertMethod.oci) {
             if (!oracleTask.getHost().isPresent()) {
                 throw new IllegalArgumentException("Field 'host' is not set.");
             }
             if (!oracleTask.getDatabase().isPresent()) {
                 throw new IllegalArgumentException("Field 'database' is not set.");
             }
+        } else {
+            if (oracleTask.getUrl().isPresent()) {
+                if (oracleTask.getHost().isPresent() || oracleTask.getDatabase().isPresent()) {
+                    throw new IllegalArgumentException("'host', 'port' and 'database' parameters are invalid if 'url' parameter is set.");
+                }
+            } else {
+                if (!oracleTask.getHost().isPresent()) {
+                    throw new IllegalArgumentException("Field 'host' is not set.");
+                }
+                if (!oracleTask.getDatabase().isPresent()) {
+                    throw new IllegalArgumentException("Field 'database' is not set.");
+                }
+            }
+        }
 
+        if (oracleTask.getUrl().isPresent()) {
+            url = oracleTask.getUrl().get();
+        } else {
             url = String.format("jdbc:oracle:thin:@%s:%d:%s",
                     oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get());
         }
@@ -92,12 +114,30 @@ public class OracleOutputPlugin
         props.setProperty("password", oracleTask.getPassword());
         props.putAll(oracleTask.getOptions());
 
-        return new OracleOutputConnector(url, props);
+        return new OracleOutputConnector(url, props, oracleTask.getInsertMethod() == InsertMethod.direct);
     }
 
     @Override
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
+        OraclePluginTask oracleTask = (OraclePluginTask) task;
+        JdbcOutputConnector connector = getConnector(task, true);
+
+        if (oracleTask.getInsertMethod() == InsertMethod.oci) {
+            OracleCharset charset;
+            try (JdbcOutputConnection connection = connector.connect(true)) {
+                charset = ((OracleOutputConnection)connection).getCharset();
+            }
+
+            return new DirectBatchInsert(
+                    String.format("%s:%d/%s", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
+                    oracleTask.getUser(),
+                    oracleTask.getPassword(),
+                    oracleTask.getTable(),
+                    charset,
+                    oracleTask.getBatchSize());
+        }
+
         return new StandardBatchInsert(getConnector(task, true));
     }
 
@@ -148,4 +188,5 @@ public class OracleOutputPlugin
 
         return tableName + "_" + uniqueSuffix;
     }
+
 }

@@ -12,16 +12,18 @@ public class OracleOutputConnector
 {
     private final String url;
     private final Properties properties;
+    private final boolean direct;
 
-    public OracleOutputConnector(String url, Properties properties)
+    public OracleOutputConnector(String url, Properties properties, boolean direct)
     {
         try {
-        	Class.forName("oracle.jdbc.OracleDriver");
+            Class.forName("oracle.jdbc.OracleDriver");
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
         this.url = url;
         this.properties = properties;
+        this.direct = direct;
     }
 
     @Override
@@ -29,12 +31,12 @@ public class OracleOutputConnector
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
-        	// driver.connect returns null when url is "jdbc:mysql://...".
-        	throw new SQLException("Invalid url : " + url);
+            // driver.connect returns null when url is "jdbc:mysql://...".
+            throw new SQLException("Invalid url : " + url);
         }
 
         try {
-            OracleOutputConnection con = new OracleOutputConnection(c, autoCommit);
+            OracleOutputConnection con = new OracleOutputConnection(c, autoCommit, direct);
             c = null;
             return con;
 

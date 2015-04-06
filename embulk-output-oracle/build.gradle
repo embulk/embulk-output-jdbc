@@ -1,3 +1,6 @@
+[compileTestJava]*.options*.encoding = 'UTF-8'
+
 dependencies {
     compile project(':embulk-output-jdbc')
+    testCompile 'org.embulk:embulk-standards:0.4.10'
 }
