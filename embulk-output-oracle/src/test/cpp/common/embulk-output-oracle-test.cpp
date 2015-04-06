@@ -3,13 +3,13 @@
 #include <dir-path-load.h>
 
 
-static int test(OCI_CONTEXT *context, const char *db, const char *user, const char *pass, const char *csvFileName)
+static int test(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *db, const char *user, const char *pass, const char *csvFileName)
 {
-	if (prepareDirPathCtx(context, db, user, pass)) {
+	if (embulk_output_oracle_prepareDirPathCtx(context, db, user, pass)) {
 		return OCI_ERROR;
 	}
 
-	OCI_COL_DEF colDefs[] = {
+	EMBULK_OUTPUT_ORACLE_OCI_COL_DEF colDefs[] = {
 		{"ID", SQLT_INT, 4},
 		//{"ID", SQLT_CHR, 8},
 		{"NUM", SQLT_INT, 4},
@@ -26,15 +26,15 @@ static int test(OCI_CONTEXT *context, const char *db, const char *user, const ch
 		{"VALUE10", SQLT_CHR, 60},
 		{NULL, 0, 0}
 	};
-	if (prepareDirPathStream(context, "EXAMPLE", 832, colDefs)) {
+	if (embulk_output_oracle_prepareDirPathStream(context, "EXAMPLE", 832, colDefs)) {
 		return OCI_ERROR;
 	}
 
-	if (loadCSV(context, colDefs, csvFileName)) {
+	if (embulk_output_oracle_loadCSV(context, colDefs, csvFileName)) {
 		return OCI_ERROR;
 	}
 
-	if (commitDirPath(context)) {
+	if (embulk_output_oracle_commitDirPath(context)) {
 		return OCI_ERROR;
 	}
 
@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
 		return OCI_ERROR;
 	}
 
-	OCI_CONTEXT context;
-	memset(&context, 0, sizeof(OCI_CONTEXT));
+	EMBULK_OUTPUT_ORACLE_OCI_CONTEXT context;
+	memset(&context, 0, sizeof(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT));
 	int result = test(&context, argv[1], argv[2], argv[3], argv[4]);
 	if (result == OCI_ERROR) {
 		printf("%s\r\n", context.message);
 	}
-	freeDirPathHandles(&context);
+	embulk_output_oracle_freeDirPathHandles(&context);
 	return result;
 }
 

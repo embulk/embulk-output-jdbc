@@ -1,7 +1,7 @@
 #include <oci.h>
 
 
-typedef struct _OCI_CONTEXT {
+typedef struct _EMBULK_OUTPUT_ORACLE_OCI_CONTEXT {
 	OCIEnv     *env;
 	OCIDirPathCtx *dp;
 	OCISvcCtx *svc;
@@ -11,26 +11,26 @@ typedef struct _OCI_CONTEXT {
 	char *buffer;
 	FILE *csv;
 	char message[512];
-} OCI_CONTEXT;
+} EMBULK_OUTPUT_ORACLE_OCI_CONTEXT;
 
-typedef struct _OCI_COL_DEF {
+typedef struct _EMBULK_OUTPUT_ORACLE_OCI_COL_DEF {
 	const char *name;
 	ub4 type;
 	ub4 size;
 	const char *dateFormat;
-} OCI_COL_DEF;
+} EMBULK_OUTPUT_ORACLE_OCI_COL_DEF;
 
 
-int prepareDirPathCtx(OCI_CONTEXT *context, const char *dbName, const char *userName, const char *password);
+int embulk_output_oracle_prepareDirPathCtx(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *dbName, const char *userName, const char *password);
 
-int prepareDirPathStream(OCI_CONTEXT *context, const char *tableName, short charsetId, OCI_COL_DEF *colDefs);
+int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *tableName, short charsetId, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs);
 	
-int loadBuffer(OCI_CONTEXT *context, OCI_COL_DEF *colDefs, const char *buffer, int rowCount);
+int embulk_output_oracle_loadBuffer(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs, const char *buffer, int rowCount);
 	
-int loadCSV(OCI_CONTEXT *context, OCI_COL_DEF *colDefs, const char *csvFileName);
+int embulk_output_oracle_loadCSV(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs, const char *csvFileName);
 
-int commitDirPath(OCI_CONTEXT *context);
+int embulk_output_oracle_commitDirPath(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context);
 	
-int rollbackDirPath(OCI_CONTEXT *context);
+int embulk_output_oracle_rollbackDirPath(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context);
 	
-void freeDirPathHandles(OCI_CONTEXT *context);
+void embulk_output_oracle_freeDirPathHandles(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context);
