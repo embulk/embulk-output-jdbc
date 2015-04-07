@@ -453,9 +453,20 @@ public abstract class AbstractJdbcOutputPlugin
 
     private JdbcSchema matchSchemaByColumnNames(Schema inputSchema, JdbcSchema targetTableSchema)
     {
-        // TODO for each inputSchema.getColumns(), search a column whose name
-        //      matches with targetTableSchema. if not match, create JdbcSchema.skipColumn().
-        return targetTableSchema;
+        ImmutableList.Builder<JdbcColumn> jdbcColumns = ImmutableList.builder();
+
+        outer : for (Column column : inputSchema.getColumns()) {
+            for (JdbcColumn jdbcColumn : targetTableSchema.getColumns()) {
+                if (jdbcColumn.getName().equals(column.getName())) {
+                    jdbcColumns.add(jdbcColumn);
+                    continue outer;
+                }
+            }
+
+            jdbcColumns.add(JdbcColumn.skipColumn());
+        }
+
+        return new JdbcSchema(jdbcColumns.build());
     }
 
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, final int taskIndex)
