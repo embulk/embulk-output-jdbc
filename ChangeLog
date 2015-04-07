@@ -1,3 +1,15 @@
+Release 0.2.2 - 2015-04-07
+
+* Skips columns if matching column names don't exist in the target table
+  rather than making the transaction failed (@libra++)
+* Improved performance of embulk-output-oracle (@hito4t)
+* embulk-output-oracle supports insert_method parameter.
+  * "normal" uses regular JDBC INSERT statements.
+  * "direct" uses the optimized direct path inserts.
+  * "oci" uses direct path inserts with Oracle Call Interface (OCI). This is
+  the fastest but requires native library in addition to JDBC driver.
+
+
 Release 0.2.1 - 2015-03-15
 
 * Added embulk-output-oracle (by @hito4t)
