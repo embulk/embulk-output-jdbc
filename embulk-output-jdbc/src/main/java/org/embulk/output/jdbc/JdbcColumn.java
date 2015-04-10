@@ -11,6 +11,7 @@ public class JdbcColumn
     private int sqlType;
     private int sizeTypeParameter;
     private int scaleTypeParameter;
+    private boolean isPrimaryKey;
 
     @JsonCreator
     public JdbcColumn(
@@ -18,25 +19,33 @@ public class JdbcColumn
             @JsonProperty("typeName") String typeName,
             @JsonProperty("sqlType") int sqlType,
             @JsonProperty("sizeTypeParameter") int sizeTypeParameter,
-            @JsonProperty("scaleTypeParameter") int scaleTypeParameter)
+            @JsonProperty("scaleTypeParameter") int scaleTypeParameter,
+            @JsonProperty("primaryKey") boolean isPrimaryKey)
     {
         this.name = name;
         this.typeName = typeName;
         this.sqlType = sqlType;
         this.sizeTypeParameter = sizeTypeParameter;
         this.scaleTypeParameter = scaleTypeParameter;
+        this.isPrimaryKey = isPrimaryKey;
     }
 
     @JsonIgnore
     public static JdbcColumn skipColumn()
     {
-        return new JdbcColumn(null, null, 0, 0, 0);
+        return new JdbcColumn(null, null, 0, 0, 0, false);
     }
 
     @JsonIgnore
     public boolean isSkipColumn()
     {
         return name == null;
+    }
+
+    @JsonProperty("primaryKey")
+    public boolean isPrimaryKey()
+    {
+        return isPrimaryKey;
     }
 
     @JsonProperty("name")

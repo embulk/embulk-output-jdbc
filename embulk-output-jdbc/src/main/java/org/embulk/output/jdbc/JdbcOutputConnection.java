@@ -1,6 +1,5 @@
 package org.embulk.output.jdbc;
 
-import java.util.List;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -66,7 +65,7 @@ public class JdbcOutputConnection
             return rs.next();
         }
     }
-    
+
     public void dropTableIfExists(String tableName) throws SQLException
     {
         Statement stmt = connection.createStatement();
@@ -152,7 +151,7 @@ public class JdbcOutputConnection
         sb.append(buildColumnsOfCreateTableSql(schema));
         return sb.toString();
     }
-    
+
     private String buildColumnsOfCreateTableSql(JdbcSchema schema)
     {
         StringBuilder sb = new StringBuilder();
@@ -306,6 +305,13 @@ public class JdbcOutputConnection
         return connection.prepareStatement(insertSql);
     }
 
+    public PreparedStatement prepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        String upsertSql = buildPrepareUpsertSql(toTable, toTableSchema);
+        logger.info("Prepared SQL: {}", upsertSql);
+        return connection.prepareStatement(upsertSql);
+    }
+
     protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
@@ -326,6 +332,11 @@ public class JdbcOutputConnection
         sb.append(")");
 
         return sb.toString();
+    }
+
+    protected String buildPrepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
     // TODO

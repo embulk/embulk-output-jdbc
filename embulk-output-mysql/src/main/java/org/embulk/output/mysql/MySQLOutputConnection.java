@@ -2,10 +2,9 @@ package org.embulk.output.mysql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.BatchInsert;
+
+import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcColumn;
 
 public class MySQLOutputConnection
         extends JdbcOutputConnection
@@ -15,6 +14,36 @@ public class MySQLOutputConnection
     {
         super(connection, null);
         connection.setAutoCommit(autoCommit);
+    }
+
+    @Override
+    protected String buildPrepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("INSERT INTO ");
+        quoteIdentifierString(sb, toTable);
+
+        sb.append(" (");
+        for (int i=0; i < toTableSchema.getCount(); i++) {
+            if(i != 0) { sb.append(", "); }
+            quoteIdentifierString(sb, toTableSchema.getColumnName(i));
+        }
+        sb.append(") VALUES (");
+        for(int i=0; i < toTableSchema.getCount(); i++) {
+            if(i != 0) { sb.append(", "); }
+            sb.append("?");
+        }
+        sb.append(")");
+
+        sb.append(" ON DUPLICATE KEY UPDATE ");
+        for (int i=0; i < toTableSchema.getCount(); i++) {
+            if(i != 0) { sb.append(", "); }
+            final String columnName = quoteIdentifierString(toTableSchema.getColumnName(i));
+            sb.append(columnName).append(" = VALUES(").append(columnName).append(")");
+        }
+
+        return sb.toString();
     }
 
     @Override

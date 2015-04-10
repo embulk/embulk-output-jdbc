@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutionException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.Types;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -32,7 +31,6 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.PageOutput;
 import org.embulk.spi.PluginClassLoader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
@@ -128,7 +126,12 @@ public abstract class AbstractJdbcOutputPlugin
 
         public boolean isInplace()
         {
-            return this == INSERT_DIRECT || this == REPLACE_INPLACE;
+            return this == INSERT_DIRECT || this == REPLACE_INPLACE || this == MERGE;
+        }
+
+        public boolean isMerge()
+        {
+            return this == MERGE;
         }
 
         public boolean usesMultipleLoadTables()
@@ -156,8 +159,11 @@ public abstract class AbstractJdbcOutputPlugin
         case "replace":
             task.setMode(Mode.REPLACE_INPLACE);
             break;
+        case "merge":
+            task.setMode(Mode.MERGE);
+            break;
         default:
-            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, replace", task.getModeConfig()));
+            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, replace, merge", task.getModeConfig()));
         }
 
         //switch(task.getModeConfig()) {
@@ -383,35 +389,35 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     columns.add(new JdbcColumn(
                             columnName, "BOOLEAN",
-                            Types.BOOLEAN, 1, 0));
+                            Types.BOOLEAN, 1, 0, false));
                 }
 
                 public void longColumn(Column column)
                 {
                     columns.add(new JdbcColumn(
                             columnName, "BIGINT",
-                            Types.BIGINT, 22, 0));
+                            Types.BIGINT, 22, 0, false));
                 }
 
                 public void doubleColumn(Column column)
                 {
                     columns.add(new JdbcColumn(
                             columnName, "DOUBLE PRECISION",
-                            Types.FLOAT, 24, 0));
+                            Types.FLOAT, 24, 0, false));
                 }
 
                 public void stringColumn(Column column)
                 {
                     columns.add(new JdbcColumn(
                                 columnName, "CLOB",
-                                Types.CLOB, 4000, 0));  // TODO size type param
+                                Types.CLOB, 4000, 0, false));  // TODO size type param
                 }
 
                 public void timestampColumn(Column column)
                 {
                     columns.add(new JdbcColumn(
                                 columnName, "TIMESTAMP",
-                                Types.TIMESTAMP, 26, 0));  // size type param is from postgresql.
+                                Types.TIMESTAMP, 26, 0, false));  // size type param is from postgresql.
                 }
             });
         }
@@ -423,15 +429,27 @@ public abstract class AbstractJdbcOutputPlugin
     {
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
-
-        ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
         String schemaNamePattern = JdbcUtils.escapeSearchString(connection.getSchemaName(), escape);
+
+        ResultSet rs = dbm.getPrimaryKeys(null, schemaNamePattern, tableName);
+        ImmutableList.Builder<String> primaryKeysBuilder = ImmutableList.builder();
+        try {
+            while(rs.next()) {
+                primaryKeysBuilder.add(rs.getString("COLUMN_NAME"));
+            }
+        } finally {
+            rs.close();
+        }
+        ImmutableList<String> primaryKeys = primaryKeysBuilder.build();
+
         String tableNamePattern = JdbcUtils.escapeSearchString(tableName, escape);
-        ResultSet rs = dbm.getColumns(null, schemaNamePattern, tableNamePattern, null);
+        ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
+        rs = dbm.getColumns(null, schemaNamePattern, tableNamePattern, null);
         try {
             while(rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
                 String typeName = rs.getString("TYPE_NAME");
+                boolean isPrimaryKey = primaryKeys.contains(columnName);
                 typeName = typeName.toUpperCase(Locale.ENGLISH);
                 int sqlType = rs.getInt("DATA_TYPE");
                 int colSize = rs.getInt("COLUMN_SIZE");
@@ -443,7 +461,7 @@ public abstract class AbstractJdbcOutputPlugin
                 //rs.getString("COLUMN_DEF") // or null  // TODO
                 columns.add(new JdbcColumn(
                             columnName, typeName,
-                            sqlType, colSize, decDigit));
+                            sqlType, colSize, decDigit, isPrimaryKey));
             }
         } finally {
             rs.close();
@@ -522,12 +540,11 @@ public abstract class AbstractJdbcOutputPlugin
                         // insert_direct
                         loadTable = task.getTable();
                     }
-
                     b.prepare(loadTable, insertSchema);
                 }
             });
 
-            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters.build(),
+            PluginPageOutput output = newPluginPageOutput(reader, batch, columnSetters.build(),
                     task.getBatchSize());
             batch = null;
             return output;
@@ -552,13 +569,20 @@ public abstract class AbstractJdbcOutputPlugin
     	return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
     }
 
+    protected PluginPageOutput newPluginPageOutput(PageReader reader,
+                                                   BatchInsert batch, List<ColumnSetter> columnSetters,
+                                                   int batchSize)
+    {
+        return new PluginPageOutput(reader, batch, columnSetters, batchSize);
+    }
+
     public static class PluginPageOutput
             implements TransactionalPageOutput
     {
+        protected final List<Column> columns;
+        protected final List<ColumnSetter> columnSetters;
         private final PageReader pageReader;
         private final BatchInsert batch;
-        private final List<Column> columns;
-        private final List<ColumnSetter> columnSetters;
         private final int batchSize;
         private final int foraceBatchFlushSize;
 
@@ -583,9 +607,7 @@ public abstract class AbstractJdbcOutputPlugin
                     if (batch.getBatchWeight() > foraceBatchFlushSize) {
                         batch.flush();
                     }
-                    for (int i=0; i < columnSetters.size(); i++) {
-                        columns.get(i).visit(columnSetters.get(i));
-                    }
+                    handleColumnsSetters();
                     batch.add();
                 }
                 if (batch.getBatchWeight() > batchSize) {
@@ -626,6 +648,15 @@ public abstract class AbstractJdbcOutputPlugin
         {
             return Exec.newCommitReport();
         }
+
+        protected void handleColumnsSetters()
+        {
+            int size = columnSetters.size();
+            for (int i=0; i < size; i++) {
+                columns.get(i).visit(columnSetters.get(i));
+            }
+        }
+
     }
 
     public static interface IdempotentSqlRunnable
