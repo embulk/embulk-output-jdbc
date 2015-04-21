@@ -1,5 +1,8 @@
 package org.embulk.output.jdbc.setter;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -30,6 +33,10 @@ public class SkipColumnSetter
     }
 
     protected void timestampValue(Timestamp v)
+    {
+    }
+
+    protected void nullValue()
     {
     }
 }
