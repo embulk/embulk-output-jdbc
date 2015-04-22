@@ -64,11 +64,11 @@ $ ./gradlew gem
 
 #### Build environment for native library
 
-Windows (x64)
+For Windows (x64)
 
 (1) Install JDK.
 
-(2) Install Microsoft Visual Studio (Only 2010 is tested).
+(2) Install Microsoft Visual Studio (only 2010 is tested).
 
 (3) Install Oracle Instant Client SDK 11.1.0.6.0 for Microsoft Windows (x64).
 
@@ -79,9 +79,9 @@ Windows (x64)
 
 (5) Open src/main/cpp/win/embulk-output-oracle.sln by Visual Studio and build.
 
-For command line
+For Windows command line, the following are needed in addition to (1) - (4).
 
-(6) Set environment variables, the following are needed.
+(6) Set environment variables.
 
 * MSVC_PATH (ex. C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC)
 * MSSDK_PATH (ex. C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A)
@@ -89,7 +89,7 @@ For command line
 (7) Execute src/main/cpp/win/build.bat .
 
 
-Linux (x64) (Only Ubuntu Server 14.04 is tested)
+For Linux (x64) (only Ubuntu Server 14.04 is tested)
 
 (1) Install JDK.
 
