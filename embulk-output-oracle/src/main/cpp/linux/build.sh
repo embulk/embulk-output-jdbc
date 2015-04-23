@@ -1,4 +1,4 @@
-# gcc, g++ and Oracle Instant Client SDK are requred.
+# gcc, g++ and Oracle Instant Client Basic and SDK are requred.
 #
 # ln libocci.so.x.x libocci.so
 # ln libclntsh.so.x.x libclntsh.so
