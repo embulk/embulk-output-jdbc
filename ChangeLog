@@ -1,3 +1,10 @@
+
+Release 0.2.3 - 2015-04-23
+
+* Support merge mode for MySQL and PostgreSQL (@takumakanari++)
+* Fix NullPointerException when a NULL value appears in a column to skip.
+
+
 Release 0.2.2 - 2015-04-07
 
 * Skips columns if matching column names don't exist in the target table
