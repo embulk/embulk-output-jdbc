@@ -2,7 +2,6 @@ package org.embulk.output.jdbc.setter;
 
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
-import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
 public class SkipColumnSetter
@@ -30,6 +29,10 @@ public class SkipColumnSetter
     }
 
     protected void timestampValue(Timestamp v)
+    {
+    }
+
+    protected void nullValue()
     {
     }
 }
