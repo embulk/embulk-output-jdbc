@@ -8,12 +8,12 @@ in:
     delimiter: ','
     quote: ''
     columns:
-    - {name: id, type: string}
-    - {name: varchar2_item, type: string}
-    - {name: integer_item, type: long}
-    - {name: number_item, type: string}
-    - {name: date_item, type: timestamp, format: '%Y/%m/%d'}
-    - {name: timestamp_item, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
+    - {name: ID, type: string}
+    - {name: VARCHAR2_ITEM, type: string}
+    - {name: INTEGER_ITEM, type: long}
+    - {name: NUMBER_ITEM, type: string}
+    - {name: DATE_ITEM, type: timestamp, format: '%Y/%m/%d'}
+    - {name: TIMESTAMP_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
 out:
     type: oracle
     user: TEST_USER
