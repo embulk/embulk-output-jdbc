@@ -18,7 +18,7 @@ MySQL output plugins for Embulk loads records to MySQL.
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required)
 - **table**: destination table name (string, required)
-- **mode**: "replace" or "insert" (string, required)
+- **mode**: "replace", "merge" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **options**: extra connection properties (hash, default: {})
 
