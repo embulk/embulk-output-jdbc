@@ -19,7 +19,7 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **database**: destination database name (string, required)
 - **schema**: destination schema name (string, default: "public")
 - **table**: destination table name (string, required)
-- **mode**: "replace" or "insert" (string, required)
+- **mode**: "replace", "merge" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **options**: extra connection properties (hash, default: {})
 
