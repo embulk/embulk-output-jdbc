@@ -178,6 +178,18 @@ public class OracleOutputPluginTestImpl
         assertGeneratedTable(table);
     }
 
+    public void testStringTimestamp() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/yml/test-string-timestamp.yml");
+
+        assertTable(table, TimeZone.getDefault());
+    }
+
     private void dropTable(String table) throws SQLException
     {
         String sql = String.format("DROP TABLE %s", table);
@@ -199,6 +211,12 @@ public class OracleOutputPluginTestImpl
 
     private void assertTable(String table) throws Exception
     {
+        assertTable(table, TimeZone.getTimeZone("GMT"));
+    }
+
+
+    private void assertTable(String table, TimeZone timeZone) throws Exception
+    {
         List<List<Object>> rows = select(table);
 
         /*
@@ -215,8 +233,8 @@ public class OracleOutputPluginTestImpl
             assertEquals("ABCDE", i2.next());
             assertEquals(new BigDecimal("0"), i2.next());
             assertEquals(new BigDecimal("123.45"), i2.next());
-            assertEquals(toTimestamp("2015/03/05 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/05 12:34:56"), i2.next());
+            assertEquals(toTimestamp("2015/03/05 00:00:00", timeZone), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 12:34:56", timeZone), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -224,8 +242,8 @@ public class OracleOutputPluginTestImpl
             assertEquals("あいうえお", i2.next());
             assertEquals(new BigDecimal("-9999"), i2.next());
             assertEquals(new BigDecimal("-99999999.99"), i2.next());
-            assertEquals(toTimestamp("2015/03/06 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/06 23:59:59"), i2.next());
+            assertEquals(toTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 23:59:59", timeZone), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -239,6 +257,11 @@ public class OracleOutputPluginTestImpl
     }
 
     private void assertGeneratedTable(String table) throws Exception
+    {
+        assertGeneratedTable(table, TimeZone.getTimeZone("GMT"));
+    }
+
+    private void assertGeneratedTable(String table, TimeZone timeZone) throws Exception
     {
         List<List<Object>> rows = select(table);
 
@@ -256,8 +279,8 @@ public class OracleOutputPluginTestImpl
             assertEquals("ABCDE", i2.next());
             assertEquals(new BigDecimal("0"), i2.next());
             assertEquals("123.45", i2.next());
-            assertEquals(toOracleTimestamp("2015/03/05 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/05 12:34:56"), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 00:00:00", timeZone), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 12:34:56", timeZone), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -265,8 +288,8 @@ public class OracleOutputPluginTestImpl
             assertEquals("あいうえお", i2.next());
             assertEquals(new BigDecimal("-9999"), i2.next());
             assertEquals("-99999999.99", i2.next());
-            assertEquals(toOracleTimestamp("2015/03/06 00:00:00"), i2.next());
-            assertEquals(toOracleTimestamp("2015/03/06 23:59:59"), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 23:59:59", timeZone), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -280,11 +303,11 @@ public class OracleOutputPluginTestImpl
     }
 
 
-    private Timestamp toTimestamp(String s)
+    private Timestamp toTimestamp(String s, TimeZone timeZone)
     {
         for (String formatString : new String[]{"yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd"}) {
             DateFormat dateFormat = new SimpleDateFormat(formatString);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+            dateFormat.setTimeZone(timeZone);
             try {
                 Date date = dateFormat.parse(s);
                 return new Timestamp(date.getTime());
@@ -295,11 +318,11 @@ public class OracleOutputPluginTestImpl
         throw new IllegalArgumentException(s);
     }
 
-    private Object toOracleTimestamp(String s) throws Exception
+    private Object toOracleTimestamp(String s, TimeZone timeZone) throws Exception
     {
         Class<?> timestampClass = Class.forName("oracle.sql.TIMESTAMP");
         Constructor<?> constructor = timestampClass.getConstructor(Timestamp.class);
-        return constructor.newInstance(toTimestamp(s));
+        return constructor.newInstance(toTimestamp(s, timeZone));
     }
 
 
