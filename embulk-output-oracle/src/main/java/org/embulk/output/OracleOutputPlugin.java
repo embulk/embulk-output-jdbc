@@ -1,7 +1,7 @@
 package org.embulk.output;
 
 import java.io.IOException;
-import java.lang.UnsupportedOperationException;
+import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -155,8 +155,9 @@ public class OracleOutputPlugin
     @Override
     protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
     {
-        // TODO: support multibyte identifier
-        return identifier.length() < MAX_TABLE_NAME_LENGTH;
+        OracleCharset charset = ((OracleOutputConnection)con).getCharset();
+        ByteBuffer buffer = charset.javaCharset.encode(identifier);
+        return buffer.remaining() <= MAX_TABLE_NAME_LENGTH;
     }
 
 }
