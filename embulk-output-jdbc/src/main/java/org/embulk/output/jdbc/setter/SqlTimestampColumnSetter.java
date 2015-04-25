@@ -2,6 +2,8 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.math.RoundingMode;
+import com.google.common.math.DoubleMath;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -33,7 +35,8 @@ public class SqlTimestampColumnSetter
 
     protected void stringValue(String v) throws IOException, SQLException
     {
-        batch.setString(v);
+        // TODO parse time?
+        nullValue();
     }
 
     protected void timestampValue(Timestamp v) throws IOException, SQLException
