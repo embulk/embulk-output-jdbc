@@ -108,3 +108,8 @@ For Linux (x64) (only Ubuntu Server 14.04 is tested)
 * OCI_PATH (the directory of Oracle Instant Client Basic and the parent of the "sdk" directory)
 
 (6) Execute src/main/cpp/linux/build.sh .
+
+
+embulk-output-oracle uses YourKit to improve performance.
+YourKit supports open source projects with its full-featured Java Profiler.
+YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>, innovative and intelligent tools for profiling Java and .NET applications.
