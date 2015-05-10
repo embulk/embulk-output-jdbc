@@ -93,15 +93,19 @@ public class PostgreSQLOutputPlugin
     @Override
     protected PluginPageOutput newPluginPageOutput(PageReader reader,
                                                    BatchInsert batch, List<ColumnSetter> columnSetters,
-                                                   int batchSize)
+                                                   PluginTask task)
     {
-        return new PostgresPluginPageOutput(reader, batch, columnSetters, batchSize);
+        if (task.getMode().isMerge()) {
+            return new PostgresPluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
+        }
+        return super.newPluginPageOutput(reader, batch, columnSetters, task);
     }
 
     public static class PostgresPluginPageOutput extends PluginPageOutput
     {
 
-        public PostgresPluginPageOutput(PageReader pageReader, BatchInsert batch, List<ColumnSetter> columnSetters, int batchSize) {
+        public PostgresPluginPageOutput(PageReader pageReader, BatchInsert batch, List<ColumnSetter> columnSetters, int batchSize)
+        {
             super(pageReader, batch, columnSetters, batchSize);
         }
 
