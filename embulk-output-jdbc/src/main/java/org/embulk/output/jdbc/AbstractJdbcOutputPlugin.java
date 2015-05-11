@@ -544,8 +544,7 @@ public abstract class AbstractJdbcOutputPlugin
                 }
             });
 
-            PluginPageOutput output = newPluginPageOutput(reader, batch, columnSetters.build(),
-                    task.getBatchSize());
+            PluginPageOutput output = newPluginPageOutput(reader, batch, columnSetters.build(), task);
             batch = null;
             return output;
 
@@ -571,9 +570,9 @@ public abstract class AbstractJdbcOutputPlugin
 
     protected PluginPageOutput newPluginPageOutput(PageReader reader,
                                                    BatchInsert batch, List<ColumnSetter> columnSetters,
-                                                   int batchSize)
+                                                   PluginTask task)
     {
-        return new PluginPageOutput(reader, batch, columnSetters, batchSize);
+        return new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
     }
 
     public static class PluginPageOutput
