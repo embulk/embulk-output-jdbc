@@ -472,9 +472,8 @@ public abstract class AbstractJdbcOutputPlugin
     {
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
-        String schemaNamePattern = JdbcUtils.escapeSearchString(connection.getSchemaName(), escape);
 
-        ResultSet rs = dbm.getPrimaryKeys(null, schemaNamePattern, tableName);
+        ResultSet rs = dbm.getPrimaryKeys(null, connection.getSchemaName(), tableName);
         ImmutableList.Builder<String> primaryKeysBuilder = ImmutableList.builder();
         try {
             while(rs.next()) {
@@ -485,6 +484,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
         ImmutableList<String> primaryKeys = primaryKeysBuilder.build();
 
+        String schemaNamePattern = JdbcUtils.escapeSearchString(connection.getSchemaName(), escape);
         String tableNamePattern = JdbcUtils.escapeSearchString(tableName, escape);
         ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
         rs = dbm.getColumns(null, schemaNamePattern, tableNamePattern, null);
