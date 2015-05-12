@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
@@ -474,7 +475,7 @@ public abstract class AbstractJdbcOutputPlugin
         String escape = dbm.getSearchStringEscape();
 
         ResultSet rs = dbm.getPrimaryKeys(null, connection.getSchemaName(), tableName);
-        ImmutableList.Builder<String> primaryKeysBuilder = ImmutableList.builder();
+        ImmutableSet.Builder<String> primaryKeysBuilder = ImmutableSet.builder();
         try {
             while(rs.next()) {
                 primaryKeysBuilder.add(rs.getString("COLUMN_NAME"));
@@ -482,12 +483,13 @@ public abstract class AbstractJdbcOutputPlugin
         } finally {
             rs.close();
         }
-        ImmutableList<String> primaryKeys = primaryKeysBuilder.build();
+        ImmutableSet<String> primaryKeys = primaryKeysBuilder.build();
 
-        String schemaNamePattern = JdbcUtils.escapeSearchString(connection.getSchemaName(), escape);
-        String tableNamePattern = JdbcUtils.escapeSearchString(tableName, escape);
         ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
-        rs = dbm.getColumns(null, schemaNamePattern, tableNamePattern, null);
+        rs = dbm.getColumns(null,
+                JdbcUtils.escapeSearchString(connection.getSchemaName(), escape),
+                JdbcUtils.escapeSearchString(tableName, escape),
+                null);
         try {
             while(rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
