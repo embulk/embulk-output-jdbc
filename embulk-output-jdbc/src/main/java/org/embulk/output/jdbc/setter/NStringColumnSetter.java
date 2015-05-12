@@ -2,66 +2,52 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.math.RoundingMode;
-import com.google.common.math.DoubleMath;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class LongColumnSetter
+public class NStringColumnSetter
         extends ColumnSetter
 {
-    public LongColumnSetter(BatchInsert batch, PageReader pageReader,
-            JdbcColumn column)
+    private final TimestampFormatter timestampFormatter;
+
+    public NStringColumnSetter(BatchInsert batch, PageReader pageReader,
+            JdbcColumn column, TimestampFormatter timestampFormatter)
     {
         super(batch, pageReader, column);
+        this.timestampFormatter = timestampFormatter;
     }
 
     @Override
     protected void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setLong(v ? 1L : 0L);
+        batch.setNString(Boolean.toString(v));
     }
 
     @Override
     protected void longValue(long v) throws IOException, SQLException
     {
-        batch.setLong(v);
+        batch.setNString(Long.toString(v));
     }
 
     @Override
     protected void doubleValue(double v) throws IOException, SQLException
     {
-        long lv;
-        try {
-            // TODO configurable rounding mode
-            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
-        } catch (ArithmeticException ex) {
-            // NaN / Infinite / -Infinite
-            nullValue();
-            return;
-        }
-        batch.setLong(lv);
+        batch.setNString(Double.toString(v));
     }
 
     @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
-        long lv;
-        try {
-            lv = Long.parseLong(v);
-        } catch (NumberFormatException e) {
-            nullValue();
-            return;
-        }
-        batch.setLong(lv);
+        batch.setNString(v);
     }
 
     @Override
     protected void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        batch.setNString(timestampFormatter.format(v));
     }
 }

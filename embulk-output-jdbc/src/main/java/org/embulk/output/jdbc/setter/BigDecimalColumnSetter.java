@@ -1,19 +1,22 @@
 package org.embulk.output.jdbc.setter;
 
+import java.math.BigDecimal;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.math.RoundingMode;
-import com.google.common.math.DoubleMath;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class LongColumnSetter
+public class BigDecimalColumnSetter
         extends ColumnSetter
 {
-    public LongColumnSetter(BatchInsert batch, PageReader pageReader,
+    private static final BigDecimal ZERO = BigDecimal.valueOf(0L);
+    private static final BigDecimal ONE = BigDecimal.valueOf(1L);
+
+    public BigDecimalColumnSetter(BatchInsert batch, PageReader pageReader,
             JdbcColumn column)
     {
         super(batch, pageReader, column);
@@ -22,41 +25,36 @@ public class LongColumnSetter
     @Override
     protected void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setLong(v ? 1L : 0L);
+        batch.setBigDecimal(v ? ONE : ZERO);
     }
 
     @Override
     protected void longValue(long v) throws IOException, SQLException
     {
-        batch.setLong(v);
+        batch.setBigDecimal(BigDecimal.valueOf(v));
     }
 
     @Override
     protected void doubleValue(double v) throws IOException, SQLException
     {
-        long lv;
-        try {
-            // TODO configurable rounding mode
-            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
-        } catch (ArithmeticException ex) {
-            // NaN / Infinite / -Infinite
+        if (Double.isNaN(v) || Double.isInfinite(v)) {
             nullValue();
-            return;
+        } else {
+            batch.setBigDecimal(BigDecimal.valueOf(v));
         }
-        batch.setLong(lv);
     }
 
     @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
-        long lv;
+        BigDecimal dv;
         try {
-            lv = Long.parseLong(v);
-        } catch (NumberFormatException e) {
+            dv = new BigDecimal(v);
+        } catch (NumberFormatException ex) {
             nullValue();
             return;
         }
-        batch.setLong(lv);
+        batch.setBigDecimal(dv);
     }
 
     @Override

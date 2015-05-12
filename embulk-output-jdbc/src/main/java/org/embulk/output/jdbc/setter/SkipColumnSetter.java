@@ -12,26 +12,32 @@ public class SkipColumnSetter
         super(batch, pageReader, null);
     }
 
+    @Override
     protected void booleanValue(boolean v)
     {
     }
 
+    @Override
     protected void longValue(long v)
     {
     }
 
+    @Override
     protected void doubleValue(double v)
     {
     }
 
+    @Override
     protected void stringValue(String v)
     {
     }
 
+    @Override
     protected void timestampValue(Timestamp v)
     {
     }
 
+    @Override
     protected void nullValue()
     {
     }

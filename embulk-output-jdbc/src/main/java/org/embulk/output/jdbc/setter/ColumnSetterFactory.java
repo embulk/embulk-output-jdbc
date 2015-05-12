@@ -28,20 +28,17 @@ public class ColumnSetterFactory
     public ColumnSetter newColumnSetter(JdbcColumn column)
     {
         switch(column.getSqlType()) {
-        //// TODO
         // setByte
-        //case Types.TINYINT:
-        //    return new ByteColumnSetter(batch, pageReader, column);
+        case Types.TINYINT:
+            return new ByteColumnSetter(batch, pageReader, column);
 
-        //// TODO
-        //// setShort
-        //case Types.SMALLINT:
-        //    return new ShortColumnSetter(batch, pageReader, column);
+        // setShort
+        case Types.SMALLINT:
+            return new ShortColumnSetter(batch, pageReader, column);
 
-        //// TODO
-        //// setInt
-        //case Types.INTEGER:
-        //    return new IntColumnSetter(batch, pageReader, column);
+        // setInt
+        case Types.INTEGER:
+            return new IntColumnSetter(batch, pageReader, column);
 
         // setLong
         case Types.BIGINT:
@@ -52,10 +49,9 @@ public class ColumnSetterFactory
         case Types.FLOAT:
             return new DoubleColumnSetter(batch, pageReader, column);
 
-        // TODO
-        //// setFloat
-        //case Types.REAL:
-        //    return new FloatColumnSetter(batch, pageReader, column);
+        // setFloat
+        case Types.REAL:
+            return new FloatColumnSetter(batch, pageReader, column);
 
         // setBool
         case Types.BOOLEAN:
@@ -69,12 +65,11 @@ public class ColumnSetterFactory
         case Types.CLOB:
             return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
 
-        // TODO
-        //// setNString, NClob
-        //case Types.NCHAR:
-        //case Types.NVARCHAR:
-        //case Types.LONGNVARCHAR:
-        //    return new NStringColumnSetter(batch, pageReader, column);
+        // setNString, NClob
+        case Types.NCHAR:
+        case Types.NVARCHAR:
+        case Types.LONGNVARCHAR:
+            return new NStringColumnSetter(batch, pageReader, column, timestampFormatter);
 
         // TODO
         //// setBytes Blob
@@ -85,10 +80,10 @@ public class ColumnSetterFactory
         //    return new BytesColumnSetter(batch, pageReader, column);
 
         // Time
-        //case Types.DATE:
-        //    return new SqlDateColumnSetter(batch, pageReader, column); // TODO
-        //case Types.TIME:
-        //    return new SqlTimeColumnSetter(batch, pageReader, column); // TODO
+        case Types.DATE:
+            return new SqlDateColumnSetter(batch, pageReader, column, timestampFormatter.getTimeZone());
+        case Types.TIME:
+            return new SqlTimeColumnSetter(batch, pageReader, column);
         case Types.TIMESTAMP:
             return new SqlTimestampColumnSetter(batch, pageReader, column);
 
@@ -96,11 +91,10 @@ public class ColumnSetterFactory
         case Types.NULL:
             return new NullColumnSetter(batch, pageReader, column);
 
-        // TODO
-        //// BigDecimal
-        //case Types.NUMERIC:
-        //case Types.DECIMAL:
-        //    return new BigDecimalColumnSetter(batch, pageReader, column);
+        // BigDecimal
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            return new BigDecimalColumnSetter(batch, pageReader, column);
 
         // others
         case Types.ARRAY:  // array

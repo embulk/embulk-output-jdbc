@@ -2,18 +2,16 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.math.RoundingMode;
-import com.google.common.math.DoubleMath;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class LongColumnSetter
+public class FloatColumnSetter
         extends ColumnSetter
 {
-    public LongColumnSetter(BatchInsert batch, PageReader pageReader,
+    public FloatColumnSetter(BatchInsert batch, PageReader pageReader,
             JdbcColumn column)
     {
         super(batch, pageReader, column);
@@ -22,41 +20,32 @@ public class LongColumnSetter
     @Override
     protected void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setLong(v ? 1L : 0L);
+        batch.setFloat(v ? (float) 1.0 : (float) 0.0);
     }
 
     @Override
     protected void longValue(long v) throws IOException, SQLException
     {
-        batch.setLong(v);
+        batch.setFloat((float) v);
     }
 
     @Override
     protected void doubleValue(double v) throws IOException, SQLException
     {
-        long lv;
-        try {
-            // TODO configurable rounding mode
-            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
-        } catch (ArithmeticException ex) {
-            // NaN / Infinite / -Infinite
-            nullValue();
-            return;
-        }
-        batch.setLong(lv);
+        batch.setFloat((float) v);
     }
 
     @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
-        long lv;
+        float fv;
         try {
-            lv = Long.parseLong(v);
+            fv = Float.parseFloat(v);
         } catch (NumberFormatException e) {
             nullValue();
             return;
         }
-        batch.setLong(lv);
+        batch.setFloat(fv);
     }
 
     @Override

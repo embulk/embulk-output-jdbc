@@ -25,26 +25,31 @@ public class BooleanColumnSetter
         super(batch, pageReader, column);
     }
 
+    @Override
     protected void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setBoolean(v);
     }
 
+    @Override
     protected void longValue(long v) throws IOException, SQLException
     {
         batch.setBoolean(v > 0);
     }
 
+    @Override
     protected void doubleValue(double v) throws IOException, SQLException
     {
         batch.setBoolean(v > 0.0);
     }
 
+    @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
         batch.setBoolean(trueStrings.contains(v));
     }
 
+    @Override
     protected void timestampValue(Timestamp v) throws IOException, SQLException
     {
         nullValue();

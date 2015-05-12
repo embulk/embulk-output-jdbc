@@ -17,21 +17,25 @@ public class DoubleColumnSetter
         super(batch, pageReader, column);
     }
 
+    @Override
     protected void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setDouble(v ? 1.0 : 0.0);
     }
 
+    @Override
     protected void longValue(long v) throws IOException, SQLException
     {
         batch.setDouble((double) v);
     }
 
+    @Override
     protected void doubleValue(double v) throws IOException, SQLException
     {
         batch.setDouble(v);
     }
 
+    @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
         double dv;
@@ -44,6 +48,7 @@ public class DoubleColumnSetter
         batch.setDouble(dv);
     }
 
+    @Override
     protected void timestampValue(Timestamp v) throws IOException, SQLException
     {
         nullValue();

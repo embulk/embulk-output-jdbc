@@ -37,6 +37,7 @@ import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
@@ -52,7 +53,7 @@ public abstract class AbstractJdbcOutputPlugin
     private final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
-            extends Task
+            extends Task, TimestampFormatter.FormatterTask
     {
         @Config("options")
         @ConfigDefault("{}")
@@ -72,6 +73,10 @@ public abstract class AbstractJdbcOutputPlugin
         @Config("merge_keys")
         @ConfigDefault("null")
         public Optional<List<String>> getMergeKeys();
+
+        @Config("timestamp_format")
+        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
+        public TimestampFormat getTimestampFormat();
 
         public void setMergeKeys(Optional<List<String>> keys);
 
@@ -642,7 +647,7 @@ public abstract class AbstractJdbcOutputPlugin
         try {
             // configure PageReader -> BatchInsert
             PageReader reader = new PageReader(schema);
-            ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
+            ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, task.getTimestampFormat().newFormatter(task));
 
             JdbcSchema loadSchema = task.getLoadSchema();
 

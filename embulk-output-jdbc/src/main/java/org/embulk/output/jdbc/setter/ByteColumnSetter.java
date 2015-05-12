@@ -10,10 +10,10 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class LongColumnSetter
+public class ByteColumnSetter
         extends ColumnSetter
 {
-    public LongColumnSetter(BatchInsert batch, PageReader pageReader,
+    public ByteColumnSetter(BatchInsert batch, PageReader pageReader,
             JdbcColumn column)
     {
         super(batch, pageReader, column);
@@ -22,13 +22,17 @@ public class LongColumnSetter
     @Override
     protected void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setLong(v ? 1L : 0L);
+        batch.setByte(v ? (byte) 1 : (byte) 0);
     }
 
     @Override
     protected void longValue(long v) throws IOException, SQLException
     {
-        batch.setLong(v);
+        if (v > Byte.MAX_VALUE || v < Byte.MIN_VALUE) {
+            nullValue();
+        } else {
+            batch.setByte((byte) v);
+        }
     }
 
     @Override
@@ -43,20 +47,20 @@ public class LongColumnSetter
             nullValue();
             return;
         }
-        batch.setLong(lv);
+        longValue(lv);
     }
 
     @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
-        long lv;
+        byte sv;
         try {
-            lv = Long.parseLong(v);
+            sv = Byte.parseByte(v);
         } catch (NumberFormatException e) {
             nullValue();
             return;
         }
-        batch.setLong(lv);
+        batch.setByte(sv);
     }
 
     @Override
