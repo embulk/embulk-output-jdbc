@@ -95,7 +95,7 @@ public class PostgreSQLOutputPlugin
                                                    BatchInsert batch, List<ColumnSetter> columnSetters,
                                                    PluginTask task)
     {
-        if (task.getMode().isMerge()) {
+        if (task.getMode().commitByMerge()) {
             return new PostgresPluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
         }
         return super.newPluginPageOutput(reader, batch, columnSetters, task);
@@ -136,7 +136,7 @@ public class PostgreSQLOutputPlugin
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
         PostgreSQLOutputConnector connector = getConnector(task, true);
-        return task.getMode().isMerge() ? new PostgresqlBatchUpsert(connector) :
+        return task.getMode().commitByMerge() ? new PostgresqlBatchUpsert(connector) :
                 new PostgreSQLCopyBatchInsert(getConnector(task, true));
     }
 }

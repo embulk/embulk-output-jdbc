@@ -119,27 +119,34 @@ public abstract class AbstractJdbcOutputPlugin
         REPLACE_INPLACE;
         //REPLACE_PARTITIONING,  // MySQL: partitioning, PostgreSQL: inheritance
 
-        public boolean isDirectWrite()
+        /**
+         * True if this mode directly modifies the target table without creating temporary tables.
+         */
+        public boolean isDirectModify()
         {
             return this == INSERT_DIRECT;
         }
 
-        public boolean isInplace()
+        /**
+         * True if this mode creates temporary table for each tasks.
+         */
+        public boolean tempTablePerTask()
         {
-            return this == INSERT_DIRECT || this == REPLACE_INPLACE || this == MERGE;
+            return !(this == INSERT_DIRECT || this == REPLACE_INPLACE || this == MERGE);
         }
 
-        public boolean isMerge()
+        /**
+         * True if this mode uses MERGE statement to commit temporary tables to the target table
+         */
+        public boolean commitByMerge()
         {
             return this == MERGE;
         }
 
-        public boolean usesMultipleLoadTables()
-        {
-            return !isInplace();
-        }
-
-        public boolean createAndSwapTable()
+        /**
+         * True if this mode swaps the target tables with temporary tables to commit
+         */
+        public boolean commitBySwapTable()
         {
             return this == REPLACE_INPLACE || this == REPLACE;
         }
@@ -200,7 +207,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         PluginTask task = taskSource.loadTask(getTaskClass());
 
-        if (task.getMode().isInplace()) {
+        if (!task.getMode().tempTablePerTask()) {
             throw new UnsupportedOperationException("inplace mode is not resumable. You need to delete partially-loaded records from the database and restart the entire transaction.");
         }
 
@@ -220,7 +227,7 @@ public abstract class AbstractJdbcOutputPlugin
             final Schema schema, int taskCount)
     {
         try {
-            withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectWrite == true
+            withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
                 public void run() throws SQLException
                 {
                     JdbcOutputConnection con = newConnection(task, true, false);
@@ -240,7 +247,7 @@ public abstract class AbstractJdbcOutputPlugin
     private ConfigDiff commit(final PluginTask task,
             Schema schema, final int taskCount)
     {
-        if (!task.getMode().isDirectWrite()) {  // no intermediate data if isDirectWrite == true
+        if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
                 withRetry(new IdempotentSqlRunnable() {
                     public void run() throws SQLException
@@ -266,7 +273,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
 
-        if (!task.getMode().isDirectWrite()) {  // no intermediate data if isDirectWrite == true
+        if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
                 withRetry(new IdempotentSqlRunnable() {
                     public void run() throws SQLException
@@ -291,7 +298,7 @@ public abstract class AbstractJdbcOutputPlugin
         Mode mode = task.getMode();
 
         JdbcSchema targetTableSchema;
-        if (mode.createAndSwapTable()) {
+        if (mode.commitBySwapTable()) {
             // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // swapTableName = "xyz__0000000054d92dee1e452158_bulk_load_temp"
@@ -307,7 +314,7 @@ public abstract class AbstractJdbcOutputPlugin
             task.setSwapTable(Optional.<String>absent());
         }
 
-        if (mode.usesMultipleLoadTables()) {
+        if (mode.tempTablePerTask()) {
             // multipleLoadTablePrefix = "xyz__0000000054d92dee1e452158_"
             // workers run:
             //   CREATE TABLE xyz__0000000054d92dee1e452158_%d
@@ -555,7 +562,7 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     String loadTable;
                     boolean createTable;
-                    if (mode.usesMultipleLoadTables()) {
+                    if (mode.tempTablePerTask()) {
                         // insert, truncate_insert, merge, replace
                         loadTable = formatMultipleLoadTableName(task, taskIndex);
                         JdbcOutputConnection con = newConnection(task, true, true);
@@ -565,7 +572,7 @@ public abstract class AbstractJdbcOutputPlugin
                             con.close();
                         }
 
-                    } else if (!mode.usesMultipleLoadTables() && mode.createAndSwapTable()) {
+                    } else if (!mode.tempTablePerTask() && mode.commitBySwapTable()) {
                         // replace_inplace
                         loadTable = task.getSwapTable().get();
 

@@ -95,6 +95,6 @@ public class MySQLOutputPlugin
     protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
     {
         MySQLOutputConnector connector = getConnector(task, true);
-        return task.getMode().isMerge() ? new MySQLBatchUpsert(connector) : new MySQLBatchInsert(connector);
+        return task.getMode().commitByMerge() ? new MySQLBatchUpsert(connector) : new MySQLBatchInsert(connector);
     }
 }
