@@ -295,7 +295,7 @@ public abstract class AbstractJdbcOutputPlugin
             // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
             // swapTableName = "xyz__0000000054d92dee1e452158_bulk_load_temp"
-            String swapTableName = generateSwapTableName(task);
+            String swapTableName = generateSwapTableName(task, con);
             con.dropTableIfExists(swapTableName);
             con.createTableIfNotExists(swapTableName, newJdbcSchemaForNewTable(schema));
             targetTableSchema = newJdbcSchemaFromExistentTable(con, swapTableName);
@@ -320,9 +320,42 @@ public abstract class AbstractJdbcOutputPlugin
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
     }
 
-    protected String generateSwapTableName(PluginTask task) throws SQLException
+    protected String generateSwapTableName(PluginTask task, JdbcOutputConnection con) throws SQLException
     {
-    	return task.getTable() + "_" + getTransactionUniqueName() + "_bulk_load_temp";
+        String tableName = task.getTable();
+        String suffix = "_bl_tmp";
+        String uniqueSuffix = getTransactionUniqueName() + suffix;
+
+        // way to count length of table name varies by DBMSs (bytes or characters),
+        // so truncate swap table name by one character.
+        while (!isValidIdentifier(con, tableName + "_" + uniqueSuffix)) {
+            if (uniqueSuffix.length() > 8 + suffix.length()) {
+                // truncate transaction unique name
+                // (include 8 characters of the transaction name at least)
+                uniqueSuffix = uniqueSuffix.substring(1);
+            } else {
+                if (tableName.isEmpty()) {
+                    throw new ConfigException("Table name is too long to generate temporary table name");
+                }
+                // truncate table name
+                tableName = tableName.substring(0, tableName.length() - 1);
+                //if (!connection.tableExists(tableName)) {
+                // TODO this doesn't help. Rather than truncating more characters,
+                //      here needs to replace characters with random characters. But
+                //      to make the result deterministic. So, an idea is replacing
+                //      the last character to the first (second, third, ... for each loop)
+                //      of md5(original table name).
+                //}
+            }
+
+        }
+        return tableName + "_" + uniqueSuffix;
+    }
+
+    // subclass should override and return if identifier (ex. table name) is valid for the DBMS.
+    protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
+    {
+        return true;
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
@@ -565,7 +598,7 @@ public abstract class AbstractJdbcOutputPlugin
     protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
             TimestampFormatter timestampFormatter)
     {
-    	return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
+        return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
     }
 
     protected PluginPageOutput newPluginPageOutput(PageReader reader,

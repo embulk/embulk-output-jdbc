@@ -153,6 +153,12 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testReplaceLongNameMultibyte() throws Exception
+    {
+        invoke("testReplaceLongNameMultibyte");
+    }
+
+    @Test
     public void testReplaceCreate() throws Exception
     {
         invoke("testReplaceCreate");

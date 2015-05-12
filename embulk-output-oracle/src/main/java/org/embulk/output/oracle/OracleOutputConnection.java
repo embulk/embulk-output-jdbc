@@ -28,6 +28,7 @@ public class OracleOutputConnection
     }
 
     private final boolean direct;
+    private OracleCharset charset;
 
 
     public OracleOutputConnection(Connection connection, boolean autoCommit, boolean direct)
@@ -105,30 +106,33 @@ public class OracleOutputConnection
 
     public OracleCharset getCharset() throws SQLException
     {
-        String charsetName = "UTF8";
-        try (Statement statement = connection.createStatement()) {
-            try (ResultSet resultSet = statement.executeQuery("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER='NLS_CHARACTERSET'")) {
-                if (resultSet.next()) {
-                    String nlsCharacterSet = resultSet.getString(1);
-                    if (CHARSET_NAMES.containsKey(nlsCharacterSet)) {
-                        charsetName = nlsCharacterSet;
+        if (charset == null) {
+            String charsetName = "UTF8";
+            try (Statement statement = connection.createStatement()) {
+                try (ResultSet resultSet = statement.executeQuery("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER='NLS_CHARACTERSET'")) {
+                    if (resultSet.next()) {
+                        String nlsCharacterSet = resultSet.getString(1);
+                        if (CHARSET_NAMES.containsKey(nlsCharacterSet)) {
+                            charsetName = nlsCharacterSet;
+                        }
                     }
                 }
             }
-        }
 
-        try (PreparedStatement statement = connection.prepareStatement("SELECT NLS_CHARSET_ID(?) FROM DUAL")) {
-            statement.setString(1, charsetName);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (!resultSet.next()) {
-                    throw new SQLException("Unknown NLS_CHARACTERSET : " + charsetName);
+            try (PreparedStatement statement = connection.prepareStatement("SELECT NLS_CHARSET_ID(?) FROM DUAL")) {
+                statement.setString(1, charsetName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        throw new SQLException("Unknown NLS_CHARACTERSET : " + charsetName);
+                    }
+
+                    charset = new OracleCharset(charsetName,
+                            resultSet.getShort(1),
+                            Charset.forName(CHARSET_NAMES.get(charsetName)));
                 }
-
-                return new OracleCharset(charsetName,
-                        resultSet.getShort(1),
-                        Charset.forName(CHARSET_NAMES.get(charsetName)));
             }
         }
+        return charset;
     }
 
 }
