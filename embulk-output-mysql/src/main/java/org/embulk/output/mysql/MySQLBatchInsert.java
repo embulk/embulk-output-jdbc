@@ -9,9 +9,9 @@ import org.embulk.output.jdbc.StandardBatchInsert;
 public class MySQLBatchInsert
         extends StandardBatchInsert
 {
-    public MySQLBatchInsert(MySQLOutputConnector connector) throws IOException, SQLException
+    public MySQLBatchInsert(MySQLOutputConnector connector, boolean useMerge) throws IOException, SQLException
     {
-        super(connector);
+        super(connector, useMerge);
     }
 
     @Override

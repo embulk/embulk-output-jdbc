@@ -113,8 +113,8 @@ public class JdbcOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
     {
-        return new StandardBatchInsert(getConnector(task, true));
+        return new StandardBatchInsert(getConnector(task, true), useMerge);
     }
 }

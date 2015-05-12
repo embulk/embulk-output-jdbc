@@ -99,7 +99,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     protected abstract JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation);
 
-    protected abstract BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException;
+    protected abstract BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException;
 
     protected JdbcOutputConnection newConnection(PluginTask task, boolean retryableMetadataOperation,
             boolean autoCommit) throws SQLException
@@ -379,25 +379,31 @@ public abstract class AbstractJdbcOutputPlugin
         throws SQLException
     {
         switch (task.getMode()) {
+        case INSERT_DIRECT:
+        case MERGE_DIRECT:
+            // already done
+            break;
+
         case INSERT:
             // aggregate insert into target
             //con.gatherInsertTables();
             throw new UnsupportedOperationException("not implemented yet"); // TODO
-        case INSERT_DIRECT:
-            // already done
-            break;
+
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
             throw new UnsupportedOperationException("not implemented yet");
             //break;
+
         case MERGE:
             // aggregate merge into target
             throw new UnsupportedOperationException("not implemented yet");
             //break;
+
         case REPLACE:
             // swap table
             con.replaceTable(task.getIntermediateTables().get().get(0), task.getLoadSchema(), task.getTable());
             break;
+
         case REPLACE_PARTITIONING:
             // aggregate insert into swap table & swap table
             throw new UnsupportedOperationException("not implemented yet");
@@ -532,7 +538,7 @@ public abstract class AbstractJdbcOutputPlugin
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
         try {
-            batch = newBatchInsert(task);
+            batch = newBatchInsert(task, mode == Mode.MERGE_DIRECT);
         } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);
         }

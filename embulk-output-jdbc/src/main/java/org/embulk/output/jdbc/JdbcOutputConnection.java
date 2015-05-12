@@ -298,21 +298,19 @@ public class JdbcOutputConnection
         }
     }
 
-    public PreparedStatement prepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, boolean useMerge) throws SQLException
     {
-        String insertSql = buildPrepareInsertSql(toTable, toTableSchema);
-        logger.info("Prepared SQL: {}", insertSql);
-        return connection.prepareStatement(insertSql);
+        String sql;
+        if (useMerge) {
+            sql = buildInsertSql(toTable, toTableSchema);
+        } else {
+            sql = buildMergeSql(toTable, toTableSchema);
+        }
+        logger.info("Prepared SQL: {}", sql);
+        return connection.prepareStatement(sql);
     }
 
-    public PreparedStatement prepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
-    {
-        String upsertSql = buildPrepareUpsertSql(toTable, toTableSchema);
-        logger.info("Prepared SQL: {}", upsertSql);
-        return connection.prepareStatement(upsertSql);
-    }
-
-    protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -334,7 +332,7 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected String buildPrepareUpsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         throw new UnsupportedOperationException("not implemented yet");
     }

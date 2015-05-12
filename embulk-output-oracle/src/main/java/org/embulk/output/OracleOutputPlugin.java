@@ -118,10 +118,10 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
     {
-        if (task.getMode().commitByMerge()) {
-            throw new UnsupportedOperationException("mode 'merge' is not implemented for this type");
+        if (useMerge) {
+            throw new UnsupportedOperationException("Oracle output plugin doesn't support 'merge_direct' mode.");
         }
 
         OraclePluginTask oracleTask = (OraclePluginTask) task;
@@ -142,7 +142,7 @@ public class OracleOutputPlugin
                     oracleTask.getBatchSize());
         }
 
-        return new StandardBatchInsert(getConnector(task, true));
+        return new StandardBatchInsert(getConnector(task, true), useMerge);
     }
 
     @Override
