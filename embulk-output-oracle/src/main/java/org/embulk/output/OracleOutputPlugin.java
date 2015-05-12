@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -70,6 +71,15 @@ public class OracleOutputPlugin
     }
 
     @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(30)
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setIgnoreMergeKeys(false);
+    }
+
+    @Override
     protected OracleOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         OraclePluginTask oracleTask = (OraclePluginTask) task;
@@ -129,7 +139,7 @@ public class OracleOutputPlugin
         if (oracleTask.getInsertMethod() == InsertMethod.oci) {
             OracleCharset charset;
             try (JdbcOutputConnection connection = connector.connect(true)) {
-                charset = ((OracleOutputConnection)connection).getCharset();
+                charset = ((OracleOutputConnection)connection).getOracleCharset();
             }
 
             return new DirectBatchInsert(
@@ -150,13 +160,4 @@ public class OracleOutputPlugin
     {
         return new OracleColumnSetterFactory(batch, pageReader, timestampFormatter);
     }
-
-    @Override
-    protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
-    {
-        OracleCharset charset = ((OracleOutputConnection)con).getCharset();
-        ByteBuffer buffer = charset.javaCharset.encode(identifier);
-        return buffer.remaining() <= MAX_TABLE_NAME_LENGTH;
-    }
-
 }

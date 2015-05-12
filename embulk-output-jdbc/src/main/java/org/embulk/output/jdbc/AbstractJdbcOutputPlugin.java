@@ -7,19 +7,18 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-
 import org.slf4j.Logger;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -76,6 +75,9 @@ public abstract class AbstractJdbcOutputPlugin
 
         public void setMergeKeys(Optional<List<String>> keys);
 
+        public void setFeatures(Features features);
+        public Features getFeatures();
+
         public void setMode(Mode mode);
         public Mode getMode();
 
@@ -84,6 +86,55 @@ public abstract class AbstractJdbcOutputPlugin
 
         public Optional<List<String>> getIntermediateTables();
         public void setIntermediateTables(Optional<List<String>> names);
+    }
+
+    public static class Features
+    {
+        private int maxTableNameLength = 64;
+        private Set<Mode> supportedModes = ImmutableSet.copyOf(Mode.values());
+        private boolean ignoreMergeKeys = false;
+
+        public Features()
+        { }
+
+        @JsonProperty
+        public int getMaxTableNameLength()
+        {
+            return maxTableNameLength;
+        }
+
+        @JsonProperty
+        public Features setMaxTableNameLength(int bytes)
+        {
+            this.maxTableNameLength = bytes;
+            return this;
+        }
+
+        @JsonProperty
+        public Set<Mode> getSupportedModes()
+        {
+            return supportedModes;
+        }
+
+        @JsonProperty
+        public Features setSupportedModes(Set<Mode> modes)
+        {
+            this.supportedModes = modes;
+            return this;
+        }
+
+        @JsonProperty
+        public boolean getIgnoreMergeKeys()
+        {
+            return ignoreMergeKeys;
+        }
+
+        @JsonProperty
+        public Features setIgnoreMergeKeys(boolean value)
+        {
+            this.ignoreMergeKeys = value;
+            return this;
+        }
     }
 
     protected void loadDriverJar(String glob)
@@ -104,6 +155,8 @@ public abstract class AbstractJdbcOutputPlugin
         return PluginTask.class;
     }
 
+    protected abstract Features getFeatures(PluginTask task);
+
     protected abstract JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation);
 
     protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException;
@@ -120,8 +173,7 @@ public abstract class AbstractJdbcOutputPlugin
         MERGE,
         MERGE_DIRECT,
         TRUNCATE_INSERT,
-        REPLACE,
-        REPLACE_PARTITIONING;
+        REPLACE;
 
         /**
          * True if this mode directly modifies the target table without creating intermediate tables.
@@ -144,7 +196,7 @@ public abstract class AbstractJdbcOutputPlugin
          */
         public boolean tempTablePerTask()
         {
-            return this == INSERT || this == MERGE || this == TRUNCATE_INSERT || this == REPLACE_PARTITIONING;
+            return this == INSERT || this == MERGE || this == TRUNCATE_INSERT /*this == REPLACE_VIEW*/;
         }
 
         /**
@@ -168,7 +220,7 @@ public abstract class AbstractJdbcOutputPlugin
          */
         public boolean ignoreTargetTableSchema()
         {
-            return this == REPLACE || this == REPLACE_PARTITIONING;
+            return this == REPLACE /*|| this == REPLACE_VIEW*/;
         }
 
         /**
@@ -185,6 +237,8 @@ public abstract class AbstractJdbcOutputPlugin
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(getTaskClass());
+        Features features = getFeatures(task);
+        task.setFeatures(features);
 
         switch(task.getModeConfig()) {
         case "insert":
@@ -205,11 +259,12 @@ public abstract class AbstractJdbcOutputPlugin
         case "replace":
             task.setMode(Mode.REPLACE);
             break;
-        case "replace_partitioning":
-            task.setMode(Mode.REPLACE_PARTITIONING);
-            break;
         default:
-            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, insert_direct, merge, merge_direct truncate_insert, replace and replace_partitioning", task.getModeConfig()));
+            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: %s", task.getModeConfig(), features.getSupportedModes()));
+        }
+
+        if (!features.getSupportedModes().contains(task.getMode())) {
+            throw new ConfigException(String.format("This output type doesn't support '%s'. Supported modes are: %s", task.getModeConfig(), features.getSupportedModes()));
         }
 
         task = begin(task, schema, taskCount);
@@ -318,16 +373,16 @@ public abstract class AbstractJdbcOutputPlugin
             // direct modify mode doesn't need intermediate tables.
             ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
             if (mode.tempTablePerTask()) {
-                String namePrefix = generateIntermediateTableNamePrefix(task, con, 3);
+                String namePrefix = generateIntermediateTableNamePrefix(task.getTable(), con, 3, task.getFeatures().getMaxTableNameLength());
                 for (int i=0; i < taskCount; i++) {
                     intermTableNames.add(namePrefix + String.format("%03d", i));
                 }
             } else {
-                String name = generateIntermediateTableNamePrefix(task, con, 0);
+                String name = generateIntermediateTableNamePrefix(task.getTable(), con, 0, task.getFeatures().getMaxTableNameLength());
                 intermTableNames.add(name);
             }
             // create the intermediate tables here
-            task.setIntermediateTables(Optional.of((List<String>) intermTableNames.build()));
+            task.setIntermediateTables(Optional.<List<String>>of(intermTableNames.build()));
             for (String name : task.getIntermediateTables().get()) {
                 // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
                 con.dropTableIfExists(name);
@@ -353,30 +408,48 @@ public abstract class AbstractJdbcOutputPlugin
 
         if (mode.isMerge()) {
             Optional<List<String>> mergeKeys = task.getMergeKeys();
-            if (!mergeKeys.isPresent()) {
+            if (task.getFeatures().getIgnoreMergeKeys()) {
+                if (mergeKeys.isPresent()) {
+                    throw new ConfigException("This output type does not accept 'merge_key' option.");
+                }
+                task.setMergeKeys(Optional.<List<String>>of(ImmutableList.<String>of()));
+            } else if (mergeKeys.isPresent()) {
+                if (task.getMergeKeys().get().isEmpty()) {
+                    throw new ConfigException("Empty 'merge_keys' option is invalid.");
+                }
+                for (String key : mergeKeys.get()) {
+                    if (!targetTableSchema.findColumn(key).isPresent()) {
+                        throw new ConfigException(String.format("Merge key '%s' does not exist in the target table.", key));
+                    }
+                }
+            } else {
                 ImmutableList.Builder<String> builder = ImmutableList.builder();
                 for (JdbcColumn column : targetTableSchema.getColumns()) {
                     if (column.isPrimaryKey()) {
                         builder.add(column.getName());
                     }
                 }
-                task.setMergeKeys(Optional.of((List<String>) builder.build()));
+                task.setMergeKeys(Optional.<List<String>>of(builder.build()));
+                if (task.getMergeKeys().get().isEmpty()) {
+                    throw new ConfigException("Merging mode is used but the target table does not have primary keys. Please set merge_keys option.");
+                }
             }
-            logger.info("Using merge keys {}", task.getMergeKeys().get());
+            logger.info("Using merge keys: {}", task.getMergeKeys().get());
         } else {
             task.setMergeKeys(Optional.<List<String>>absent());
         }
     }
 
-    protected String generateIntermediateTableNamePrefix(PluginTask task, JdbcOutputConnection con, int suffixLength) throws SQLException
+    protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con, int suffixLength, int maxLength) throws SQLException
     {
-        String tableName = task.getTable();
+        Charset tableNameCharset = con.getTableNameCharset();
+        String tableName = baseTableName;
         String suffix = "_bl_tmp";
         String uniqueSuffix = getTransactionUniqueName() + suffix;
 
         // way to count length of table name varies by DBMSs (bytes or characters),
         // so truncate swap table name by one character.
-        while (!isValidIdentifier(con, tableName + "_" + uniqueSuffix)) {
+        while (!checkTableNameLength(tableName + "_" + uniqueSuffix, tableNameCharset, suffixLength, maxLength)) {
             if (uniqueSuffix.length() > 8 + suffix.length()) {
                 // truncate transaction unique name
                 // (include 8 characters of the transaction name at least)
@@ -400,10 +473,9 @@ public abstract class AbstractJdbcOutputPlugin
         return tableName + "_" + uniqueSuffix;
     }
 
-    // subclass should override and return if identifier (ex. table name) is valid for the DBMS.
-    protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
+    private boolean checkTableNameLength(String tableName, Charset tableNameCharset, int suffixLength, int maxLength)
     {
-        return true;
+        return tableNameCharset.encode(tableName).remaining() <= maxLength;
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
@@ -427,17 +499,12 @@ public abstract class AbstractJdbcOutputPlugin
 
         case MERGE:
             // aggregate merge into target
-            con.collectMerge(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable());
+            con.collectMerge(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable(), task.getMergeKeys().get());
             break;
 
         case REPLACE:
             // swap table
             con.replaceTable(task.getIntermediateTables().get().get(0), task.getLoadSchema(), task.getTable());
-            break;
-
-        case REPLACE_PARTITIONING:
-            // aggregate insert into swap table & swap table
-            con.replaceTablePartitioning(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable());
             break;
         }
     }
@@ -548,15 +615,9 @@ public abstract class AbstractJdbcOutputPlugin
     {
         ImmutableList.Builder<JdbcColumn> jdbcColumns = ImmutableList.builder();
 
-        outer : for (Column column : inputSchema.getColumns()) {
-            for (JdbcColumn jdbcColumn : targetTableSchema.getColumns()) {
-                if (jdbcColumn.getName().equals(column.getName())) {
-                    jdbcColumns.add(jdbcColumn);
-                    continue outer;
-                }
-            }
-
-            jdbcColumns.add(JdbcColumn.skipColumn());
+        for (Column column : inputSchema.getColumns()) {
+            Optional<JdbcColumn> c = targetTableSchema.findColumn(column.getName());
+            jdbcColumns.add(c.or(JdbcColumn.skipColumn()));
         }
 
         return new JdbcSchema(jdbcColumns.build());

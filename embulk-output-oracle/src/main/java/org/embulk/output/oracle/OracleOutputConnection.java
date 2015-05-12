@@ -1,6 +1,5 @@
 package org.embulk.output.oracle;
 
-
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,7 +28,6 @@ public class OracleOutputConnection
 
     private final boolean direct;
     private OracleCharset charset;
-
 
     public OracleOutputConnection(Connection connection, boolean autoCommit, boolean direct)
             throws SQLException
@@ -104,7 +102,13 @@ public class OracleOutputConnection
         return sql;
     }
 
-    public OracleCharset getCharset() throws SQLException
+    @Override
+    public Charset getTableNameCharset() throws SQLException
+    {
+        return getOracleCharset().getJavaCharset();
+    }
+
+    public synchronized OracleCharset getOracleCharset() throws SQLException
     {
         if (charset == null) {
             String charsetName = "UTF8";
@@ -134,5 +138,4 @@ public class OracleOutputConnection
         }
         return charset;
     }
-
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -62,6 +63,15 @@ public class RedshiftOutputPlugin
     protected Class<? extends PluginTask> getTaskClass()
     {
         return RedshiftPluginTask.class;
+    }
+
+    @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(30)
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setIgnoreMergeKeys(false);
     }
 
     @Override

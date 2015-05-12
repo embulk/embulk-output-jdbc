@@ -23,7 +23,6 @@ public class MySQLOutputConnection
 
         sb.append("INSERT INTO ");
         quoteIdentifierString(sb, toTable);
-
         sb.append(" (");
         for (int i=0; i < toTableSchema.getCount(); i++) {
             if(i != 0) { sb.append(", "); }
@@ -35,11 +34,43 @@ public class MySQLOutputConnection
             sb.append("?");
         }
         sb.append(")");
-
         sb.append(" ON DUPLICATE KEY UPDATE ");
         for (int i=0; i < toTableSchema.getCount(); i++) {
             if(i != 0) { sb.append(", "); }
-            final String columnName = quoteIdentifierString(toTableSchema.getColumnName(i));
+            String columnName = quoteIdentifierString(toTableSchema.getColumnName(i));
+            sb.append(columnName).append(" = VALUES(").append(columnName).append(")");
+        }
+
+        return sb.toString();
+    }
+
+    @Override
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys) throws SQLException
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("INSERT INTO ");
+        quoteIdentifierString(sb, toTable);
+        sb.append(" (");
+        for (int i=0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            quoteIdentifierString(sb, schema.getColumnName(i));
+        }
+        sb.append(") ");
+        for (int i=0; i < fromTables.size(); i++) {
+            if (i != 0) { sb.append(" UNION ALL "); }
+            sb.append("SELECT ");
+            for (int j=0; j < schema.getCount(); j++) {
+                if (j != 0) { sb.append(", "); }
+                quoteIdentifierString(sb, schema.getColumnName(j));
+            }
+            sb.append(" FROM ");
+            quoteIdentifierString(sb, fromTables.get(i));
+        }
+        sb.append(" ON DUPLICATE KEY UPDATE ");
+        for (int i=0; i < schema.getCount(); i++) {
+            if(i != 0) { sb.append(", "); }
+            String columnName = quoteIdentifierString(schema.getColumnName(i));
             sb.append(columnName).append(" = VALUES(").append(columnName).append(")");
         }
 

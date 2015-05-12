@@ -43,6 +43,14 @@ public class MySQLOutputPlugin
     }
 
     @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(64)
+            .setIgnoreMergeKeys(true);
+    }
+
+    @Override
     protected MySQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         MySQLPluginTask t = (MySQLPluginTask) task;

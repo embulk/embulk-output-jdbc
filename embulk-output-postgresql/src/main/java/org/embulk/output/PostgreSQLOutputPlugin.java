@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -47,6 +48,15 @@ public class PostgreSQLOutputPlugin
     protected Class<? extends PluginTask> getTaskClass()
     {
         return PostgreSQLPluginTask.class;
+    }
+
+    @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(30)
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setIgnoreMergeKeys(false);
     }
 
     @Override
