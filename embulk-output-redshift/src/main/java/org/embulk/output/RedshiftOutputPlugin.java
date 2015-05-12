@@ -1,9 +1,11 @@
 package org.embulk.output;
 
+import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.slf4j.Logger;
+import com.google.common.base.Optional;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -121,9 +123,9 @@ public class RedshiftOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        if (useMerge) {
+        if (mergeKeys.isPresent()) {
             throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;

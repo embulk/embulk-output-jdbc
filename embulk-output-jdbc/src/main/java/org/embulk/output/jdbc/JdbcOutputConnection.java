@@ -7,8 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import org.slf4j.Logger;
+import com.google.common.base.Optional;
 import org.embulk.spi.Exec;
 
 public class JdbcOutputConnection
@@ -243,13 +243,13 @@ public class JdbcOutputConnection
         return ColumnDeclareType.SIMPLE;
     }
 
-    public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, boolean useMerge) throws SQLException
+    public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, Optional<List<String>> mergeKeys) throws SQLException
     {
         String sql;
-        if (useMerge) {
-            sql = buildPreparedInsertSql(toTable, toTableSchema);
+        if (mergeKeys.isPresent()) {
+            sql = buildPreparedMergeSql(toTable, toTableSchema, mergeKeys.get());
         } else {
-            sql = buildPreparedMergeSql(toTable, toTableSchema);
+            sql = buildPreparedInsertSql(toTable, toTableSchema);
         }
         logger.info("Prepared SQL: {}", sql);
         return connection.prepareStatement(sql);
@@ -277,7 +277,7 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema, List<String> mergeKeys) throws SQLException
     {
         throw new UnsupportedOperationException("not implemented");
     }

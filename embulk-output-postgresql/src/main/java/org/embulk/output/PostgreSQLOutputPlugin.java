@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
-
+import com.google.common.base.Optional;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -90,9 +90,9 @@ public class PostgreSQLOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        if (useMerge) {
+        if (mergeKeys.isPresent()) {
             throw new UnsupportedOperationException("PostgreSQL output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         return new PostgreSQLCopyBatchInsert(getConnector(task, true));

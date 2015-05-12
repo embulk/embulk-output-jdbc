@@ -1,17 +1,19 @@
 package org.embulk.output.mysql;
 
+import java.util.List;
 import java.io.IOException;
 import java.sql.Types;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import com.google.common.base.Optional;
 import org.embulk.output.jdbc.StandardBatchInsert;
 
 public class MySQLBatchInsert
         extends StandardBatchInsert
 {
-    public MySQLBatchInsert(MySQLOutputConnector connector, boolean useMerge) throws IOException, SQLException
+    public MySQLBatchInsert(MySQLOutputConnector connector, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        super(connector, useMerge);
+        super(connector, mergeKeys);
     }
 
     @Override

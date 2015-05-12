@@ -1,10 +1,11 @@
 package org.embulk.output;
 
+import java.util.List;
+import java.util.Properties;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
-import java.util.Properties;
-
+import com.google.common.base.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -21,8 +22,6 @@ import org.embulk.output.oracle.OracleOutputConnector;
 import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.time.TimestampFormatter;
-
-import com.google.common.base.Optional;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -118,9 +117,9 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        if (useMerge) {
+        if (mergeKeys.isPresent()) {
             throw new UnsupportedOperationException("Oracle output plugin doesn't support 'merge_direct' mode.");
         }
 
@@ -142,7 +141,7 @@ public class OracleOutputPlugin
                     oracleTask.getBatchSize());
         }
 
-        return new StandardBatchInsert(getConnector(task, true), useMerge);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
     }
 
     @Override

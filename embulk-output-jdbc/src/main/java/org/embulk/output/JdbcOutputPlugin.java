@@ -1,5 +1,6 @@
 package org.embulk.output;
 
+import java.util.List;
 import java.util.Properties;
 import java.sql.Driver;
 import java.io.IOException;
@@ -113,8 +114,8 @@ public class JdbcOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        return new StandardBatchInsert(getConnector(task, true), useMerge);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
     }
 }

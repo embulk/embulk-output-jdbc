@@ -70,6 +70,12 @@ public abstract class AbstractJdbcOutputPlugin
         // TODO set minimum number
         public int getBatchSize();
 
+        @Config("merge_keys")
+        @ConfigDefault("null")
+        public Optional<List<String>> getMergeKeys();
+
+        public void setMergeKeys(Optional<List<String>> keys);
+
         public void setMode(Mode mode);
         public Mode getMode();
 
@@ -100,7 +106,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     protected abstract JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation);
 
-    protected abstract BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException;
+    protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException;
 
     protected JdbcOutputConnection newConnection(PluginTask task, boolean retryableMetadataOperation,
             boolean autoCommit) throws SQLException
@@ -123,6 +129,14 @@ public abstract class AbstractJdbcOutputPlugin
         public boolean isDirectModify()
         {
             return this == INSERT_DIRECT || this == MERGE_DIRECT;
+        }
+
+        /**
+         * True if this mode merges records on unique keys
+         */
+        public boolean isMerge()
+        {
+            return this == MERGE || this == MERGE_DIRECT;
         }
 
         /**
@@ -336,6 +350,22 @@ public abstract class AbstractJdbcOutputPlugin
             targetTableSchema = newJdbcSchemaFromExistentTable(con, task.getTable());
         }
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
+
+        if (mode.isMerge()) {
+            Optional<List<String>> mergeKeys = task.getMergeKeys();
+            if (!mergeKeys.isPresent()) {
+                ImmutableList.Builder<String> builder = ImmutableList.builder();
+                for (JdbcColumn column : targetTableSchema.getColumns()) {
+                    if (column.isPrimaryKey()) {
+                        builder.add(column.getName());
+                    }
+                }
+                task.setMergeKeys(Optional.of((List<String>) builder.build()));
+            }
+            logger.info("Using merge keys {}", task.getMergeKeys().get());
+        } else {
+            task.setMergeKeys(Optional.<List<String>>absent());
+        }
     }
 
     protected String generateIntermediateTableNamePrefix(PluginTask task, JdbcOutputConnection con, int suffixLength) throws SQLException
@@ -540,7 +570,10 @@ public abstract class AbstractJdbcOutputPlugin
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
         try {
-            batch = newBatchInsert(task, mode == Mode.MERGE_DIRECT);
+            batch = newBatchInsert(task,
+                    task.getMode() == Mode.MERGE_DIRECT ?
+                        task.getMergeKeys() :
+                        Optional.<List<String>>absent());
         } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);
         }

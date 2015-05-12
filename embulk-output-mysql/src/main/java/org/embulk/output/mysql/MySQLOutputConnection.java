@@ -1,8 +1,8 @@
 package org.embulk.output.mysql;
 
+import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 
@@ -17,7 +17,7 @@ public class MySQLOutputConnection
     }
 
     @Override
-    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema, List<String> mergeKeys) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 

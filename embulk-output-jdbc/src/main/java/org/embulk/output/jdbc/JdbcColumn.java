@@ -6,12 +6,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class JdbcColumn
 {
-    private String name;
-    private String typeName;
-    private int sqlType;
-    private int sizeTypeParameter;
-    private int scaleTypeParameter;
-    private boolean isPrimaryKey;
+    private final String name;
+    private final String typeName;
+    private final int sqlType;
+    private final int sizeTypeParameter;
+    private final int scaleTypeParameter;
+    private final boolean isPrimaryKey;
 
     @JsonCreator
     public JdbcColumn(
