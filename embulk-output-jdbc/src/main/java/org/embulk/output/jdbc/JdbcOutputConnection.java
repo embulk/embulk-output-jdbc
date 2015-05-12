@@ -1,5 +1,6 @@
 package org.embulk.output.jdbc;
 
+import java.util.List;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -242,75 +243,19 @@ public class JdbcOutputConnection
         return ColumnDeclareType.SIMPLE;
     }
 
-    protected String buildInsertTableSql(String fromTable, JdbcSchema fromTableSchema, String toTable)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
-        sb.append(" (");
-        boolean first = true;
-        for (JdbcColumn c : fromTableSchema.getColumns()) {
-            if (first) { first = false; }
-            else { sb.append(", "); }
-            quoteIdentifierString(sb, c.getName());
-        }
-        sb.append(") ");
-        sb.append("SELECT ");
-        for (JdbcColumn c : fromTableSchema.getColumns()) {
-            if (first) { first = false; }
-            else { sb.append(", "); }
-            quoteIdentifierString(sb, c.getName());
-        }
-        sb.append(" FROM ");
-        quoteIdentifierString(sb, fromTable);
-
-        return sb.toString();
-    }
-
-    protected String buildTruncateSql(String table)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("DELETE FROM ");
-        quoteIdentifierString(sb, table);
-
-        return sb.toString();
-    }
-
-    protected void insertTable(String fromTable, JdbcSchema fromTableSchema, String toTable,
-            boolean truncateDestinationFirst) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            if(truncateDestinationFirst) {
-                String sql = buildTruncateSql(toTable);
-                executeUpdate(stmt, sql);
-            }
-            String sql = buildInsertTableSql(fromTable, fromTableSchema, toTable);
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            connection.rollback();
-            throw ex;
-        } finally {
-            stmt.close();
-        }
-    }
-
     public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, boolean useMerge) throws SQLException
     {
         String sql;
         if (useMerge) {
-            sql = buildInsertSql(toTable, toTableSchema);
+            sql = buildPreparedInsertSql(toTable, toTableSchema);
         } else {
-            sql = buildMergeSql(toTable, toTableSchema);
+            sql = buildPreparedMergeSql(toTable, toTableSchema);
         }
         logger.info("Prepared SQL: {}", sql);
         return connection.prepareStatement(sql);
     }
 
-    protected String buildInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -332,30 +277,80 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected String buildMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
-        throw new UnsupportedOperationException("not implemented yet");
+        throw new UnsupportedOperationException("not implemented");
     }
 
-    // TODO
-    //protected void gatherInsertTables(List<String> fromTables, JdbcSchema fromTableSchema, String toTable,
-    //        boolean truncateDestinationFirst) throws SQLException
-    //{
-    //    Statement stmt = connection.createStatement();
-    //    try {
-    //        if(truncateDestinationFirst) {
-    //            String sql = buildTruncateSql(toTable);
-    //            executeUpdate(stmt, sql);
-    //        }
-    //        String sql = buildGatherInsertTables(fromTable, fromTableSchema, toTable);
-    //        executeUpdate(stmt, sql);
-    //        commitIfNecessary(connection);
-    //    } catch (SQLException ex) {
-    //        throw safeRollback(connection, ex);
-    //    } finally {
-    //        stmt.close();
-    //    }
-    //}
+    protected void collectInsert(List<String> fromTables, JdbcSchema schema, String toTable,
+            boolean truncateDestinationFirst) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+            if(truncateDestinationFirst) {
+                String sql = buildTruncateSql(toTable);
+                executeUpdate(stmt, sql);
+            }
+            String sql = buildCollectInsertSql(fromTables, schema, toTable);
+            executeUpdate(stmt, sql);
+            commitIfNecessary(connection);
+        } catch (SQLException ex) {
+            throw safeRollback(connection, ex);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    protected String buildTruncateSql(String table)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("DELETE FROM ");
+        quoteIdentifierString(sb, table);
+
+        return sb.toString();
+    }
+
+    protected String buildCollectInsertSql(List<String> fromTables, JdbcSchema schema, String toTable)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("INSERT INTO ");
+        quoteIdentifierString(sb, toTable);
+        sb.append(" (");
+        {
+            boolean firstColumn = true;
+            for (JdbcColumn c : schema.getColumns()) {
+                if (firstColumn) { firstColumn = false; }
+                else { sb.append(", "); }
+                quoteIdentifierString(sb, c.getName());
+            }
+        }
+        sb.append(") ");
+        {
+            boolean firstTable = true;
+            for (String fromTable : fromTables) {
+                if (firstTable) { firstTable = false; }
+                else { sb.append(" UNION ALL "); }
+                sb.append("SELECT ");
+                boolean firstColumn = true;
+                for (JdbcColumn c : schema.getColumns()) {
+                    if (firstColumn) { firstColumn = false; }
+                    else { sb.append(", "); }
+                    quoteIdentifierString(sb, c.getName());
+                }
+                sb.append(" FROM ");
+                quoteIdentifierString(sb, fromTable);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable) throws SQLException
+    {
+        throw new UnsupportedOperationException("not implemented");
+    }
 
     public void replaceTable(String fromTable, JdbcSchema schema, String toTable) throws SQLException
     {
@@ -377,6 +372,11 @@ public class JdbcOutputConnection
         } finally {
             stmt.close();
         }
+    }
+
+    protected void replaceTablePartitioning(List<String> fromTables, JdbcSchema schema, String toTable) throws SQLException
+    {
+        throw new UnsupportedOperationException("not implemented");
     }
 
     protected void quoteIdentifierString(StringBuilder sb, String str)

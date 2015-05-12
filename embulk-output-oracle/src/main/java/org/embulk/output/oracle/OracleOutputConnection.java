@@ -95,9 +95,9 @@ public class OracleOutputConnection
     }
 
     @Override
-    protected String buildInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
-        String sql = super.buildInsertSql(toTable, toTableSchema);
+        String sql = super.buildPreparedInsertSql(toTable, toTableSchema);
         if (direct) {
             sql = sql.replaceAll("^INSERT ", "INSERT /*+ APPEND_VALUES */ ");
         }

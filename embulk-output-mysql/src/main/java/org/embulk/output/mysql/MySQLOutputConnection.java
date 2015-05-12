@@ -17,7 +17,7 @@ public class MySQLOutputConnection
     }
 
     @Override
-    protected String buildMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 

@@ -387,18 +387,18 @@ public abstract class AbstractJdbcOutputPlugin
 
         case INSERT:
             // aggregate insert into target
-            //con.gatherInsertTables();
-            throw new UnsupportedOperationException("not implemented yet"); // TODO
+            con.collectInsert(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable(), false);
+            break;
 
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
-            throw new UnsupportedOperationException("not implemented yet");
-            //break;
+            con.collectInsert(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable(), true);
+            break;
 
         case MERGE:
             // aggregate merge into target
-            throw new UnsupportedOperationException("not implemented yet");
-            //break;
+            con.collectMerge(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable());
+            break;
 
         case REPLACE:
             // swap table
@@ -407,8 +407,8 @@ public abstract class AbstractJdbcOutputPlugin
 
         case REPLACE_PARTITIONING:
             // aggregate insert into swap table & swap table
-            throw new UnsupportedOperationException("not implemented yet");
-            //break;
+            con.replaceTablePartitioning(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable());
+            break;
         }
     }
 
