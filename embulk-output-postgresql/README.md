@@ -21,6 +21,8 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **table**: destination table name (string, required)
 - **mode**: "replace", "merge" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
+- **timestamp_format**: strftime(3) format when embulk writes a timestamp value to a VARCHAR or CLOB column (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
+- **timezone**: timezone used to format a timestamp value using `timestamp_format` (string, default: UTC)
 - **options**: extra connection properties (hash, default: {})
 
 ### Example
