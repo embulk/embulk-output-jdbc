@@ -1,13 +1,12 @@
 package org.embulk.output;
 
 import java.io.IOException;
-import java.lang.UnsupportedOperationException;
+import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Properties;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -154,44 +153,11 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected String generateSwapTableName(PluginTask task) throws SQLException
+    protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
     {
-        return generateSwapTableName(task, "_bl_tmp", MAX_TABLE_NAME_LENGTH);
-    }
-
-    // TODO move this method to AbstractJdbcOutputPlugin
-    protected String generateSwapTableName(PluginTask task, String suffix, int maxTableNameLength) throws SQLException
-    {
-        String tableName = task.getTable();
-        String uniqueSuffix = getTransactionUniqueName() + suffix;
-
-        if (tableName.length() + uniqueSuffix.length() + 1 > maxTableNameLength) {  // + 1 for '_'
-            // truncate transaction unique name
-            int suffixLength = Math.max(maxTableNameLength - tableName.length() - 1, suffix.length() + 8);  // include 8 characters of the transaction name at least
-            uniqueSuffix = uniqueSuffix.substring(uniqueSuffix.length() - suffixLength);
-        }
-
-        if (tableName.length() + uniqueSuffix.length() + 1 > maxTableNameLength) {
-            // use truncated table name
-            int truncLength = maxTableNameLength - uniqueSuffix.length() - 1;
-            while (true) {
-                truncLength--;
-                if (truncLength <= 0) {
-                    throw new ConfigException("Table name is too long to generate temporary table name");
-                }
-                tableName = tableName.substring(0, truncLength);
-                //if (!connection.tableExists(tableName)) {
-                    // TODO this doesn't help. Rather than truncating more characters,
-                    //      here needs to replace characters with random characters. But
-                    //      to make the result deterministic. So, an idea is replacing
-                    //      the last character to the first (second, third, ... for each loop)
-                    //      of md5(original table name).
-                    return tableName + "_" + uniqueSuffix;
-                //}
-            }
-        }
-
-        return tableName + "_" + uniqueSuffix;
+        OracleCharset charset = ((OracleOutputConnection)con).getCharset();
+        ByteBuffer buffer = charset.javaCharset.encode(identifier);
+        return buffer.remaining() <= MAX_TABLE_NAME_LENGTH;
     }
 
 }

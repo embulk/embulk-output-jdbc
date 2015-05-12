@@ -178,6 +178,18 @@ public class OracleOutputPluginTestImpl
         assertGeneratedTable(table);
     }
 
+    public void testReplaceLongNameMultibyte() throws Exception
+    {
+        String table = "ＴＥＳＴ12345678901234567890";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/yml/test-replace-long-name-multibyte.yml");
+
+        assertGeneratedTable(table);
+    }
+
     private void dropTable(String table) throws SQLException
     {
         String sql = String.format("DROP TABLE %s", table);
