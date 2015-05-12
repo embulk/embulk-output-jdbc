@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.slf4j.Logger;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
@@ -101,6 +102,24 @@ public class RedshiftOutputPlugin
         return new RedshiftOutputConnector(url, props, t.getSchema());
     }
 
+    private static AWSCredentialsProvider getAWSCredentialsProvider(RedshiftPluginTask task)
+    {
+        final AWSCredentials creds = new BasicAWSCredentials(
+                task.getAccessKeyId(), task.getSecretAccessKey());
+        return new AWSCredentialsProvider() {
+            @Override
+            public AWSCredentials getCredentials()
+            {
+                return creds;
+            }
+
+            @Override
+            public void refresh()
+            {
+            }
+        };
+    }
+
     @Override
     protected BatchInsert newBatchInsert(PluginTask task, boolean useMerge) throws IOException, SQLException
     {
@@ -108,9 +127,7 @@ public class RedshiftOutputPlugin
             throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
-        AWSCredentials creds = new BasicAWSCredentials(
-                t.getAccessKeyId(), t.getSecretAccessKey());
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                creds, t.getS3Bucket(), t.getIamUserName());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getIamUserName());
     }
 }
