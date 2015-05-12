@@ -75,11 +75,8 @@ public abstract class AbstractJdbcOutputPlugin
         public JdbcSchema getLoadSchema();
         public void setLoadSchema(JdbcSchema schema);
 
-        public Optional<String> getSwapTable();
-        public void setSwapTable(Optional<String> name);
-
-        public Optional<String> getMultipleLoadTablePrefix();
-        public void setMultipleLoadTablePrefix(Optional<String> prefix);
+        public Optional<List<String>> getIntermediateTables();
+        public void setIntermediateTables(Optional<List<String>> names);
     }
 
     protected void loadDriverJar(String glob)
@@ -113,30 +110,38 @@ public abstract class AbstractJdbcOutputPlugin
     public enum Mode {
         INSERT,
         INSERT_DIRECT,
-        TRUNCATE_INSERT,
         MERGE,
+        MERGE_DIRECT,
+        TRUNCATE_INSERT,
         REPLACE,
-        REPLACE_INPLACE;
-        //REPLACE_PARTITIONING,  // MySQL: partitioning, PostgreSQL: inheritance
+        REPLACE_PARTITIONING;
 
         /**
-         * True if this mode directly modifies the target table without creating temporary tables.
+         * True if this mode directly modifies the target table without creating intermediate tables.
          */
         public boolean isDirectModify()
         {
-            return this == INSERT_DIRECT;
+            return this == INSERT_DIRECT || this == MERGE_DIRECT;
         }
 
         /**
-         * True if this mode creates temporary table for each tasks.
+         * True if this mode creates intermediate table for each tasks.
          */
         public boolean tempTablePerTask()
         {
-            return !(this == INSERT_DIRECT || this == REPLACE_INPLACE || this == MERGE);
+            return this == INSERT || this == MERGE || this == TRUNCATE_INSERT || this == REPLACE_PARTITIONING;
         }
 
         /**
-         * True if this mode uses MERGE statement to commit temporary tables to the target table
+         * True if this mode truncates the target table before committing intermediate tables
+         */
+        public boolean truncateBeforeCommit()
+        {
+            return this == TRUNCATE_INSERT;
+        }
+
+        /**
+         * True if this mode uses MERGE statement to commit intermediate tables to the target table
          */
         public boolean commitByMerge()
         {
@@ -144,11 +149,19 @@ public abstract class AbstractJdbcOutputPlugin
         }
 
         /**
-         * True if this mode swaps the target tables with temporary tables to commit
+         * True if this mode overwrites schema of the target tables
+         */
+        public boolean ignoreTargetTableSchema()
+        {
+            return this == REPLACE || this == REPLACE_PARTITIONING;
+        }
+
+        /**
+         * True if this mode swaps the target tables with intermediate tables to commit
          */
         public boolean commitBySwapTable()
         {
-            return this == REPLACE_INPLACE || this == REPLACE;
+            return this == REPLACE;
         }
     }
 
@@ -158,43 +171,31 @@ public abstract class AbstractJdbcOutputPlugin
     {
         PluginTask task = config.loadConfig(getTaskClass());
 
-        // TODO this is a temporary code. behavior will change in a future release.
         switch(task.getModeConfig()) {
         case "insert":
-            task.setMode(Mode.INSERT_DIRECT);
+            task.setMode(Mode.INSERT);
             break;
-        case "replace":
-            task.setMode(Mode.REPLACE_INPLACE);
+        case "insert_direct":
+            task.setMode(Mode.INSERT_DIRECT);
             break;
         case "merge":
             task.setMode(Mode.MERGE);
             break;
+        case "merge_direct":
+            task.setMode(Mode.MERGE_DIRECT);
+            break;
+        case "truncate_insert":
+            task.setMode(Mode.TRUNCATE_INSERT);
+            break;
+        case "replace":
+            task.setMode(Mode.REPLACE);
+            break;
+        case "replace_partitioning":
+            task.setMode(Mode.REPLACE_PARTITIONING);
+            break;
         default:
-            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, replace, merge", task.getModeConfig()));
+            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, insert_direct, merge, merge_direct truncate_insert, replace and replace_partitioning", task.getModeConfig()));
         }
-
-        //switch(task.getModeConfig()) {
-        ////case "insert":
-        ////    task.setMode(Mode.INSERT);
-        ////    break;
-        //case "insert_direct":
-        //    task.setMode(Mode.INSERT_DIRECT);
-        //    break;
-        ////case "truncate_insert":  // TODO
-        ////    task.setMode(Mode.TRUNCATE_INSERT);
-        ////    break;
-        ////case "merge":  // TODO
-        ////    task.setMode(Mode.MERGE);
-        ////    break;
-        ////case "replace":
-        ////    task.setMode(Mode.REPLACE);
-        ////    break;
-        //case "replace_inplace":
-        //    task.setMode(Mode.REPLACE_INPLACE);
-        //    break;
-        //default:
-        //    new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert_direct, replace_inplace", task.getModeConfig()));
-        //}
 
         task = begin(task, schema, taskCount);
         control.run(task.dump());
@@ -224,7 +225,7 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     private PluginTask begin(final PluginTask task,
-            final Schema schema, int taskCount)
+            final Schema schema, final int taskCount)
     {
         try {
             withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
@@ -232,7 +233,7 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     JdbcOutputConnection con = newConnection(task, true, false);
                     try {
-                        doBegin(con, task, schema);
+                        doBegin(con, task, schema, taskCount);
                     } finally {
                         con.close();
                     }
@@ -293,41 +294,50 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     protected void doBegin(JdbcOutputConnection con,
-            PluginTask task, Schema schema) throws SQLException
+            PluginTask task, Schema schema, int taskCount) throws SQLException
     {
         Mode mode = task.getMode();
+        JdbcSchema newTableSchema = newJdbcSchemaForNewTable(schema);  // TODO get CREATE TABLE statement from task
+
+        if (!mode.isDirectModify()) {
+            // direct modify mode doesn't need intermediate tables.
+            ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
+            if (mode.tempTablePerTask()) {
+                String namePrefix = generateIntermediateTableNamePrefix(task, con, 3);
+                for (int i=0; i < taskCount; i++) {
+                    intermTableNames.add(namePrefix + String.format("%03d", i));
+                }
+            } else {
+                String name = generateIntermediateTableNamePrefix(task, con, 0);
+                intermTableNames.add(name);
+            }
+            // create the intermediate tables here
+            task.setIntermediateTables(Optional.of((List<String>) intermTableNames.build()));
+            for (String name : task.getIntermediateTables().get()) {
+                // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
+                con.dropTableIfExists(name);
+                // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
+                con.createTableIfNotExists(name, newTableSchema);
+            }
+        } else {
+            task.setIntermediateTables(Optional.<List<String>>absent());
+        }
 
         JdbcSchema targetTableSchema;
-        if (mode.commitBySwapTable()) {
-            // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
-            // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
-            // swapTableName = "xyz__0000000054d92dee1e452158_bulk_load_temp"
-            String swapTableName = generateSwapTableName(task, con);
-            con.dropTableIfExists(swapTableName);
-            con.createTableIfNotExists(swapTableName, newJdbcSchemaForNewTable(schema));
-            targetTableSchema = newJdbcSchemaFromExistentTable(con, swapTableName);
-            task.setSwapTable(Optional.of(swapTableName));
+        if (mode.ignoreTargetTableSchema()) {
+            // TODO NullPointerException if taskCount == 0
+            String firstItermTable = task.getIntermediateTables().get().get(0);
+            targetTableSchema = newJdbcSchemaFromExistentTable(con, firstItermTable);
         } else {
+            // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
-            con.createTableIfNotExists(task.getTable(), newJdbcSchemaForNewTable(schema));
+            con.createTableIfNotExists(task.getTable(), newTableSchema);
             targetTableSchema = newJdbcSchemaFromExistentTable(con, task.getTable());
-            task.setSwapTable(Optional.<String>absent());
         }
-
-        if (mode.tempTablePerTask()) {
-            // multipleLoadTablePrefix = "xyz__0000000054d92dee1e452158_"
-            // workers run:
-            //   CREATE TABLE xyz__0000000054d92dee1e452158_%d
-            String multipleLoadTablePrefix = task.getTable() + "_" + getTransactionUniqueName();
-            task.setMultipleLoadTablePrefix(Optional.of(multipleLoadTablePrefix));
-        } else {
-            task.setMultipleLoadTablePrefix(Optional.<String>absent());
-        }
-
         task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
     }
 
-    protected String generateSwapTableName(PluginTask task, JdbcOutputConnection con) throws SQLException
+    protected String generateIntermediateTableNamePrefix(PluginTask task, JdbcOutputConnection con, int suffixLength) throws SQLException
     {
         String tableName = task.getTable();
         String suffix = "_bl_tmp";
@@ -385,18 +395,13 @@ public abstract class AbstractJdbcOutputPlugin
             throw new UnsupportedOperationException("not implemented yet");
             //break;
         case REPLACE:
-            if (taskCount == 1) {
-                // swap table
-                con.replaceTable(task.getSwapTable().get(), task.getLoadSchema(), task.getTable());
-            } else {
-                // aggregate insert into swap table & swap table
-                throw new UnsupportedOperationException("not implemented yet");
-            }
-            break;
-        case REPLACE_INPLACE:
             // swap table
-            con.replaceTable(task.getSwapTable().get(), task.getLoadSchema(), task.getTable());
+            con.replaceTable(task.getIntermediateTables().get().get(0), task.getLoadSchema(), task.getTable());
             break;
+        case REPLACE_PARTITIONING:
+            // aggregate insert into swap table & swap table
+            throw new UnsupportedOperationException("not implemented yet");
+            //break;
         }
     }
 
@@ -404,19 +409,11 @@ public abstract class AbstractJdbcOutputPlugin
             List<CommitReport> successCommitReports)
         throws SQLException
     {
-        if (task.getSwapTable().isPresent()) {
-            con.dropTableIfExists(task.getSwapTable().get());
-        }
-        if (task.getMultipleLoadTablePrefix().isPresent()) {
-            for (int i=0; i < taskCount; i++) {
-                con.dropTableIfExists(formatMultipleLoadTableName(task, i));
+        if (task.getIntermediateTables().isPresent()) {
+            for (String intermTable : task.getIntermediateTables().get()) {
+                con.dropTableIfExists(intermTable);
             }
         }
-    }
-
-    static String formatMultipleLoadTableName(PluginTask task, int taskIndex)
-    {
-        return task.getMultipleLoadTablePrefix().get() + String.format("%04x", taskIndex);
     }
 
     protected JdbcSchema newJdbcSchemaForNewTable(Schema schema)
@@ -532,13 +529,16 @@ public abstract class AbstractJdbcOutputPlugin
         final PluginTask task = taskSource.loadTask(getTaskClass());
         final Mode mode = task.getMode();
 
-        BatchInsert batch;
+        // instantiate BatchInsert without table name
+        BatchInsert batch = null;
         try {
             batch = newBatchInsert(task);
         } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);
         }
+
         try {
+            // configure PageReader -> BatchInsert
             PageReader reader = new PageReader(schema);
             ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
 
@@ -556,39 +556,22 @@ public abstract class AbstractJdbcOutputPlugin
             }
             final JdbcSchema insertSchema = new JdbcSchema(insertColumns.build());
 
-            final BatchInsert b = batch;
-            withRetry(new IdempotentSqlRunnable() {
-                public void run() throws SQLException
-                {
-                    String loadTable;
-                    boolean createTable;
-                    if (mode.tempTablePerTask()) {
-                        // insert, truncate_insert, merge, replace
-                        loadTable = formatMultipleLoadTableName(task, taskIndex);
-                        JdbcOutputConnection con = newConnection(task, true, true);
-                        try {
-                            con.createTableIfNotExists(loadTable, insertSchema);
-                        } finally {
-                            con.close();
-                        }
-
-                    } else if (!mode.tempTablePerTask() && mode.commitBySwapTable()) {
-                        // replace_inplace
-                        loadTable = task.getSwapTable().get();
-
-                    } else {
-                        // insert_direct
-                        loadTable = task.getTable();
-                    }
-                    b.prepare(loadTable, insertSchema);
-                }
-            });
+            // configure BatchInsert -> an intermediate table (!isDirectModify) or the target table (isDirectModify)
+            String destTable;
+            if (mode.tempTablePerTask()) {
+                destTable = task.getIntermediateTables().get().get(taskIndex);
+            } else if (mode.isDirectModify()) {
+                destTable = task.getTable();
+            } else {
+                destTable = task.getIntermediateTables().get().get(0);
+            }
+            batch.prepare(destTable, insertSchema);
 
             PluginPageOutput output = newPluginPageOutput(reader, batch, columnSetters.build(), task);
             batch = null;
             return output;
 
-        } catch (SQLException | InterruptedException ex) {
+        } catch (SQLException ex) {
             throw new RuntimeException(ex);
 
         } finally {
