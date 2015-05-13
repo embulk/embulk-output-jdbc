@@ -42,8 +42,8 @@ import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
-import org.embulk.output.jdbc.RetryExecutor.IdempotentOperation;
-import static org.embulk.output.jdbc.RetryExecutor.retryExecutor;
+import org.embulk.spi.util.RetryExecutor.Retryable;
+import static org.embulk.spi.util.RetryExecutor.retryExecutor;
 import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 
 public abstract class AbstractJdbcOutputPlugin
@@ -818,17 +818,17 @@ public abstract class AbstractJdbcOutputPlugin
     {
         try {
             retryExecutor()
-                .setRetryLimit(12)
-                .setInitialRetryWait(1000)
-                .setMaxRetryWait(30 * 60 * 1000)
-                .runInterruptible(new IdempotentOperation<Void>() {
+                .withRetryLimit(12)
+                .withInitialRetryWait(1000)
+                .withMaxRetryWait(30 * 60 * 1000)
+                .runInterruptible(new Retryable<Void>() {
                     public Void call() throws Exception
                     {
                         op.run();
                         return null;
                     }
 
-                    public void onRetry(Throwable exception, int retryCount, int retryLimit, int retryWait)
+                    public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
                     {
                         if (exception instanceof SQLException) {
                             SQLException ex = (SQLException) exception;
@@ -847,7 +847,7 @@ public abstract class AbstractJdbcOutputPlugin
                         }
                     }
 
-                    public void onGiveup(Throwable firstException, Throwable lastException)
+                    public void onGiveup(Exception firstException, Exception lastException)
                     {
                         if (firstException instanceof SQLException) {
                             SQLException ex = (SQLException) firstException;
@@ -857,7 +857,7 @@ public abstract class AbstractJdbcOutputPlugin
                         }
                     }
 
-                    public boolean isRetryableException(Throwable exception)
+                    public boolean isRetryableException(Exception exception)
                     {
                         //if (exception instanceof SQLException) {
                         //    SQLException ex = (SQLException) exception;
