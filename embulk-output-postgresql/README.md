@@ -26,6 +26,33 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **options**: extra connection properties (hash, default: {})
 - **string_pass_through**: if a value is string, writes it to database without conversion regardless of the target table's column type. Usually, if the target table's column type is not string while the value is string, embulk writes NULL. But if this option is true, embulk lets the database parse the string into the column type. If the conversion fails, the task fails. (boolean, default: false)
 
+### Modes
+
+* **insert**:
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query.
+  * Transactional: Yes. This mode successfully writes all rows, or fails with writing zero rows.
+  * Resumable: Yes.
+* **insert_direct**:
+  * Behavior: This mode inserts rows to the target table directly.
+  * Transactional: No. If fails, the target table could have some rows inserted.
+  * Resumable: No.
+* **truncate_insert**:
+  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
+  * Transactional: Yes.
+  * Resumable: Yes.
+* **merge**:
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query.
+  * Transactional: Yes.
+  * Resumable: Yes.
+* **merge_direct**:
+  * Behavior: This mode inserts rows to the target table directory using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query.
+  * Transactional: No.
+  * Resumable: No.
+* **replace**:
+  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
+  * Transactional: Yes.
+  * Resumable: No.
+
 ### Example
 
 ```yaml
