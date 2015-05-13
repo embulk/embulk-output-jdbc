@@ -5,10 +5,8 @@ Oracle output plugins for Embulk loads records to Oracle.
 ## Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depends on the mode:
-  * **insert**: no
-  * **replace**: yes
-* **Resume supported**: no
+* **Load all or nothing**: depnds on the mode. see bellow.
+* **Resume supported**: depnds on the mode. see bellow.
 
 ## Configuration
 
