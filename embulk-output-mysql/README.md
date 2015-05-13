@@ -23,6 +23,7 @@ MySQL output plugins for Embulk loads records to MySQL.
 - **timestamp_format**: strftime(3) format when embulk writes a timestamp value to a VARCHAR or CLOB column (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
 - **timezone**: timezone used to format a timestamp value using `timestamp_format` (string, default: UTC)
 - **options**: extra connection properties (hash, default: {})
+- **string_pass_through**: if a value is string, writes it to database without conversion regardless of the target table's column type. Usually, if the target table's column type is not string while the value is string, embulk writes NULL. But if this option is true, embulk lets the database parse the string into the column type. If the conversion fails, the task may fails (maybe depending on sql_mode?). (boolean, default: false)
 
 ### Modes
 

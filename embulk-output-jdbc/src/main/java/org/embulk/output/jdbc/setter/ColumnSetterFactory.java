@@ -25,6 +25,20 @@ public class ColumnSetterFactory
         return new SkipColumnSetter(batch, pageReader);
     }
 
+    public ColumnSetter newStringPassThroughColumnSetter(JdbcColumn column)
+    {
+        System.out.println("string pass through: "+column);
+        switch(column.getSqlType()) {
+        // setNString, NClob
+        case Types.NCHAR:
+        case Types.NVARCHAR:
+        case Types.LONGNVARCHAR:
+            return new NStringColumnSetter(batch, pageReader, column, timestampFormatter);
+        default:
+            return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
+        }
+    }
+
     public ColumnSetter newColumnSetter(JdbcColumn column)
     {
         switch(column.getSqlType()) {

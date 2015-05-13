@@ -24,6 +24,7 @@ Oracle output plugins for Embulk loads records to Oracle.
 - **insert_method**: see below
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **options**: extra connection properties (hash, default: {})
+- **string_pass_through**: if a value is string, writes it to database without conversion regardless of the target table's column type. Usually, if the target table's column type is not string while the value is string, embulk writes NULL. But if this option is true, embulk lets the database parse the string into the column type. If the conversion fails, the task may fail. (boolean, default: false)
 
 ### Modes
 

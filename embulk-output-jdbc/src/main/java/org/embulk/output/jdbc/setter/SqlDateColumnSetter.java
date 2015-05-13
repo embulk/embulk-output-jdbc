@@ -42,7 +42,7 @@ public class SqlDateColumnSetter
     @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
-        batch.setString(v);
+        nullValue();
     }
 
     @Override

@@ -11,14 +11,6 @@ import org.embulk.output.jdbc.BatchInsert;
 public class BooleanColumnSetter
         extends ColumnSetter
 {
-    private static final ImmutableSet<String> trueStrings =
-        ImmutableSet.<String>of(
-                "true", "True", "TRUE",
-                "yes", "Yes", "YES",
-                "y", "Y",
-                "on", "On", "ON",
-                "1");
-
     public BooleanColumnSetter(BatchInsert batch, PageReader pageReader,
             JdbcColumn column)
     {
@@ -46,7 +38,7 @@ public class BooleanColumnSetter
     @Override
     protected void stringValue(String v) throws IOException, SQLException
     {
-        batch.setBoolean(trueStrings.contains(v));
+        nullValue();
     }
 
     @Override

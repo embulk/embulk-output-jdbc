@@ -36,14 +36,15 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
+import org.embulk.spi.type.StringType;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.RetryExecutor.IdempotentOperation;
-
 import static org.embulk.output.jdbc.RetryExecutor.retryExecutor;
+import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
@@ -78,6 +79,10 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
         public TimestampFormat getTimestampFormat();
 
+        @Config("string_pass_through")
+        @ConfigDefault("false")
+        public boolean getStringPassThrough();
+
         public void setMergeKeys(Optional<List<String>> keys);
 
         public void setFeatures(Features features);
@@ -86,8 +91,8 @@ public abstract class AbstractJdbcOutputPlugin
         public void setMode(Mode mode);
         public Mode getMode();
 
-        public JdbcSchema getLoadSchema();
-        public void setLoadSchema(JdbcSchema schema);
+        public JdbcSchema getTargetTableSchema();
+        public void setTargetTableSchema(JdbcSchema schema);
 
         public Optional<List<String>> getIntermediateTables();
         public void setIntermediateTables(Optional<List<String>> names);
@@ -409,7 +414,7 @@ public abstract class AbstractJdbcOutputPlugin
             con.createTableIfNotExists(task.getTable(), newTableSchema);
             targetTableSchema = newJdbcSchemaFromExistentTable(con, task.getTable());
         }
-        task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
+        task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
         if (mode.isMerge()) {
             Optional<List<String>> mergeKeys = task.getMergeKeys();
@@ -486,6 +491,8 @@ public abstract class AbstractJdbcOutputPlugin
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
+        JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
+
         switch (task.getMode()) {
         case INSERT_DIRECT:
         case MERGE_DIRECT:
@@ -494,22 +501,22 @@ public abstract class AbstractJdbcOutputPlugin
 
         case INSERT:
             // aggregate insert into target
-            con.collectInsert(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable(), false);
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), false);
             break;
 
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
-            con.collectInsert(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable(), true);
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), true);
             break;
 
         case MERGE:
             // aggregate merge into target
-            con.collectMerge(task.getIntermediateTables().get(), task.getLoadSchema(), task.getTable(), task.getMergeKeys().get());
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getTable(), task.getMergeKeys().get());
             break;
 
         case REPLACE:
             // swap table
-            con.replaceTable(task.getIntermediateTables().get().get(0), task.getLoadSchema(), task.getTable());
+            con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getTable());
             break;
         }
     }
@@ -632,6 +639,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
         final Mode mode = task.getMode();
+        final boolean stringPassThrough = task.getStringPassThrough();
 
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
@@ -649,16 +657,22 @@ public abstract class AbstractJdbcOutputPlugin
             PageReader reader = new PageReader(schema);
             ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, task.getTimestampFormat().newFormatter(task));
 
-            JdbcSchema loadSchema = task.getLoadSchema();
+            JdbcSchema targetTableSchema = task.getTargetTableSchema();
 
             ImmutableList.Builder<JdbcColumn> insertColumns = ImmutableList.builder();
             ImmutableList.Builder<ColumnSetter> columnSetters = ImmutableList.builder();
-            for (JdbcColumn c : loadSchema.getColumns()) {
-                if (c.isSkipColumn()) {
+            int schemaColumnIndex = 0;
+            for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
+                if (targetColumn.isSkipColumn()) {
                     columnSetters.add(factory.newSkipColumnSetter());
+                } else if (stringPassThrough && schema.getColumnType(schemaColumnIndex) instanceof StringType) {
+                    columnSetters.add(factory.newStringPassThroughColumnSetter(targetColumn));
+                    insertColumns.add(targetColumn);
+                    schemaColumnIndex++;
                 } else {
-                    columnSetters.add(factory.newColumnSetter(c));
-                    insertColumns.add(c);
+                    columnSetters.add(factory.newColumnSetter(targetColumn));
+                    insertColumns.add(targetColumn);
+                    schemaColumnIndex++;
                 }
             }
             final JdbcSchema insertSchema = new JdbcSchema(insertColumns.build());
