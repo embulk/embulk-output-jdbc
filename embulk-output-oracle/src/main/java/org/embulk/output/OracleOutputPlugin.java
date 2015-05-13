@@ -14,15 +14,12 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.StandardBatchInsert;
-import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.oracle.DirectBatchInsert;
 import org.embulk.output.oracle.InsertMethod;
 import org.embulk.output.oracle.OracleCharset;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
-import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.time.TimestampFormatter;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -152,12 +149,5 @@ public class OracleOutputPlugin
         }
 
         return new StandardBatchInsert(getConnector(task, true), mergeKeys);
-    }
-
-    @Override
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
-            TimestampFormatter timestampFormatter)
-    {
-        return new OracleColumnSetterFactory(batch, pageReader, timestampFormatter);
     }
 }
