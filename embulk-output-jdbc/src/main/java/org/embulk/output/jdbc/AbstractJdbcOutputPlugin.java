@@ -485,7 +485,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     private boolean checkTableNameLength(String tableName, Charset tableNameCharset, int suffixLength, int maxLength)
     {
-        return tableNameCharset.encode(tableName).remaining() <= maxLength;
+        return tableNameCharset.encode(tableName).remaining() + suffixLength <= maxLength;
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
