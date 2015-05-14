@@ -24,8 +24,6 @@ import org.embulk.spi.PageReader;
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private static final int MAX_TABLE_NAME_LENGTH = 30;
-
     public interface OraclePluginTask
             extends PluginTask
     {
