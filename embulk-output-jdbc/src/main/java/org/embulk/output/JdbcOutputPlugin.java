@@ -46,7 +46,7 @@ public class JdbcOutputPlugin
         public Optional<String> getSchema();
 
         @Config("max_table_name_length")
-        @ConfigDefault("256")
+        @ConfigDefault("30")
         public int getMaxTableNameLength();
     }
 
