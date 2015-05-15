@@ -113,7 +113,7 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.TIMESTAMP:
                     String oracleFormat;
                     DateFormat javaFormat;
-                    if (insertColumn.getTypeName().equals("DATE")) {
+                    if (insertColumn.getSimpleTypeName().equals("DATE")) {
                         oracleFormat = "YYYY-MM-DD HH24:MI:SS";
                         javaFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     } else {
@@ -128,7 +128,7 @@ public class DirectBatchInsert implements BatchInsert
                     break;
 
                 default:
-                    throw new SQLException("Unsupported type : " + insertColumn.getTypeName());
+                    throw new SQLException("Unsupported type : " + insertColumn.getSimpleTypeName());
             }
 
         }

@@ -143,15 +143,15 @@ public class PostgreSQLOutputConnection
     }
 
     @Override
-    protected String convertTypeName(String typeName)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
-        switch(typeName) {
+        switch(c.getSimpleTypeName()) {
         case "CLOB":
             return "TEXT";
         case "BLOB":
             return "BYTEA";
         default:
-            return typeName;
+            return super.buildColumnTypeName(c);
         }
     }
 }

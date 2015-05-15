@@ -187,31 +187,34 @@ public class JdbcOutputConnection
 
     protected String getCreateTableTypeName(JdbcColumn c)
     {
-        String convertedTypeName = convertTypeName(c.getTypeName());
-        switch (getColumnDeclareType(convertedTypeName, c)) {
-        case SIZE:
-            return String.format("%s(%d)", convertedTypeName, c.getSizeTypeParameter());
-        case SIZE_AND_SCALE:
-            if (c.getScaleTypeParameter() < 0) {
-                return String.format("%s(%d,0)", convertedTypeName, c.getSizeTypeParameter());
-            } else {
-                return String.format("%s(%d,%d)", convertedTypeName, c.getSizeTypeParameter(), c.getScaleTypeParameter());
-            }
-        case SIZE_AND_OPTIONAL_SCALE:
-            if (c.getScaleTypeParameter() < 0) {
-                return String.format("%s(%d)", convertedTypeName, c.getSizeTypeParameter());
-            } else {
-                return String.format("%s(%d,%d)", convertedTypeName, c.getSizeTypeParameter(), c.getScaleTypeParameter());
-            }
-        default:  // SIMPLE
-            return convertedTypeName;
+        if (c.getDeclaredType().isPresent()) {
+            return c.getDeclaredType().get();
+        } else {
+            return buildColumnTypeName(c);
         }
     }
 
-    // hook point for subclasses
-    protected String convertTypeName(String typeName)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
-        return typeName;
+        String simpleTypeName = c.getSimpleTypeName();
+        switch (getColumnDeclareType(simpleTypeName, c)) {
+        case SIZE:
+            return String.format("%s(%d)", simpleTypeName, c.getSizeTypeParameter());
+        case SIZE_AND_SCALE:
+            if (c.getScaleTypeParameter() < 0) {
+                return String.format("%s(%d,0)", simpleTypeName, c.getSizeTypeParameter());
+            } else {
+                return String.format("%s(%d,%d)", simpleTypeName, c.getSizeTypeParameter(), c.getScaleTypeParameter());
+            }
+        case SIZE_AND_OPTIONAL_SCALE:
+            if (c.getScaleTypeParameter() < 0) {
+                return String.format("%s(%d)", simpleTypeName, c.getSizeTypeParameter());
+            } else {
+                return String.format("%s(%d,%d)", simpleTypeName, c.getSizeTypeParameter(), c.getScaleTypeParameter());
+            }
+        default:  // SIMPLE
+            return simpleTypeName;
+        }
     }
 
     // TODO

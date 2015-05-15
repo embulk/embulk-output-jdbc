@@ -435,7 +435,7 @@ public abstract class AbstractJdbcOutputPlugin
             } else {
                 ImmutableList.Builder<String> builder = ImmutableList.builder();
                 for (JdbcColumn column : targetTableSchema.getColumns()) {
-                    if (column.isPrimaryKey()) {
+                    if (column.isUniqueKey()) {
                         builder.add(column.getName());
                     }
                 }
@@ -540,37 +540,37 @@ public abstract class AbstractJdbcOutputPlugin
             c.visit(new ColumnVisitor() {
                 public void booleanColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                            columnName, "BOOLEAN",
-                            Types.BOOLEAN, 1, 0, false));
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.BOOLEAN, "BOOLEAN",
+                            1, 0, false, false));
                 }
 
                 public void longColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                            columnName, "BIGINT",
-                            Types.BIGINT, 22, 0, false));
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.BIGINT, "BIGINT",
+                            22, 0, false, false));
                 }
 
                 public void doubleColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                            columnName, "DOUBLE PRECISION",
-                            Types.FLOAT, 24, 0, false));
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.FLOAT, "DOUBLE PRECISION",
+                            24, 0, false, false));
                 }
 
                 public void stringColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                                columnName, "CLOB",
-                                Types.CLOB, 4000, 0, false));  // TODO size type param
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.CLOB, "CLOB",
+                            4000, 0, false, false));  // TODO size type param
                 }
 
                 public void timestampColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                                columnName, "TIMESTAMP",
-                                Types.TIMESTAMP, 26, 0, false));  // size type param is from postgresql.
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.TIMESTAMP, "TIMESTAMP",
+                            26, 0, false, false));  // size type param is from postgresql
                 }
             });
         }
@@ -600,22 +600,22 @@ public abstract class AbstractJdbcOutputPlugin
                 JdbcUtils.escapeSearchString(tableName, escape),
                 null);
         try {
-            while(rs.next()) {
+            while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
-                String typeName = rs.getString("TYPE_NAME");
-                boolean isPrimaryKey = primaryKeys.contains(columnName);
-                typeName = typeName.toUpperCase(Locale.ENGLISH);
+                String simpleTypeName = rs.getString("TYPE_NAME").toUpperCase(Locale.ENGLISH);
+                boolean isUniqueKey = primaryKeys.contains(columnName);
                 int sqlType = rs.getInt("DATA_TYPE");
                 int colSize = rs.getInt("COLUMN_SIZE");
                 int decDigit = rs.getInt("DECIMAL_DIGITS");
                 if (rs.wasNull()) {
                     decDigit = -1;
                 }
-                //rs.getString("IS_NULLABLE").equals("NO")  // "YES" or ""  // TODO
+                boolean isNotNull = "NO".equals(rs.getString("IS_NULLABLE"));
                 //rs.getString("COLUMN_DEF") // or null  // TODO
-                columns.add(new JdbcColumn(
-                            columnName, typeName,
-                            sqlType, colSize, decDigit, isPrimaryKey));
+                columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, sqlType, simpleTypeName, colSize, decDigit, isNotNull, isUniqueKey));
+                // We can't get declared column name using JDBC API.
+                // Subclasses need to overwrite it.
             }
         } finally {
             rs.close();

@@ -3,6 +3,7 @@ package org.embulk.output.mysql;
 import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 
@@ -78,13 +79,13 @@ public class MySQLOutputConnection
     }
 
     @Override
-    protected String convertTypeName(String typeName)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
-        switch(typeName) {
+        switch(c.getSimpleTypeName()) {
         case "CLOB":
             return "TEXT";
         default:
-            return typeName;
+            return super.buildColumnTypeName(c);
         }
     }
 }

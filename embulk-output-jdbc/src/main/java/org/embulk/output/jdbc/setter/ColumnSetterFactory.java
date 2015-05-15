@@ -140,6 +140,7 @@ public class ColumnSetterFactory
     {
         throw new UnsupportedOperationException(
                 String.format("Unsupported type %s (sqlType=%d, size=%d, scale=%d)",
-                    column.getTypeName(), column.getSqlType(), column.getSizeTypeParameter(), column.getScaleTypeParameter()));
+                    column.getDeclaredType().or(column.getSimpleTypeName()),
+                    column.getSqlType(), column.getSizeTypeParameter(), column.getScaleTypeParameter()));
     }
 }

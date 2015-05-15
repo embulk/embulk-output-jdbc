@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 
 public class OracleOutputConnection
@@ -39,13 +40,13 @@ public class OracleOutputConnection
     }
 
     @Override
-    protected String convertTypeName(String typeName)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
-        switch(typeName) {
+        switch(c.getSimpleTypeName()) {
         case "BIGINT":
             return "NUMBER(19,0)";
         default:
-            return typeName;
+            return super.buildColumnTypeName(c);
         }
     }
 
@@ -53,7 +54,6 @@ public class OracleOutputConnection
     protected void setSearchPath(String schema) throws SQLException {
         // NOP
     }
-
 
     @Override
     public void dropTableIfExists(String tableName) throws SQLException
