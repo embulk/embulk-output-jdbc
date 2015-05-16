@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.embulk.spi.ColumnVisitor;
-import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -16,26 +15,25 @@ public class BigDecimalColumnSetter
     private static final BigDecimal ZERO = BigDecimal.valueOf(0L);
     private static final BigDecimal ONE = BigDecimal.valueOf(1L);
 
-    public BigDecimalColumnSetter(BatchInsert batch, PageReader pageReader,
-            JdbcColumn column)
+    public BigDecimalColumnSetter(BatchInsert batch, JdbcColumn column)
     {
-        super(batch, pageReader, column);
+        super(batch, column);
     }
 
     @Override
-    protected void booleanValue(boolean v) throws IOException, SQLException
+    public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setBigDecimal(v ? ONE : ZERO);
     }
 
     @Override
-    protected void longValue(long v) throws IOException, SQLException
+    public void longValue(long v) throws IOException, SQLException
     {
         batch.setBigDecimal(BigDecimal.valueOf(v));
     }
 
     @Override
-    protected void doubleValue(double v) throws IOException, SQLException
+    public void doubleValue(double v) throws IOException, SQLException
     {
         if (Double.isNaN(v) || Double.isInfinite(v)) {
             nullValue();
@@ -45,7 +43,7 @@ public class BigDecimalColumnSetter
     }
 
     @Override
-    protected void stringValue(String v) throws IOException, SQLException
+    public void stringValue(String v) throws IOException, SQLException
     {
         BigDecimal dv;
         try {
@@ -58,7 +56,7 @@ public class BigDecimalColumnSetter
     }
 
     @Override
-    protected void timestampValue(Timestamp v) throws IOException, SQLException
+    public void timestampValue(Timestamp v) throws IOException, SQLException
     {
         nullValue();
     }

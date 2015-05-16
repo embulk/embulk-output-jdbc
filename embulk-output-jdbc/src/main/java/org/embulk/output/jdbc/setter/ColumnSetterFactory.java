@@ -2,27 +2,24 @@ package org.embulk.output.jdbc.setter;
 
 import java.sql.Types;
 import org.embulk.spi.time.TimestampFormatter;
-import org.embulk.spi.PageReader;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 
 public class ColumnSetterFactory
 {
     protected final BatchInsert batch;
-    protected final PageReader pageReader;
     protected final TimestampFormatter timestampFormatter;
 
-    public ColumnSetterFactory(BatchInsert batch, PageReader pageReader,
+    public ColumnSetterFactory(BatchInsert batch,
             TimestampFormatter timestampFormatter)
     {
         this.batch = batch;
-        this.pageReader = pageReader;
         this.timestampFormatter = timestampFormatter;
     }
 
     public SkipColumnSetter newSkipColumnSetter()
     {
-        return new SkipColumnSetter(batch, pageReader);
+        return new SkipColumnSetter(batch);
     }
 
     public ColumnSetter newStringPassThroughColumnSetter(JdbcColumn column)
@@ -33,9 +30,9 @@ public class ColumnSetterFactory
         case Types.NCHAR:
         case Types.NVARCHAR:
         case Types.LONGNVARCHAR:
-            return new NStringColumnSetter(batch, pageReader, column, timestampFormatter);
+            return new NStringColumnSetter(batch, column, timestampFormatter);
         default:
-            return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
+            return new StringColumnSetter(batch, column, timestampFormatter);
         }
     }
 
@@ -44,46 +41,46 @@ public class ColumnSetterFactory
         switch(column.getSqlType()) {
         // setByte
         case Types.TINYINT:
-            return new ByteColumnSetter(batch, pageReader, column);
+            return new ByteColumnSetter(batch, column);
 
         // setShort
         case Types.SMALLINT:
-            return new ShortColumnSetter(batch, pageReader, column);
+            return new ShortColumnSetter(batch, column);
 
         // setInt
         case Types.INTEGER:
-            return new IntColumnSetter(batch, pageReader, column);
+            return new IntColumnSetter(batch, column);
 
         // setLong
         case Types.BIGINT:
-            return new LongColumnSetter(batch, pageReader, column);
+            return new LongColumnSetter(batch, column);
 
         // setDouble
         case Types.DOUBLE:
         case Types.FLOAT:
-            return new DoubleColumnSetter(batch, pageReader, column);
+            return new DoubleColumnSetter(batch, column);
 
         // setFloat
         case Types.REAL:
-            return new FloatColumnSetter(batch, pageReader, column);
+            return new FloatColumnSetter(batch, column);
 
         // setBool
         case Types.BOOLEAN:
         case Types.BIT:  // JDBC BIT is boolean, unlike SQL-92
-            return new BooleanColumnSetter(batch, pageReader, column);
+            return new BooleanColumnSetter(batch, column);
 
         // setString, Clob
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
         case Types.CLOB:
-            return new StringColumnSetter(batch, pageReader, column, timestampFormatter);
+            return new StringColumnSetter(batch, column, timestampFormatter);
 
         // setNString, NClob
         case Types.NCHAR:
         case Types.NVARCHAR:
         case Types.LONGNVARCHAR:
-            return new NStringColumnSetter(batch, pageReader, column, timestampFormatter);
+            return new NStringColumnSetter(batch, column, timestampFormatter);
 
         // TODO
         //// setBytes Blob
@@ -91,24 +88,24 @@ public class ColumnSetterFactory
         //case Types.VARBINARY:
         //case Types.LONGVARBINARY:
         //case Types.BLOB:
-        //    return new BytesColumnSetter(batch, pageReader, column);
+        //    return new BytesColumnSetter(batch, column);
 
         // Time
         case Types.DATE:
-            return new SqlDateColumnSetter(batch, pageReader, column, timestampFormatter.getTimeZone());
+            return new SqlDateColumnSetter(batch, column, timestampFormatter.getTimeZone());
         case Types.TIME:
-            return new SqlTimeColumnSetter(batch, pageReader, column);
+            return new SqlTimeColumnSetter(batch, column);
         case Types.TIMESTAMP:
-            return new SqlTimestampColumnSetter(batch, pageReader, column);
+            return new SqlTimestampColumnSetter(batch, column);
 
         // Null
         case Types.NULL:
-            return new NullColumnSetter(batch, pageReader, column);
+            return new NullColumnSetter(batch, column);
 
         // BigDecimal
         case Types.NUMERIC:
         case Types.DECIMAL:
-            return new BigDecimalColumnSetter(batch, pageReader, column);
+            return new BigDecimalColumnSetter(batch, column);
 
         // others
         case Types.ARRAY:  // array

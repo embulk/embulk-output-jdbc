@@ -14,9 +14,13 @@ import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import org.slf4j.Logger;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.embulk.config.CommitReport;
@@ -42,6 +46,7 @@ import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
+import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
 import org.embulk.spi.util.RetryExecutor.Retryable;
 import static org.embulk.spi.util.RetryExecutor.retryExecutor;
 import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
@@ -64,7 +69,7 @@ public abstract class AbstractJdbcOutputPlugin
         public String getTable();
 
         @Config("mode")
-        public String getModeConfig();
+        public Mode getMode();
 
         @Config("batch_size")
         @ConfigDefault("16777216")
@@ -87,9 +92,6 @@ public abstract class AbstractJdbcOutputPlugin
 
         public void setFeatures(Features features);
         public Features getFeatures();
-
-        public void setMode(Mode mode);
-        public Mode getMode();
 
         public JdbcSchema getTargetTableSchema();
         public void setTargetTableSchema(JdbcSchema schema);
@@ -185,6 +187,34 @@ public abstract class AbstractJdbcOutputPlugin
         TRUNCATE_INSERT,
         REPLACE;
 
+        @JsonValue
+        @Override
+        public String toString()
+        {
+            return name().toLowerCase(Locale.ENGLISH);
+        }
+
+        @JsonCreator
+        public static Mode fromString(String value)
+        {
+            switch(value) {
+            case "insert":
+                return INSERT;
+            case "insert_direct":
+                return INSERT_DIRECT;
+            case "merge":
+                return MERGE;
+            case "merge_direct":
+                return MERGE_DIRECT;
+            case "truncate_insert":
+                return TRUNCATE_INSERT;
+            case "replace":
+                return REPLACE;
+            default:
+                throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are insert, insert_direct, merge, merge_direct, truncate_insert, replace", value));
+            }
+        }
+
         /**
          * True if this mode directly modifies the target table without creating intermediate tables.
          */
@@ -250,31 +280,8 @@ public abstract class AbstractJdbcOutputPlugin
         Features features = getFeatures(task);
         task.setFeatures(features);
 
-        switch(task.getModeConfig()) {
-        case "insert":
-            task.setMode(Mode.INSERT);
-            break;
-        case "insert_direct":
-            task.setMode(Mode.INSERT_DIRECT);
-            break;
-        case "merge":
-            task.setMode(Mode.MERGE);
-            break;
-        case "merge_direct":
-            task.setMode(Mode.MERGE_DIRECT);
-            break;
-        case "truncate_insert":
-            task.setMode(Mode.TRUNCATE_INSERT);
-            break;
-        case "replace":
-            task.setMode(Mode.REPLACE);
-            break;
-        default:
-            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: %s", task.getModeConfig(), features.getSupportedModes()));
-        }
-
         if (!features.getSupportedModes().contains(task.getMode())) {
-            throw new ConfigException(String.format("This output type doesn't support '%s'. Supported modes are: %s", task.getModeConfig(), features.getSupportedModes()));
+            throw new ConfigException(String.format("This output type doesn't support '%s'. Supported modes are: %s", task.getMode(), features.getSupportedModes()));
         }
 
         task = begin(task, schema, taskCount);
@@ -655,7 +662,7 @@ public abstract class AbstractJdbcOutputPlugin
         try {
             // configure PageReader -> BatchInsert
             PageReader reader = new PageReader(schema);
-            ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, task.getTimestampFormat().newFormatter(task));
+            ColumnSetterFactory factory = newColumnSetterFactory(batch, task.getTimestampFormat().newFormatter(task));
 
             JdbcSchema targetTableSchema = task.getTargetTableSchema();
 
@@ -688,7 +695,7 @@ public abstract class AbstractJdbcOutputPlugin
             }
             batch.prepare(destTable, insertSchema);
 
-            PluginPageOutput output = newPluginPageOutput(reader, batch, columnSetters.build(), task);
+            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters.build(), task.getBatchSize());
             batch = null;
             return output;
 
@@ -706,39 +713,37 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
-            TimestampFormatter timestampFormatter)
+    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, TimestampFormatter timestampFormatter)
     {
-        return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
-    }
-
-    protected PluginPageOutput newPluginPageOutput(PageReader reader,
-                                                   BatchInsert batch, List<ColumnSetter> columnSetters,
-                                                   PluginTask task)
-    {
-        return new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
+        return new ColumnSetterFactory(batch, timestampFormatter);
     }
 
     public static class PluginPageOutput
             implements TransactionalPageOutput
     {
         protected final List<Column> columns;
-        protected final List<ColumnSetter> columnSetters;
+        protected final List<ColumnSetterVisitor> columnVisitors;
         private final PageReader pageReader;
         private final BatchInsert batch;
         private final int batchSize;
-        private final int foraceBatchFlushSize;
+        private final int forceBatchFlushSize;
 
-        public PluginPageOutput(PageReader pageReader,
+        public PluginPageOutput(final PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
                 int batchSize)
         {
             this.pageReader = pageReader;
             this.batch = batch;
             this.columns = pageReader.getSchema().getColumns();
-            this.columnSetters = columnSetters;
+            this.columnVisitors = ImmutableList.copyOf(Lists.transform(
+                        columnSetters, new Function<ColumnSetter, ColumnSetterVisitor>() {
+                            public ColumnSetterVisitor apply(ColumnSetter setter)
+                            {
+                                return new ColumnSetterVisitor(pageReader, setter);
+                            }
+                        }));
             this.batchSize = batchSize;
-            this.foraceBatchFlushSize = batchSize * 2;
+            this.forceBatchFlushSize = batchSize * 2;
         }
 
         @Override
@@ -747,7 +752,7 @@ public abstract class AbstractJdbcOutputPlugin
             try {
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
-                    if (batch.getBatchWeight() > foraceBatchFlushSize) {
+                    if (batch.getBatchWeight() > forceBatchFlushSize) {
                         batch.flush();
                     }
                     handleColumnsSetters();
@@ -794,12 +799,11 @@ public abstract class AbstractJdbcOutputPlugin
 
         protected void handleColumnsSetters()
         {
-            int size = columnSetters.size();
+            int size = columnVisitors.size();
             for (int i=0; i < size; i++) {
-                columns.get(i).visit(columnSetters.get(i));
+                columns.get(i).visit(columnVisitors.get(i));
             }
         }
-
     }
 
     public static interface IdempotentSqlRunnable
