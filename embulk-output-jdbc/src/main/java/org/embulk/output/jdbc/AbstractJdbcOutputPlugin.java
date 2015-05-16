@@ -2,6 +2,7 @@ package org.embulk.output.jdbc;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
@@ -84,9 +85,9 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
         public TimestampFormat getTimestampFormat();
 
-        @Config("string_pass_through")
-        @ConfigDefault("false")
-        public boolean getStringPassThrough();
+        @Config("column_options")
+        @ConfigDefault("{}")
+        public Map<String, ColumnOption> getColumnOptions();
 
         public void setMergeKeys(Optional<List<String>> keys);
 
@@ -99,6 +100,75 @@ public abstract class AbstractJdbcOutputPlugin
         public Optional<List<String>> getIntermediateTables();
         public void setIntermediateTables(Optional<List<String>> names);
     }
+
+    public static interface ColumnOption
+            extends Task
+    {
+        @Config("value_type")
+        @ConfigDefault("\"coalesce\"")
+        public String getValueType();
+    }
+
+    //public static enum ColumnValueType
+    //{
+    //    BYTE,
+    //    SHORT,
+    //    INT,
+    //    LONG,
+    //    DOUBLE,
+    //    FLOAT,
+    //    BOOLEAN,
+    //    STRING,
+    //    NSTRING,
+    //    DATE,
+    //    TIME,
+    //    TIMESTAMP,
+    //    DECIMAL,
+    //    PASS,
+    //    COALESCE;
+    //
+    //    @JsonValue
+    //    @Override
+    //    public String toString()
+    //    {
+    //        return name().toLowerCase(Locale.ENGLISH);
+    //    }
+    //
+    //    @JsonCreator
+    //    public static ColumnValueType fromString(String value)
+    //    {
+    //        switch(value) {
+    //        case "byte":
+    //            return BYTE;
+    //        case "short":
+    //            return SHORT;
+    //        case "long":
+    //            return LONG;
+    //        case "float":
+    //            return FLOAT;
+    //        case "boolean":
+    //            return BOOLEAN;
+    //        case "string":
+    //            return STRING;
+    //        case "nstring":
+    //            return NSTRING;
+    //        case "date":
+    //            return DATE;
+    //        case "time":
+    //            return TIME;
+    //        case "timestamp":
+    //            return TIMESTAMP;
+    //        case "decimal":
+    //            return DECIMAL;
+    //        case "pass":
+    //            return PASS;
+    //        case "coalesce":
+    //            return COALESCE;
+    //        default:
+    //            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are insert, insert_direct, merge, merge_direct, truncate_insert, replace", value));
+    //        }
+    //    }
+    //}
 
     public static class Features
     {
@@ -646,7 +716,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
         final Mode mode = task.getMode();
-        final boolean stringPassThrough = task.getStringPassThrough();
+        final Map<String, ColumnOption> columnOptions = task.getColumnOptions();
 
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
@@ -672,12 +742,15 @@ public abstract class AbstractJdbcOutputPlugin
             for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
                 if (targetColumn.isSkipColumn()) {
                     columnSetters.add(factory.newSkipColumnSetter());
-                } else if (stringPassThrough && schema.getColumnType(schemaColumnIndex) instanceof StringType) {
-                    columnSetters.add(factory.newStringPassThroughColumnSetter(targetColumn));
-                    insertColumns.add(targetColumn);
-                    schemaColumnIndex++;
                 } else {
-                    columnSetters.add(factory.newColumnSetter(targetColumn));
+                    Column c = schema.getColumn(schemaColumnIndex);
+                    Optional<ColumnOption> columnOption = Optional.fromNullable(columnOptions.get(c.getName()));
+
+                    String valueType = "coalesce";
+                    if (columnOption.isPresent()) {
+                        valueType = columnOption.get().getValueType();
+                    }
+                    columnSetters.add(factory.newColumnSetter(targetColumn, valueType));
                     insertColumns.add(targetColumn);
                     schemaColumnIndex++;
                 }

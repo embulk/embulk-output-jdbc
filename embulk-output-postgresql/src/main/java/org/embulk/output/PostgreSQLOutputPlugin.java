@@ -6,15 +6,12 @@ import java.io.IOException;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import org.embulk.spi.Exec;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.postgresql.PostgreSQLOutputConnector;
 import org.embulk.output.postgresql.PostgreSQLCopyBatchInsert;
-import org.embulk.spi.PageReader;
 
 public class PostgreSQLOutputPlugin
         extends AbstractJdbcOutputPlugin

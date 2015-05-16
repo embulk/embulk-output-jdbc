@@ -4,6 +4,7 @@ import java.sql.Types;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.config.ConfigException;
 
 public class ColumnSetterFactory
 {
@@ -20,6 +21,47 @@ public class ColumnSetterFactory
     public SkipColumnSetter newSkipColumnSetter()
     {
         return new SkipColumnSetter(batch);
+    }
+
+    public ColumnSetter newColumnSetter(JdbcColumn column, String valueType)
+    {
+        switch (valueType) {
+        case "coalesce":
+            return newColumnSetter(column);
+        case "byte":
+            return new ByteColumnSetter(batch, column);
+        case "short":
+            return new ShortColumnSetter(batch, column);
+        case "int":
+            return new IntColumnSetter(batch, column);
+        case "long":
+            return new LongColumnSetter(batch, column);
+        case "double":
+            return new DoubleColumnSetter(batch, column);
+        case "float":
+            return new FloatColumnSetter(batch, column);
+        case "boolean":
+            return new BooleanColumnSetter(batch, column);
+        case "string":
+            return new StringColumnSetter(batch, column, timestampFormatter);
+        case "nstring":
+            return new NStringColumnSetter(batch, column, timestampFormatter);
+        case "data":
+            return new SqlDateColumnSetter(batch, column, timestampFormatter.getTimeZone());
+        case "time":
+            return new SqlTimeColumnSetter(batch, column);
+        case "timestamp":
+            return new SqlTimestampColumnSetter(batch, column);
+        case "decimal":
+            return new BigDecimalColumnSetter(batch, column);
+        case "null":
+            return new NullColumnSetter(batch, column);
+        case "pass":
+            return new PassThroughColumnSetter(batch, column, timestampFormatter);
+        default:
+            // TODO validate valueType at AbstractJdbcOutputPlugin#transaction so that here never throws exception
+            throw new ConfigException(String.format("Unknown value_type '%s' for column '%s'", valueType, column.getName()));
+        }
     }
 
     public ColumnSetter newStringPassThroughColumnSetter(JdbcColumn column)
