@@ -59,7 +59,6 @@ public class ColumnSetterFactory
         case "pass":
             return new PassThroughColumnSetter(batch, column, timestampFormatter);
         default:
-            // TODO validate valueType at AbstractJdbcOutputPlugin#transaction so that here never throws exception
             throw new ConfigException(String.format("Unknown value_type '%s' for column '%s'", valueType, column.getName()));
         }
     }

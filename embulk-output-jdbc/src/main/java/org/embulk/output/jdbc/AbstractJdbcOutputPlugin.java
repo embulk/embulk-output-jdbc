@@ -109,67 +109,6 @@ public abstract class AbstractJdbcOutputPlugin
         public String getValueType();
     }
 
-    //public static enum ColumnValueType
-    //{
-    //    BYTE,
-    //    SHORT,
-    //    INT,
-    //    LONG,
-    //    DOUBLE,
-    //    FLOAT,
-    //    BOOLEAN,
-    //    STRING,
-    //    NSTRING,
-    //    DATE,
-    //    TIME,
-    //    TIMESTAMP,
-    //    DECIMAL,
-    //    PASS,
-    //    COALESCE;
-    //
-    //    @JsonValue
-    //    @Override
-    //    public String toString()
-    //    {
-    //        return name().toLowerCase(Locale.ENGLISH);
-    //    }
-    //
-    //    @JsonCreator
-    //    public static ColumnValueType fromString(String value)
-    //    {
-    //        switch(value) {
-    //        case "byte":
-    //            return BYTE;
-    //        case "short":
-    //            return SHORT;
-    //        case "long":
-    //            return LONG;
-    //        case "float":
-    //            return FLOAT;
-    //        case "boolean":
-    //            return BOOLEAN;
-    //        case "string":
-    //            return STRING;
-    //        case "nstring":
-    //            return NSTRING;
-    //        case "date":
-    //            return DATE;
-    //        case "time":
-    //            return TIME;
-    //        case "timestamp":
-    //            return TIMESTAMP;
-    //        case "decimal":
-    //            return DECIMAL;
-    //        case "pass":
-    //            return PASS;
-    //        case "coalesce":
-    //            return COALESCE;
-    //        default:
-    //            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are insert, insert_direct, merge, merge_direct, truncate_insert, replace", value));
-    //        }
-    //    }
-    //}
-
     public static class Features
     {
         private int maxTableNameLength = 64;
@@ -456,6 +395,7 @@ public abstract class AbstractJdbcOutputPlugin
         Mode mode = task.getMode();
         JdbcSchema newTableSchema = newJdbcSchemaForNewTable(schema);  // TODO get CREATE TABLE statement from task
 
+        // create intermediate tables
         if (!mode.isDirectModify()) {
             // direct modify mode doesn't need intermediate tables.
             ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
@@ -480,6 +420,7 @@ public abstract class AbstractJdbcOutputPlugin
             task.setIntermediateTables(Optional.<List<String>>absent());
         }
 
+        // build JdbcSchema from a table
         JdbcSchema targetTableSchema;
         if (mode.ignoreTargetTableSchema()) {
             // TODO NullPointerException if taskCount == 0
@@ -493,6 +434,12 @@ public abstract class AbstractJdbcOutputPlugin
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
+        // validate column_options
+        newColumnSetters(
+                newColumnSetterFactory(null, task.getTimestampFormat().newFormatter(task)),  // TODO create a dummy BatchInsert
+                task.getTargetTableSchema(), schema, task.getColumnOptions());
+
+        // normalize merge_key parameter for merge modes
         if (mode.isMerge()) {
             Optional<List<String>> mergeKeys = task.getMergeKeys();
             if (task.getFeatures().getIgnoreMergeKeys()) {
@@ -716,7 +663,6 @@ public abstract class AbstractJdbcOutputPlugin
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
         final Mode mode = task.getMode();
-        final Map<String, ColumnOption> columnOptions = task.getColumnOptions();
 
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
@@ -732,30 +678,11 @@ public abstract class AbstractJdbcOutputPlugin
         try {
             // configure PageReader -> BatchInsert
             PageReader reader = new PageReader(schema);
-            ColumnSetterFactory factory = newColumnSetterFactory(batch, task.getTimestampFormat().newFormatter(task));
 
-            JdbcSchema targetTableSchema = task.getTargetTableSchema();
-
-            ImmutableList.Builder<JdbcColumn> insertColumns = ImmutableList.builder();
-            ImmutableList.Builder<ColumnSetter> columnSetters = ImmutableList.builder();
-            int schemaColumnIndex = 0;
-            for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
-                if (targetColumn.isSkipColumn()) {
-                    columnSetters.add(factory.newSkipColumnSetter());
-                } else {
-                    Column c = schema.getColumn(schemaColumnIndex);
-                    Optional<ColumnOption> columnOption = Optional.fromNullable(columnOptions.get(c.getName()));
-
-                    String valueType = "coalesce";
-                    if (columnOption.isPresent()) {
-                        valueType = columnOption.get().getValueType();
-                    }
-                    columnSetters.add(factory.newColumnSetter(targetColumn, valueType));
-                    insertColumns.add(targetColumn);
-                    schemaColumnIndex++;
-                }
-            }
-            final JdbcSchema insertSchema = new JdbcSchema(insertColumns.build());
+            List<ColumnSetter> columnSetters = newColumnSetters(
+                    newColumnSetterFactory(batch, task.getTimestampFormat().newFormatter(task)),
+                    task.getTargetTableSchema(), schema, task.getColumnOptions());
+            JdbcSchema insertIntoSchema = filterSkipColumns(task.getTargetTableSchema());
 
             // configure BatchInsert -> an intermediate table (!isDirectModify) or the target table (isDirectModify)
             String destTable;
@@ -766,9 +693,9 @@ public abstract class AbstractJdbcOutputPlugin
             } else {
                 destTable = task.getIntermediateTables().get().get(0);
             }
-            batch.prepare(destTable, insertSchema);
+            batch.prepare(destTable, insertIntoSchema);
 
-            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters.build(), task.getBatchSize());
+            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
             batch = null;
             return output;
 
@@ -789,6 +716,29 @@ public abstract class AbstractJdbcOutputPlugin
     protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, TimestampFormatter timestampFormatter)
     {
         return new ColumnSetterFactory(batch, timestampFormatter);
+    }
+
+    protected static List<ColumnSetter> newColumnSetters(ColumnSetterFactory factory,
+            JdbcSchema targetTableSchema, Schema inputValueSchema, Map<String, ColumnOption> columnOptions)
+    {
+        ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
+        int schemaColumnIndex = 0;
+        for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
+            if (targetColumn.isSkipColumn()) {
+                builder.add(factory.newSkipColumnSetter());
+            } else {
+                Column c = inputValueSchema.getColumn(schemaColumnIndex);
+                Optional<ColumnOption> columnOption = Optional.fromNullable(columnOptions.get(c.getName()));
+
+                String valueType = "coalesce";
+                if (columnOption.isPresent()) {
+                    valueType = columnOption.get().getValueType();
+                }
+                builder.add(factory.newColumnSetter(targetColumn, valueType));
+                schemaColumnIndex++;
+            }
+        }
+        return builder.build();
     }
 
     public static class PluginPageOutput
