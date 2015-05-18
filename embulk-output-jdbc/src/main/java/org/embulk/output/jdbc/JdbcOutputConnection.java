@@ -132,35 +132,11 @@ public class JdbcOutputConnection
 
         sb.append("CREATE TABLE IF NOT EXISTS ");
         quoteIdentifierString(sb, name);
-        sb.append(buildColumnsOfCreateTableSql(schema));
+        sb.append(buildCreateTableSchemaSql(schema));
         return sb.toString();
     }
 
-    public void createTable(String tableName, JdbcSchema schema) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            String sql = buildCreateTableSql(tableName, schema);
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            throw safeRollback(connection, ex);
-        } finally {
-            stmt.close();
-        }
-    }
-
-    protected String buildCreateTableSql(String name, JdbcSchema schema)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("CREATE TABLE ");
-        quoteIdentifierString(sb, name);
-        sb.append(buildColumnsOfCreateTableSql(schema));
-        return sb.toString();
-    }
-
-    private String buildColumnsOfCreateTableSql(JdbcSchema schema)
+    protected String buildCreateTableSchemaSql(JdbcSchema schema)
     {
         StringBuilder sb = new StringBuilder();
 
