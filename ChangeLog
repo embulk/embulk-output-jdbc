@@ -1,3 +1,17 @@
+Release 0.3.0 - 2015-05-18
+
+This release requires embulk >= 0.6.8.
+
+* Added implementation of insert, insert_direct, merge, merge_direct, truncate_insert, and replace modes.
+  * insert mode is renamed to insert_direct. insert is a new mode.
+  * merge mode is renamed to merge_direct. merge is a new mode.
+  * removed "merge_direct" mode support from postgresql. Instead, added new "merge" mode.
+* Added implementation of java.sql.Types.TINYINT, SMALLINT, INTEGER, REAL, DATE, TIME, NUMERIC, DECIMAL, and NVARCHAR family.
+  * BooleanColumnSetter doesn't parse string into boolean value any more.
+  * TimestampColumnSetter doesn't allow string any more (#31)
+* Added default_timezone option
+* Added column_options option
+
 Release 0.2.4 - 2015-05-12
 
 * Fixed a bug that prevented insert mode for PostgreSQL from working (@takumakanari++)
