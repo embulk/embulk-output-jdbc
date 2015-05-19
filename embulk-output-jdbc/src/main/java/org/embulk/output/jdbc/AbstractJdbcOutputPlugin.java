@@ -59,7 +59,7 @@ public abstract class AbstractJdbcOutputPlugin
 {
     private final static Set<String> loadedJarGlobs = new HashSet<String>();
 
-    private final Logger logger = Exec.getLogger(getClass());
+    protected final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
             extends Task

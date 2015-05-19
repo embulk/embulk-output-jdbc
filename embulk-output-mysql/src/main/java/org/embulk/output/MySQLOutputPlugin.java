@@ -59,8 +59,6 @@ public class MySQLOutputPlugin
                 t.getHost(), t.getPort(), t.getDatabase());
 
         Properties props = new Properties();
-        props.setProperty("user", t.getUser());
-        props.setProperty("password", t.getPassword());
 
         props.setProperty("rewriteBatchedStatements", "true");
         props.setProperty("useCompression", "true");
@@ -97,6 +95,10 @@ public class MySQLOutputPlugin
         props.putAll(t.getOptions());
 
         // TODO validate task.getMergeKeys is null
+
+        props.setProperty("user", t.getUser());
+        logger.info("Connecting to {} options {}", url, props);
+        props.setProperty("password", t.getPassword());
 
         return new MySQLOutputConnector(url, props);
     }

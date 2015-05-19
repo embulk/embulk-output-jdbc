@@ -75,14 +75,17 @@ public class JdbcOutputPlugin
         }
 
         Properties props = new Properties();
+
+        props.putAll(t.getOptions());
+
         if (t.getUser().isPresent()) {
             props.setProperty("user", t.getUser().get());
         }
+        logger.info("Connecting to {} options {}", t.getUrl(), props);
         if (t.getPassword().isPresent()) {
             props.setProperty("password", t.getPassword().get());
         }
 
-        props.putAll(t.getOptions());
 
         return new GenericOutputConnector(t.getUrl(), props, t.getDriverClass(),
                 t.getSchema().orNull());

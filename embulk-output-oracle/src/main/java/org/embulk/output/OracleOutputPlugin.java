@@ -114,9 +114,11 @@ public class OracleOutputPlugin
         }
 
         Properties props = new Properties();
-        props.setProperty("user", oracleTask.getUser());
-        props.setProperty("password", oracleTask.getPassword());
         props.putAll(oracleTask.getOptions());
+
+        props.setProperty("user", oracleTask.getUser());
+        logger.info("Connecting to {} options {}", url, props);
+        props.setProperty("password", oracleTask.getPassword());
 
         return new OracleOutputConnector(url, props, oracleTask.getInsertMethod() == InsertMethod.direct);
     }

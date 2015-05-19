@@ -65,8 +65,6 @@ public class PostgreSQLOutputPlugin
                 t.getHost(), t.getPort(), t.getDatabase());
 
         Properties props = new Properties();
-        props.setProperty("user", t.getUser());
-        props.setProperty("password", t.getPassword());
         props.setProperty("loginTimeout",   "300"); // seconds
         props.setProperty("socketTimeout", "1800"); // seconds
 
@@ -92,6 +90,10 @@ public class PostgreSQLOutputPlugin
         }
 
         props.putAll(t.getOptions());
+
+        props.setProperty("user", t.getUser());
+        logger.info("Connecting to {} options {}", url, props);
+        props.setProperty("password", t.getPassword());
 
         return new PostgreSQLOutputConnector(url, props, t.getSchema());
     }
