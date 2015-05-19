@@ -18,30 +18,36 @@ public class NullColumnSetter
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
+    }
+
+    @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setNull();
     }
 }

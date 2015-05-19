@@ -17,6 +17,12 @@ public class FloatColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setFloat();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setFloat(v ? (float) 1.0 : (float) 0.0);

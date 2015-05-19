@@ -22,6 +22,12 @@ public class StringColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setString();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setString(Boolean.toString(v));

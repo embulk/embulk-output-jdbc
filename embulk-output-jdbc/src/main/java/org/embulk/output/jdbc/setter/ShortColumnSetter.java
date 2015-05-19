@@ -19,6 +19,12 @@ public class ShortColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setShort();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setShort(v ? (short) 1 : (short) 0);

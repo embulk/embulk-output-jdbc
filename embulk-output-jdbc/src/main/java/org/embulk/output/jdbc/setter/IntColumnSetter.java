@@ -19,6 +19,12 @@ public class IntColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setInt();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setInt(v ? 1 : 0);

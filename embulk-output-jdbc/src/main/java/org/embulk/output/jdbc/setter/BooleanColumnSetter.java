@@ -17,6 +17,12 @@ public class BooleanColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setBoolean();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setBoolean(v);
@@ -37,12 +43,12 @@ public class BooleanColumnSetter
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        defaultValue.setString();
+        defaultValue.setBoolean();
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setString();
+        defaultValue.setBoolean();
     }
 }

@@ -22,6 +22,12 @@ public class BigDecimalColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setBigDecimal();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setBigDecimal(v ? ONE : ZERO);

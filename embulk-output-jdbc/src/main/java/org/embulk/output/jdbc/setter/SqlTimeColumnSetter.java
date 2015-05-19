@@ -17,6 +17,12 @@ public class SqlTimeColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setSqlTime();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         defaultValue.setSqlTime();

@@ -17,6 +17,12 @@ public class DoubleColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setDouble();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setDouble(v ? 1.0 : 0.0);

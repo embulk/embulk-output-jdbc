@@ -22,6 +22,12 @@ public class SqlDateColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setSqlDate();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         defaultValue.setSqlDate();

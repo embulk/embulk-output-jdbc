@@ -21,6 +21,12 @@ public class PassThroughColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        batch.setNull(column.getSqlType());
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setBoolean(v);

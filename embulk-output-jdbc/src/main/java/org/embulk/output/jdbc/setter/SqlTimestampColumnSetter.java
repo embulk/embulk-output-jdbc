@@ -16,6 +16,12 @@ public class SqlTimestampColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setSqlTimestamp();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         defaultValue.setSqlTimestamp();

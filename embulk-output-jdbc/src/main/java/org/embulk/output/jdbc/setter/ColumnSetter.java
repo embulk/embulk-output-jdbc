@@ -31,10 +31,7 @@ public abstract class ColumnSetter
         return column.getSqlType();
     }
 
-    public void nullValue() throws IOException, SQLException
-    {
-        batch.setNull(getSqlType());
-    }
+    public abstract void nullValue() throws IOException, SQLException;
 
     public abstract void booleanValue(boolean v) throws IOException, SQLException;
 

@@ -19,6 +19,12 @@ public class ByteColumnSetter
     }
 
     @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setByte();
+    }
+
+    @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
         batch.setByte(v ? (byte) 1 : (byte) 0);
