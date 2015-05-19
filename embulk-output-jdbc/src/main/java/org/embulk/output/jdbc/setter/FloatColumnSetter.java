@@ -10,9 +10,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class FloatColumnSetter
         extends ColumnSetter
 {
-    public FloatColumnSetter(BatchInsert batch, JdbcColumn column)
+    public FloatColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -40,7 +41,7 @@ public class FloatColumnSetter
         try {
             fv = Float.parseFloat(v);
         } catch (NumberFormatException e) {
-            nullValue();
+            defaultValue.setFloat();
             return;
         }
         batch.setFloat(fv);
@@ -49,6 +50,6 @@ public class FloatColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setFloat();
     }
 }

@@ -10,33 +10,34 @@ import org.embulk.output.jdbc.BatchInsert;
 public class SqlTimeColumnSetter
         extends ColumnSetter
 {
-    public SqlTimeColumnSetter(BatchInsert batch, JdbcColumn column)
+    public SqlTimeColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTime();
     }
 
     @Override

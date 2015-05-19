@@ -8,7 +8,7 @@ public class SkipColumnSetter
 {
     public SkipColumnSetter(BatchInsert batch)
     {
-        super(batch, null);
+        super(batch, null, null);
     }
 
     @Override

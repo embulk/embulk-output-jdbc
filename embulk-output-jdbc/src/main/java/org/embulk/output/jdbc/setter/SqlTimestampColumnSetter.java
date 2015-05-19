@@ -9,33 +9,34 @@ import org.embulk.output.jdbc.BatchInsert;
 public class SqlTimestampColumnSetter
         extends ColumnSetter
 {
-    public SqlTimestampColumnSetter(BatchInsert batch, JdbcColumn column)
+    public SqlTimestampColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTimestamp();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTimestamp();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTimestamp();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlTimestamp();
     }
 
     @Override

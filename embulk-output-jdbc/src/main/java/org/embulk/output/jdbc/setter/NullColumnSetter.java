@@ -9,9 +9,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class NullColumnSetter
         extends ColumnSetter
 {
-    public NullColumnSetter(BatchInsert batch, JdbcColumn column)
+    public NullColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override

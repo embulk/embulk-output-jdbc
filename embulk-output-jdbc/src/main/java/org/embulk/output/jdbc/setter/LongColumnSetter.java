@@ -12,9 +12,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class LongColumnSetter
         extends ColumnSetter
 {
-    public LongColumnSetter(BatchInsert batch, JdbcColumn column)
+    public LongColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -38,7 +39,7 @@ public class LongColumnSetter
             lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
         } catch (ArithmeticException ex) {
             // NaN / Infinite / -Infinite
-            nullValue();
+            defaultValue.setLong();
             return;
         }
         batch.setLong(lv);
@@ -51,7 +52,7 @@ public class LongColumnSetter
         try {
             lv = Long.parseLong(v);
         } catch (NumberFormatException e) {
-            nullValue();
+            defaultValue.setLong();
             return;
         }
         batch.setLong(lv);
@@ -60,6 +61,6 @@ public class LongColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setLong();
     }
 }

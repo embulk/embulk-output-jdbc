@@ -14,9 +14,10 @@ public class NStringColumnSetter
     private final TimestampFormatter timestampFormatter;
 
     public NStringColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue,
             TimestampFormatter timestampFormatter)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
         this.timestampFormatter = timestampFormatter;
     }
 

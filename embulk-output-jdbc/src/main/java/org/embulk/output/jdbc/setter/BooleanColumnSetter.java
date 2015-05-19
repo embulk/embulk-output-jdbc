@@ -10,9 +10,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class BooleanColumnSetter
         extends ColumnSetter
 {
-    public BooleanColumnSetter(BatchInsert batch, JdbcColumn column)
+    public BooleanColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -36,12 +37,12 @@ public class BooleanColumnSetter
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setString();
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setString();
     }
 }

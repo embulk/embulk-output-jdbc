@@ -15,9 +15,10 @@ public class BigDecimalColumnSetter
     private static final BigDecimal ZERO = BigDecimal.valueOf(0L);
     private static final BigDecimal ONE = BigDecimal.valueOf(1L);
 
-    public BigDecimalColumnSetter(BatchInsert batch, JdbcColumn column)
+    public BigDecimalColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -36,7 +37,7 @@ public class BigDecimalColumnSetter
     public void doubleValue(double v) throws IOException, SQLException
     {
         if (Double.isNaN(v) || Double.isInfinite(v)) {
-            nullValue();
+            defaultValue.setBigDecimal();
         } else {
             batch.setBigDecimal(BigDecimal.valueOf(v));
         }
@@ -49,7 +50,7 @@ public class BigDecimalColumnSetter
         try {
             dv = new BigDecimal(v);
         } catch (NumberFormatException ex) {
-            nullValue();
+            defaultValue.setBigDecimal();
             return;
         }
         batch.setBigDecimal(dv);
@@ -58,6 +59,6 @@ public class BigDecimalColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setBigDecimal();
     }
 }

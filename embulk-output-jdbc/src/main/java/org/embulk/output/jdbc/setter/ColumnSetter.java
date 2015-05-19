@@ -11,11 +11,14 @@ public abstract class ColumnSetter
 {
     protected final BatchInsert batch;
     protected final JdbcColumn column;
+    protected final DefaultValueSetter defaultValue;
 
-    public ColumnSetter(BatchInsert batch, JdbcColumn column)
+    public ColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
         this.batch = batch;
         this.column = column;
+        this.defaultValue = defaultValue;
     }
 
     public JdbcColumn getColumn()

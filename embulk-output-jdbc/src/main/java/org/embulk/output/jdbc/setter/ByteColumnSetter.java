@@ -12,9 +12,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class ByteColumnSetter
         extends ColumnSetter
 {
-    public ByteColumnSetter(BatchInsert batch, JdbcColumn column)
+    public ByteColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class ByteColumnSetter
     public void longValue(long v) throws IOException, SQLException
     {
         if (v > Byte.MAX_VALUE || v < Byte.MIN_VALUE) {
-            nullValue();
+            defaultValue.setByte();
         } else {
             batch.setByte((byte) v);
         }
@@ -42,7 +43,7 @@ public class ByteColumnSetter
             lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
         } catch (ArithmeticException ex) {
             // NaN / Infinite / -Infinite
-            nullValue();
+            defaultValue.setByte();
             return;
         }
         longValue(lv);
@@ -55,7 +56,7 @@ public class ByteColumnSetter
         try {
             sv = Byte.parseByte(v);
         } catch (NumberFormatException e) {
-            nullValue();
+            defaultValue.setByte();
             return;
         }
         batch.setByte(sv);
@@ -64,6 +65,6 @@ public class ByteColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setByte();
     }
 }

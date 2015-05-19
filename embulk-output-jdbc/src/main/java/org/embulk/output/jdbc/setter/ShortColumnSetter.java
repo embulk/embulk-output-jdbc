@@ -12,9 +12,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class ShortColumnSetter
         extends ColumnSetter
 {
-    public ShortColumnSetter(BatchInsert batch, JdbcColumn column)
+    public ShortColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class ShortColumnSetter
     public void longValue(long v) throws IOException, SQLException
     {
         if (v > Short.MAX_VALUE || v < Short.MIN_VALUE) {
-            nullValue();
+            defaultValue.setShort();
         } else {
             batch.setShort((short) v);
         }
@@ -42,7 +43,7 @@ public class ShortColumnSetter
             lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
         } catch (ArithmeticException ex) {
             // NaN / Infinite / -Infinite
-            nullValue();
+            defaultValue.setShort();
             return;
         }
         longValue(lv);
@@ -55,7 +56,7 @@ public class ShortColumnSetter
         try {
             sv = Short.parseShort(v);
         } catch (NumberFormatException e) {
-            nullValue();
+            defaultValue.setShort();
             return;
         }
         batch.setShort(sv);
@@ -64,6 +65,6 @@ public class ShortColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setShort();
     }
 }

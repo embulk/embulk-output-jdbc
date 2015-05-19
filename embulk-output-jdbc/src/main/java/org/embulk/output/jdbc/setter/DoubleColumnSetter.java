@@ -10,9 +10,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class DoubleColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column)
+    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
     }
 
     @Override
@@ -40,7 +41,7 @@ public class DoubleColumnSetter
         try {
             dv = Double.parseDouble(v);
         } catch (NumberFormatException e) {
-            nullValue();
+            defaultValue.setDouble();
             return;
         }
         batch.setDouble(dv);
@@ -49,6 +50,6 @@ public class DoubleColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setDouble();
     }
 }

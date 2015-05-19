@@ -14,34 +14,35 @@ public class SqlDateColumnSetter
     private final DateTimeZone timeZone;
 
     public SqlDateColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue,
             DateTimeZone timeZone)
     {
-        super(batch, column);
+        super(batch, column, defaultValue);
         this.timeZone = timeZone;
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setSqlDate();
     }
 
     @Override
