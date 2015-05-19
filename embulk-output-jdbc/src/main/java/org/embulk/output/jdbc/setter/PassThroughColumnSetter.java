@@ -10,14 +10,10 @@ import org.embulk.output.jdbc.BatchInsert;
 public class PassThroughColumnSetter
         extends ColumnSetter
 {
-    private final TimestampFormatter timestampFormatter;
-
     public PassThroughColumnSetter(BatchInsert batch, JdbcColumn column,
-            DefaultValueSetter defaultValue,
-            TimestampFormatter timestampFormatter)
+            DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
-        this.timestampFormatter = timestampFormatter;
     }
 
     @Override

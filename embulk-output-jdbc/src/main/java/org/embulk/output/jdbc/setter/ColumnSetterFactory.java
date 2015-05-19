@@ -63,7 +63,7 @@ public class ColumnSetterFactory
         case "null":
             return new NullColumnSetter(batch, column, newDefaultValueSetter(column, option));
         case "pass":
-            return new PassThroughColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
+            return new PassThroughColumnSetter(batch, column, newDefaultValueSetter(column, option));
         default:
             throw new ConfigException(String.format("Unknown value_type '%s' for column '%s'", option.getValueType(), column.getName()));
         }
