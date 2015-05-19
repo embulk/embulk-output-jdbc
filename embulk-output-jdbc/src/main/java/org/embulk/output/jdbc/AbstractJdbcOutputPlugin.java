@@ -387,7 +387,7 @@ public abstract class AbstractJdbcOutputPlugin
             PluginTask task, final Schema schema, int taskCount) throws SQLException
     {
         if (schema.getColumnCount() == 0) {
-            throw new IllegalArgumentException("task count == 0 is not supported");
+            throw new ConfigException("task count == 0 is not supported");
         }
 
         Mode mode = task.getMode();
