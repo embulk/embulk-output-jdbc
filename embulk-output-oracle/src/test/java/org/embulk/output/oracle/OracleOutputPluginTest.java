@@ -164,4 +164,9 @@ public class OracleOutputPluginTest
         invoke("testReplaceCreate");
     }
 
+    @Test
+    public void testStringTimestamp() throws Exception
+    {
+        invoke("testStringTimestamp");
+    }
 }

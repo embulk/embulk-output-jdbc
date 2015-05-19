@@ -1,5 +1,7 @@
 package org.embulk.output;
 
+import java.util.List;
+import java.util.Set;
 import java.util.Properties;
 import java.sql.Driver;
 import java.io.IOException;
@@ -7,6 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -41,12 +44,25 @@ public class JdbcOutputPlugin
         @Config("schema")
         @ConfigDefault("null")
         public Optional<String> getSchema();
+
+        @Config("max_table_name_length")
+        @ConfigDefault("30")
+        public int getMaxTableNameLength();
     }
 
     @Override
     protected Class<? extends PluginTask> getTaskClass()
     {
         return GenericPluginTask.class;
+    }
+
+    @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        GenericPluginTask t = (GenericPluginTask) task;
+        return new Features()
+            .setMaxTableNameLength(t.getMaxTableNameLength())
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE));
     }
 
     @Override
@@ -113,8 +129,8 @@ public class JdbcOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        return new StandardBatchInsert(getConnector(task, true));
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
     }
 }

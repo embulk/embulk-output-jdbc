@@ -17,7 +17,7 @@ import org.embulk.EmbulkService;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
 import org.embulk.exec.ExecutionResult;
-import org.embulk.exec.LocalExecutor;
+import org.embulk.exec.BulkLoader;
 import org.embulk.plugin.InjectedPluginSource;
 import org.embulk.spi.ExecSession;
 
@@ -81,8 +81,8 @@ public class EmbulkPluginTester
         Injector injector = service.getInjector();
         ConfigSource config = injector.getInstance(ConfigLoader.class).fromYamlFile(new File(ymlPath));
         ExecSession session = new ExecSession(injector, config);
-        LocalExecutor executor = injector.getInstance(LocalExecutor.class);
-        ExecutionResult result = executor.run(session, config);
+        BulkLoader loader = injector.getInstance(BulkLoader.class);
+        ExecutionResult result = loader.run(session, config);
     }
 
     private File convert(String yml) {

@@ -2,15 +2,17 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.math.RoundingMode;
+import com.google.common.math.DoubleMath;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class IntColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
+    public IntColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
@@ -19,43 +21,56 @@ public class DoubleColumnSetter
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setInt();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        batch.setInt(v ? 1 : 0);
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        if (v > Integer.MAX_VALUE || v < Integer.MIN_VALUE) {
+            defaultValue.setInt();
+        } else {
+            batch.setInt((int) v);
+        }
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setDouble(v);
+        long lv;
+        try {
+            // TODO configurable rounding mode
+            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
+        } catch (ArithmeticException ex) {
+            // NaN / Infinite / -Infinite
+            defaultValue.setInt();
+            return;
+        }
+        longValue(lv);
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
+        int iv;
         try {
-            dv = Double.parseDouble(v);
+            iv = Integer.parseInt(v);
         } catch (NumberFormatException e) {
-            defaultValue.setDouble();
+            defaultValue.setInt();
             return;
         }
-        batch.setDouble(dv);
+        batch.setInt(iv);
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setInt();
     }
 }

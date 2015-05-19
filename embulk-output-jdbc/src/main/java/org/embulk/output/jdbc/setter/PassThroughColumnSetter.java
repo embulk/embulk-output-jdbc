@@ -2,36 +2,40 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class PassThroughColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
-            DefaultValueSetter defaultValue)
+    private final TimestampFormatter timestampFormatter;
+
+    public PassThroughColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue,
+            TimestampFormatter timestampFormatter)
     {
         super(batch, column, defaultValue);
+        this.timestampFormatter = timestampFormatter;
     }
 
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        batch.setNull(column.getSqlType());
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        batch.setBoolean(v);
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        batch.setLong(v);
     }
 
     @Override
@@ -43,19 +47,14 @@ public class DoubleColumnSetter
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
-        try {
-            dv = Double.parseDouble(v);
-        } catch (NumberFormatException e) {
-            defaultValue.setDouble();
-            return;
-        }
-        batch.setDouble(dv);
+        batch.setString(v);
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
+        t.setNanos(v.getNano());
+        batch.setSqlTimestamp(t, getSqlType());
     }
 }

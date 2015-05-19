@@ -4,58 +4,56 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class NStringColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
-            DefaultValueSetter defaultValue)
+    private final TimestampFormatter timestampFormatter;
+
+    public NStringColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue,
+            TimestampFormatter timestampFormatter)
     {
         super(batch, column, defaultValue);
+        this.timestampFormatter = timestampFormatter;
     }
 
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setNString();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        batch.setNString(Boolean.toString(v));
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        batch.setNString(Long.toString(v));
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setDouble(v);
+        batch.setNString(Double.toString(v));
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
-        try {
-            dv = Double.parseDouble(v);
-        } catch (NumberFormatException e) {
-            defaultValue.setDouble();
-            return;
-        }
-        batch.setDouble(dv);
+        batch.setNString(v);
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        batch.setNString(timestampFormatter.format(v));
     }
 }

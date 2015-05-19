@@ -2,58 +2,62 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import org.embulk.spi.ColumnVisitor;
+import java.sql.Date;
+import org.joda.time.DateTimeZone;
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class StringColumnSetter
+public class SqlDateColumnSetter
         extends ColumnSetter
 {
-    private final TimestampFormatter timestampFormatter;
+    private final DateTimeZone timeZone;
 
-    public StringColumnSetter(BatchInsert batch, JdbcColumn column,
+    public SqlDateColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue,
-            TimestampFormatter timestampFormatter)
+            DateTimeZone timeZone)
     {
         super(batch, column, defaultValue);
-        this.timestampFormatter = timestampFormatter;
+        this.timeZone = timeZone;
     }
 
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setString();
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setString(Boolean.toString(v));
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setString(Long.toString(v));
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setString(Double.toString(v));
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        batch.setString(v);
+        defaultValue.setSqlDate();
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        batch.setString(timestampFormatter.format(v));
+        // JavaDoc of java.sql.Time says:
+        // >> To conform with the definition of SQL DATE, the millisecond values wrapped by a java.sql.Date instance must be 'normalized' by setting the hours, minutes, seconds, and milliseconds to zero in the particular time zone with which the instance is associated.
+        long normalized = timeZone.convertUTCToLocal(v.toEpochMilli());
+        Date d = new Date(normalized);
+        batch.setSqlDate(d, getSqlType());
     }
 }

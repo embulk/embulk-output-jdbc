@@ -12,7 +12,7 @@ import java.io.Writer;
 import java.io.BufferedWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
-import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.auth.policy.Resource;
@@ -34,7 +34,6 @@ public class RedshiftCopyBatchInsert
 {
     private final Logger logger = Exec.getLogger(RedshiftCopyBatchInsert.class);
     private final RedshiftOutputConnector connector;
-    private final AWSCredentials awsCredentials;
     private final String s3BucketName;
     private final String iamReaderUserName;
     private final AmazonS3Client s3;
@@ -48,16 +47,15 @@ public class RedshiftCopyBatchInsert
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS STATUPDATE OFF COMPUPDATE OFF";
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
-            AWSCredentials awsCredentials, String s3BucketName,
+            AWSCredentialsProvider credentialsProvider, String s3BucketName,
             String iamReaderUserName) throws IOException, SQLException
     {
         super();
         this.connector = connector;
-        this.awsCredentials = awsCredentials;
         this.s3BucketName = s3BucketName;
         this.iamReaderUserName = iamReaderUserName;
-        this.s3 = new AmazonS3Client(awsCredentials);  // TODO options
-        this.sts = new AWSSecurityTokenServiceClient(awsCredentials);  // options
+        this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
+        this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
     }
 
     @Override

@@ -5,10 +5,8 @@ Oracle output plugins for Embulk loads records to Oracle.
 ## Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depends on the mode:
-  * **insert**: no
-  * **replace**: yes
-* **Resume supported**: no
+* **Load all or nothing**: depnds on the mode. see bellow.
+* **Resume supported**: depnds on the mode. see bellow.
 
 ## Configuration
 
@@ -20,10 +18,32 @@ Oracle output plugins for Embulk loads records to Oracle.
 - **database**: destination database name (string, required if url is not set or insert_method is "oci")
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
-- **mode**: "replace" or "insert" (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert", or "replace". See bellow. (string, required)
 - **insert_method**: see below
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **options**: extra connection properties (hash, default: {})
+- **string_pass_through**: if a value is string, writes it to database without conversion regardless of the target table's column type. Usually, if the target table's column type is not string while the value is string, embulk writes NULL. But if this option is true, embulk lets the database parse the string into the column type. If the conversion fails, the task may fail. (boolean, default: false)
+
+### Modes
+
+* **insert**:
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query.
+  * Transactional: Yes. This mode successfully writes all rows, or fails with writing zero rows.
+  * Resumable: Yes.
+* **insert_direct**:
+  * Behavior: This mode inserts rows to the target table directly.
+  * Transactional: No. If fails, the target table could have some rows inserted.
+  * Resumable: No.
+* **truncate_insert**:
+  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
+  * Transactional: Yes.
+  * Resumable: Yes.
+* **replace**:
+  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
+  * Transactional: Yes.
+  * Resumable: No.
+
+### Insert modes
 
 insert_method supports three options.
 
@@ -39,7 +59,6 @@ You must set the library loading path to the OCI library.
 If you use "oci", platform dependent library written in cpp is required.
 Windows(x64) library and Linux(x64) are bundled, but others are not bundled.
 You should build by yourself and set the library loading path to it.
-
 
 ### Example
 

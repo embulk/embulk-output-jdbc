@@ -12,8 +12,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.SQLException;
-import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.BatchInsert;
 
 public abstract class AbstractPostgreSQLCopyBatchInsert

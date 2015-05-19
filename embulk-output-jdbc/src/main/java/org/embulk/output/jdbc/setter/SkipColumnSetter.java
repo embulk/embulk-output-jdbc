@@ -1,38 +1,43 @@
 package org.embulk.output.jdbc.setter;
 
-import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.BatchInsert;
 
 public class SkipColumnSetter
         extends ColumnSetter
 {
-    public SkipColumnSetter(BatchInsert batch, PageReader pageReader)
+    public SkipColumnSetter(BatchInsert batch)
     {
-        super(batch, pageReader, null);
+        super(batch, null, null);
     }
 
-    protected void booleanValue(boolean v)
-    {
-    }
-
-    protected void longValue(long v)
+    @Override
+    public void booleanValue(boolean v)
     {
     }
 
-    protected void doubleValue(double v)
+    @Override
+    public void longValue(long v)
     {
     }
 
-    protected void stringValue(String v)
+    @Override
+    public void doubleValue(double v)
     {
     }
 
-    protected void timestampValue(Timestamp v)
+    @Override
+    public void stringValue(String v)
     {
     }
 
-    protected void nullValue()
+    @Override
+    public void timestampValue(Timestamp v)
+    {
+    }
+
+    @Override
+    public void nullValue()
     {
     }
 }

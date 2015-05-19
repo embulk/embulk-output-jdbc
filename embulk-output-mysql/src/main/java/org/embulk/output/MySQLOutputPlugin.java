@@ -1,10 +1,10 @@
 package org.embulk.output;
 
+import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
-
-import org.embulk.output.mysql.MySQLBatchUpsert;
+import com.google.common.base.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -40,6 +40,14 @@ public class MySQLOutputPlugin
     protected Class<? extends PluginTask> getTaskClass()
     {
         return MySQLPluginTask.class;
+    }
+
+    @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(64)
+            .setIgnoreMergeKeys(true);
     }
 
     @Override
@@ -88,13 +96,14 @@ public class MySQLOutputPlugin
 
         props.putAll(t.getOptions());
 
+        // TODO validate task.getMergeKeys is null
+
         return new MySQLOutputConnector(url, props);
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        MySQLOutputConnector connector = getConnector(task, true);
-        return task.getMode().isMerge() ? new MySQLBatchUpsert(connector) : new MySQLBatchInsert(connector);
+        return new MySQLBatchInsert(getConnector(task, true), mergeKeys);
     }
 }

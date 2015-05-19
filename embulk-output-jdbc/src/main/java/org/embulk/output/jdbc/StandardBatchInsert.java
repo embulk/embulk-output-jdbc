@@ -1,5 +1,6 @@
 package org.embulk.output.jdbc;
 
+import java.util.List;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -7,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 
@@ -16,6 +18,7 @@ public class StandardBatchInsert
     private final Logger logger = Exec.getLogger(StandardBatchInsert.class);
 
     private final JdbcOutputConnector connector;
+    private final Optional<List<String>> mergeKeys;
 
     private JdbcOutputConnection connection;
     private PreparedStatement batch;
@@ -24,25 +27,25 @@ public class StandardBatchInsert
     private int batchRows;
     private long totalRows;
 
-    public StandardBatchInsert(JdbcOutputConnector connector) throws IOException, SQLException
+    public StandardBatchInsert(JdbcOutputConnector connector, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
         this.connector = connector;
+        this.mergeKeys = mergeKeys;
     }
 
     public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
     {
         this.connection = connector.connect(true);
-        this.batch = newPreparedStatement(connection, loadTable, insertSchema);
         this.index = 1;  // PreparedStatement index begings from 1
         this.batchRows = 0;
         this.totalRows = 0;
+        this.batch = prepareStatement(loadTable, insertSchema);
         batch.clearBatch();
     }
 
-    protected PreparedStatement newPreparedStatement(JdbcOutputConnection connection,
-                                                     String loadTable, JdbcSchema insertSchema) throws SQLException
+    protected PreparedStatement prepareStatement(String loadTable, JdbcSchema insertSchema) throws SQLException
     {
-        return connection.prepareInsertSql(loadTable, insertSchema);
+        return connection.prepareBatchInsertStatement(loadTable, insertSchema, mergeKeys);
     }
 
     public int getBatchWeight()

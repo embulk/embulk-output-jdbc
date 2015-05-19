@@ -2,15 +2,17 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.math.RoundingMode;
+import com.google.common.math.DoubleMath;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class ShortColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
+    public ShortColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
@@ -19,43 +21,56 @@ public class DoubleColumnSetter
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setShort();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        batch.setShort(v ? (short) 1 : (short) 0);
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        if (v > Short.MAX_VALUE || v < Short.MIN_VALUE) {
+            defaultValue.setShort();
+        } else {
+            batch.setShort((short) v);
+        }
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setDouble(v);
+        long lv;
+        try {
+            // TODO configurable rounding mode
+            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
+        } catch (ArithmeticException ex) {
+            // NaN / Infinite / -Infinite
+            defaultValue.setShort();
+            return;
+        }
+        longValue(lv);
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
+        short sv;
         try {
-            dv = Double.parseDouble(v);
+            sv = Short.parseShort(v);
         } catch (NumberFormatException e) {
-            defaultValue.setDouble();
+            defaultValue.setShort();
             return;
         }
-        batch.setDouble(dv);
+        batch.setShort(sv);
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setShort();
     }
 }

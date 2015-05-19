@@ -1,6 +1,5 @@
 package org.embulk.output.oracle;
 
-
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 
 public class OracleOutputConnection
@@ -30,7 +30,6 @@ public class OracleOutputConnection
     private final boolean direct;
     private OracleCharset charset;
 
-
     public OracleOutputConnection(Connection connection, boolean autoCommit, boolean direct)
             throws SQLException
     {
@@ -41,13 +40,13 @@ public class OracleOutputConnection
     }
 
     @Override
-    protected String convertTypeName(String typeName)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
-        switch(typeName) {
+        switch(c.getSimpleTypeName()) {
         case "BIGINT":
             return "NUMBER(19,0)";
         default:
-            return typeName;
+            return super.buildColumnTypeName(c);
         }
     }
 
@@ -55,7 +54,6 @@ public class OracleOutputConnection
     protected void setSearchPath(String schema) throws SQLException {
         // NOP
     }
-
 
     @Override
     public void dropTableIfExists(String tableName) throws SQLException
@@ -80,6 +78,30 @@ public class OracleOutputConnection
         }
     }
 
+    public void createTable(String tableName, JdbcSchema schema) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+            String sql = buildCreateTableSql(tableName, schema);
+            executeUpdate(stmt, sql);
+            commitIfNecessary(connection);
+        } catch (SQLException ex) {
+            throw safeRollback(connection, ex);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    protected String buildCreateTableSql(String name, JdbcSchema schema)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("CREATE TABLE ");
+        quoteIdentifierString(sb, name);
+        sb.append(buildCreateTableSchemaSql(schema));
+        return sb.toString();
+    }
+
     private static String getSchema(Connection connection) throws SQLException
     {
         // Because old Oracle JDBC drivers don't support Connection#getSchema method.
@@ -95,16 +117,22 @@ public class OracleOutputConnection
     }
 
     @Override
-    protected String buildPrepareInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
     {
-        String sql = super.buildPrepareInsertSql(toTable, toTableSchema);
+        String sql = super.buildPreparedInsertSql(toTable, toTableSchema);
         if (direct) {
             sql = sql.replaceAll("^INSERT ", "INSERT /*+ APPEND_VALUES */ ");
         }
         return sql;
     }
 
-    public OracleCharset getCharset() throws SQLException
+    @Override
+    public Charset getTableNameCharset() throws SQLException
+    {
+        return getOracleCharset().getJavaCharset();
+    }
+
+    public synchronized OracleCharset getOracleCharset() throws SQLException
     {
         if (charset == null) {
             String charsetName = "UTF8";
@@ -134,5 +162,4 @@ public class OracleOutputConnection
         }
         return charset;
     }
-
 }

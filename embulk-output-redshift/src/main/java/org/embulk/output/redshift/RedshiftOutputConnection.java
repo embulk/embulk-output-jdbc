@@ -79,10 +79,10 @@ public class RedshiftOutputConnection
     }
 
     @Override
-    protected String convertTypeName(String typeName)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
         // Redshift does not support TEXT type.
-        switch(typeName) {
+        switch(c.getSimpleTypeName()) {
         case "CLOB":
             return "VARCHAR(65535)";
         case "TEXT":
@@ -90,7 +90,7 @@ public class RedshiftOutputConnection
         case "BLOB":
             return "BYTEA";
         default:
-            return typeName;
+            return super.buildColumnTypeName(c);
         }
     }
 

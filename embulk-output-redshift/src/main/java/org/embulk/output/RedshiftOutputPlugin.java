@@ -1,10 +1,14 @@
 package org.embulk.output;
 
+import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.slf4j.Logger;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import org.embulk.spi.Exec;
 import org.embulk.config.Config;
@@ -62,6 +66,15 @@ public class RedshiftOutputPlugin
     }
 
     @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(30)
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setIgnoreMergeKeys(false);
+    }
+
+    @Override
     protected RedshiftOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         RedshiftPluginTask t = (RedshiftPluginTask) task;
@@ -101,16 +114,32 @@ public class RedshiftOutputPlugin
         return new RedshiftOutputConnector(url, props, t.getSchema());
     }
 
-    @Override
-    protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
+    private static AWSCredentialsProvider getAWSCredentialsProvider(RedshiftPluginTask task)
     {
-        if (task.getMode().isMerge()) {
-            throw new UnsupportedOperationException("mode 'merge' is not implemented for this type");
+        final AWSCredentials creds = new BasicAWSCredentials(
+                task.getAccessKeyId(), task.getSecretAccessKey());
+        return new AWSCredentialsProvider() {
+            @Override
+            public AWSCredentials getCredentials()
+            {
+                return creds;
+            }
+
+            @Override
+            public void refresh()
+            {
+            }
+        };
+    }
+
+    @Override
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
+    {
+        if (mergeKeys.isPresent()) {
+            throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
-        AWSCredentials creds = new BasicAWSCredentials(
-                t.getAccessKeyId(), t.getSecretAccessKey());
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                creds, t.getS3Bucket(), t.getIamUserName());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getIamUserName());
     }
 }

@@ -113,7 +113,7 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.TIMESTAMP:
                     String oracleFormat;
                     DateFormat javaFormat;
-                    if (insertColumn.getTypeName().equals("DATE")) {
+                    if (insertColumn.getSimpleTypeName().equals("DATE")) {
                         oracleFormat = "YYYY-MM-DD HH24:MI:SS";
                         javaFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     } else {
@@ -128,7 +128,7 @@ public class DirectBatchInsert implements BatchInsert
                     break;
 
                 default:
-                    throw new SQLException("Unsupported type : " + insertColumn.getTypeName());
+                    throw new SQLException("Unsupported type : " + insertColumn.getSimpleTypeName());
             }
 
         }
@@ -138,10 +138,10 @@ public class DirectBatchInsert implements BatchInsert
             rowSize += column.columnSize;
         }
 
-        TableDefinition tableDefinition = new TableDefinition(table, charset.charstId, columns);
+        TableDefinition tableDefinition = new TableDefinition(table, charset.getId(), columns);
         ociManager.open(ociKey, database, user, password, tableDefinition);
 
-        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset.javaCharset);
+        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset.getJavaCharset());
     }
 
     @Override

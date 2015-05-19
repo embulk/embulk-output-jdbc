@@ -7,10 +7,10 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class FloatColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
+    public FloatColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
@@ -19,43 +19,43 @@ public class DoubleColumnSetter
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setFloat();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        batch.setFloat(v ? (float) 1.0 : (float) 0.0);
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        batch.setFloat((float) v);
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setDouble(v);
+        batch.setFloat((float) v);
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
+        float fv;
         try {
-            dv = Double.parseDouble(v);
+            fv = Float.parseFloat(v);
         } catch (NumberFormatException e) {
-            defaultValue.setDouble();
+            defaultValue.setFloat();
             return;
         }
-        batch.setDouble(dv);
+        batch.setFloat(fv);
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setFloat();
     }
 }

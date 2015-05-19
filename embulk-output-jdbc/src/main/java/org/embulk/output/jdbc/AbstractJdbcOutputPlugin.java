@@ -2,23 +2,30 @@ package org.embulk.output.jdbc;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-
 import org.slf4j.Logger;
-
+import org.joda.time.DateTimeZone;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Function;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -36,13 +43,16 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
+import org.embulk.spi.type.StringType;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
-import org.embulk.output.jdbc.RetryExecutor.IdempotentOperation;
-
-import static org.embulk.output.jdbc.RetryExecutor.retryExecutor;
+import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
+import org.embulk.spi.util.RetryExecutor.Retryable;
+import static org.embulk.spi.util.RetryExecutor.retryExecutor;
+import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
@@ -62,24 +72,84 @@ public abstract class AbstractJdbcOutputPlugin
         public String getTable();
 
         @Config("mode")
-        public String getModeConfig();
+        public Mode getMode();
 
         @Config("batch_size")
         @ConfigDefault("16777216")
         // TODO set minimum number
         public int getBatchSize();
 
-        public void setMode(Mode mode);
-        public Mode getMode();
+        @Config("merge_keys")
+        @ConfigDefault("null")
+        public Optional<List<String>> getMergeKeys();
 
-        public JdbcSchema getLoadSchema();
-        public void setLoadSchema(JdbcSchema schema);
+        @Config("column_options")
+        @ConfigDefault("{}")
+        public Map<String, JdbcColumnOption> getColumnOptions();
 
-        public Optional<String> getSwapTable();
-        public void setSwapTable(Optional<String> name);
+        @Config("default_timezone")
+        @ConfigDefault("\"UTC\"")
+        public DateTimeZone getDefaultTimeZone();
 
-        public Optional<String> getMultipleLoadTablePrefix();
-        public void setMultipleLoadTablePrefix(Optional<String> prefix);
+        public void setMergeKeys(Optional<List<String>> keys);
+
+        public void setFeatures(Features features);
+        public Features getFeatures();
+
+        public JdbcSchema getTargetTableSchema();
+        public void setTargetTableSchema(JdbcSchema schema);
+
+        public Optional<List<String>> getIntermediateTables();
+        public void setIntermediateTables(Optional<List<String>> names);
+    }
+
+    public static class Features
+    {
+        private int maxTableNameLength = 64;
+        private Set<Mode> supportedModes = ImmutableSet.copyOf(Mode.values());
+        private boolean ignoreMergeKeys = false;
+
+        public Features()
+        { }
+
+        @JsonProperty
+        public int getMaxTableNameLength()
+        {
+            return maxTableNameLength;
+        }
+
+        @JsonProperty
+        public Features setMaxTableNameLength(int bytes)
+        {
+            this.maxTableNameLength = bytes;
+            return this;
+        }
+
+        @JsonProperty
+        public Set<Mode> getSupportedModes()
+        {
+            return supportedModes;
+        }
+
+        @JsonProperty
+        public Features setSupportedModes(Set<Mode> modes)
+        {
+            this.supportedModes = modes;
+            return this;
+        }
+
+        @JsonProperty
+        public boolean getIgnoreMergeKeys()
+        {
+            return ignoreMergeKeys;
+        }
+
+        @JsonProperty
+        public Features setIgnoreMergeKeys(boolean value)
+        {
+            this.ignoreMergeKeys = value;
+            return this;
+        }
     }
 
     protected void loadDriverJar(String glob)
@@ -100,9 +170,11 @@ public abstract class AbstractJdbcOutputPlugin
         return PluginTask.class;
     }
 
+    protected abstract Features getFeatures(PluginTask task);
+
     protected abstract JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation);
 
-    protected abstract BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException;
+    protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException;
 
     protected JdbcOutputConnection newConnection(PluginTask task, boolean retryableMetadataOperation,
             boolean autoCommit) throws SQLException
@@ -113,35 +185,93 @@ public abstract class AbstractJdbcOutputPlugin
     public enum Mode {
         INSERT,
         INSERT_DIRECT,
-        TRUNCATE_INSERT,
         MERGE,
-        REPLACE,
-        REPLACE_INPLACE;
-        //REPLACE_PARTITIONING,  // MySQL: partitioning, PostgreSQL: inheritance
+        MERGE_DIRECT,
+        TRUNCATE_INSERT,
+        REPLACE;
 
-        public boolean isDirectWrite()
+        @JsonValue
+        @Override
+        public String toString()
         {
-            return this == INSERT_DIRECT;
+            return name().toLowerCase(Locale.ENGLISH);
         }
 
-        public boolean isInplace()
+        @JsonCreator
+        public static Mode fromString(String value)
         {
-            return this == INSERT_DIRECT || this == REPLACE_INPLACE || this == MERGE;
+            switch(value) {
+            case "insert":
+                return INSERT;
+            case "insert_direct":
+                return INSERT_DIRECT;
+            case "merge":
+                return MERGE;
+            case "merge_direct":
+                return MERGE_DIRECT;
+            case "truncate_insert":
+                return TRUNCATE_INSERT;
+            case "replace":
+                return REPLACE;
+            default:
+                throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are insert, insert_direct, merge, merge_direct, truncate_insert, replace", value));
+            }
         }
 
+        /**
+         * True if this mode directly modifies the target table without creating intermediate tables.
+         */
+        public boolean isDirectModify()
+        {
+            return this == INSERT_DIRECT || this == MERGE_DIRECT;
+        }
+
+        /**
+         * True if this mode merges records on unique keys
+         */
         public boolean isMerge()
+        {
+            return this == MERGE || this == MERGE_DIRECT;
+        }
+
+        /**
+         * True if this mode creates intermediate table for each tasks.
+         */
+        public boolean tempTablePerTask()
+        {
+            return this == INSERT || this == MERGE || this == TRUNCATE_INSERT /*this == REPLACE_VIEW*/;
+        }
+
+        /**
+         * True if this mode truncates the target table before committing intermediate tables
+         */
+        public boolean truncateBeforeCommit()
+        {
+            return this == TRUNCATE_INSERT;
+        }
+
+        /**
+         * True if this mode uses MERGE statement to commit intermediate tables to the target table
+         */
+        public boolean commitByMerge()
         {
             return this == MERGE;
         }
 
-        public boolean usesMultipleLoadTables()
+        /**
+         * True if this mode overwrites schema of the target tables
+         */
+        public boolean ignoreTargetTableSchema()
         {
-            return !isInplace();
+            return this == REPLACE /*|| this == REPLACE_VIEW*/;
         }
 
-        public boolean createAndSwapTable()
+        /**
+         * True if this mode swaps the target tables with intermediate tables to commit
+         */
+        public boolean commitBySwapTable()
         {
-            return this == REPLACE_INPLACE || this == REPLACE;
+            return this == REPLACE;
         }
     }
 
@@ -150,44 +280,12 @@ public abstract class AbstractJdbcOutputPlugin
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(getTaskClass());
+        Features features = getFeatures(task);
+        task.setFeatures(features);
 
-        // TODO this is a temporary code. behavior will change in a future release.
-        switch(task.getModeConfig()) {
-        case "insert":
-            task.setMode(Mode.INSERT_DIRECT);
-            break;
-        case "replace":
-            task.setMode(Mode.REPLACE_INPLACE);
-            break;
-        case "merge":
-            task.setMode(Mode.MERGE);
-            break;
-        default:
-            throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert, replace, merge", task.getModeConfig()));
+        if (!features.getSupportedModes().contains(task.getMode())) {
+            throw new ConfigException(String.format("This output type doesn't support '%s'. Supported modes are: %s", task.getMode(), features.getSupportedModes()));
         }
-
-        //switch(task.getModeConfig()) {
-        ////case "insert":
-        ////    task.setMode(Mode.INSERT);
-        ////    break;
-        //case "insert_direct":
-        //    task.setMode(Mode.INSERT_DIRECT);
-        //    break;
-        ////case "truncate_insert":  // TODO
-        ////    task.setMode(Mode.TRUNCATE_INSERT);
-        ////    break;
-        ////case "merge":  // TODO
-        ////    task.setMode(Mode.MERGE);
-        ////    break;
-        ////case "replace":
-        ////    task.setMode(Mode.REPLACE);
-        ////    break;
-        //case "replace_inplace":
-        //    task.setMode(Mode.REPLACE_INPLACE);
-        //    break;
-        //default:
-        //    new ConfigException(String.format("Unknown mode '%s'. Supported modes are: insert_direct, replace_inplace", task.getModeConfig()));
-        //}
 
         task = begin(task, schema, taskCount);
         control.run(task.dump());
@@ -200,7 +298,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         PluginTask task = taskSource.loadTask(getTaskClass());
 
-        if (task.getMode().isInplace()) {
+        if (!task.getMode().tempTablePerTask()) {
             throw new UnsupportedOperationException("inplace mode is not resumable. You need to delete partially-loaded records from the database and restart the entire transaction.");
         }
 
@@ -217,15 +315,15 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     private PluginTask begin(final PluginTask task,
-            final Schema schema, int taskCount)
+            final Schema schema, final int taskCount)
     {
         try {
-            withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectWrite == true
+            withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
                 public void run() throws SQLException
                 {
                     JdbcOutputConnection con = newConnection(task, true, false);
                     try {
-                        doBegin(con, task, schema);
+                        doBegin(con, task, schema, taskCount);
                     } finally {
                         con.close();
                     }
@@ -240,7 +338,7 @@ public abstract class AbstractJdbcOutputPlugin
     private ConfigDiff commit(final PluginTask task,
             Schema schema, final int taskCount)
     {
-        if (!task.getMode().isDirectWrite()) {  // no intermediate data if isDirectWrite == true
+        if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
                 withRetry(new IdempotentSqlRunnable() {
                     public void run() throws SQLException
@@ -266,7 +364,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
 
-        if (!task.getMode().isDirectWrite()) {  // no intermediate data if isDirectWrite == true
+        if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
                 withRetry(new IdempotentSqlRunnable() {
                     public void run() throws SQLException
@@ -286,49 +384,116 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     protected void doBegin(JdbcOutputConnection con,
-            PluginTask task, Schema schema) throws SQLException
+            PluginTask task, final Schema schema, int taskCount) throws SQLException
     {
+        if (schema.getColumnCount() == 0) {
+            throw new ConfigException("task count == 0 is not supported");
+        }
+
         Mode mode = task.getMode();
+        Optional<JdbcSchema> initialTargetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable());
 
+        // TODO get CREATE TABLE statement from task if set
+        JdbcSchema newTableSchema = applyColumnOptionsToNewTableSchema(
+                initialTargetTableSchema.or(new Supplier<JdbcSchema>() {
+                    public JdbcSchema get()
+                    {
+                        return newJdbcSchemaForNewTable(schema);
+                    }
+                }),
+                task.getColumnOptions());
+
+        // create intermediate tables
+        if (!mode.isDirectModify()) {
+            // direct modify mode doesn't need intermediate tables.
+            ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
+            if (mode.tempTablePerTask()) {
+                String namePrefix = generateIntermediateTableNamePrefix(task.getTable(), con, 3, task.getFeatures().getMaxTableNameLength());
+                for (int i=0; i < taskCount; i++) {
+                    intermTableNames.add(namePrefix + String.format("%03d", i));
+                }
+            } else {
+                String name = generateIntermediateTableNamePrefix(task.getTable(), con, 0, task.getFeatures().getMaxTableNameLength());
+                intermTableNames.add(name);
+            }
+            // create the intermediate tables here
+            task.setIntermediateTables(Optional.<List<String>>of(intermTableNames.build()));
+            for (String name : task.getIntermediateTables().get()) {
+                // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
+                con.dropTableIfExists(name);
+                // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
+                con.createTableIfNotExists(name, newTableSchema);
+            }
+        } else {
+            task.setIntermediateTables(Optional.<List<String>>absent());
+        }
+
+        // build JdbcSchema from a table
         JdbcSchema targetTableSchema;
-        if (mode.createAndSwapTable()) {
-            // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
-            // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
-            // swapTableName = "xyz__0000000054d92dee1e452158_bulk_load_temp"
-            String swapTableName = generateSwapTableName(task, con);
-            con.dropTableIfExists(swapTableName);
-            con.createTableIfNotExists(swapTableName, newJdbcSchemaForNewTable(schema));
-            targetTableSchema = newJdbcSchemaFromExistentTable(con, swapTableName);
-            task.setSwapTable(Optional.of(swapTableName));
+        if (mode.ignoreTargetTableSchema() && taskCount != 0) {
+            String firstItermTable = task.getIntermediateTables().get().get(0);
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
+        } else if (initialTargetTableSchema.isPresent()) {
+            targetTableSchema = initialTargetTableSchema.get();
         } else {
+            // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
-            con.createTableIfNotExists(task.getTable(), newJdbcSchemaForNewTable(schema));
-            targetTableSchema = newJdbcSchemaFromExistentTable(con, task.getTable());
-            task.setSwapTable(Optional.<String>absent());
+            con.createTableIfNotExists(task.getTable(), newTableSchema);
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable()).get();
         }
+        task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
-        if (mode.usesMultipleLoadTables()) {
-            // multipleLoadTablePrefix = "xyz__0000000054d92dee1e452158_"
-            // workers run:
-            //   CREATE TABLE xyz__0000000054d92dee1e452158_%d
-            String multipleLoadTablePrefix = task.getTable() + "_" + getTransactionUniqueName();
-            task.setMultipleLoadTablePrefix(Optional.of(multipleLoadTablePrefix));
+        // validate column_options
+        newColumnSetters(
+                new ColumnSetterFactory(null, task.getDefaultTimeZone()),  // TODO create a dummy BatchInsert
+                task.getTargetTableSchema(), schema,
+                task.getColumnOptions());
+
+        // normalize merge_key parameter for merge modes
+        if (mode.isMerge()) {
+            Optional<List<String>> mergeKeys = task.getMergeKeys();
+            if (task.getFeatures().getIgnoreMergeKeys()) {
+                if (mergeKeys.isPresent()) {
+                    throw new ConfigException("This output type does not accept 'merge_key' option.");
+                }
+                task.setMergeKeys(Optional.<List<String>>of(ImmutableList.<String>of()));
+            } else if (mergeKeys.isPresent()) {
+                if (task.getMergeKeys().get().isEmpty()) {
+                    throw new ConfigException("Empty 'merge_keys' option is invalid.");
+                }
+                for (String key : mergeKeys.get()) {
+                    if (!targetTableSchema.findColumn(key).isPresent()) {
+                        throw new ConfigException(String.format("Merge key '%s' does not exist in the target table.", key));
+                    }
+                }
+            } else {
+                ImmutableList.Builder<String> builder = ImmutableList.builder();
+                for (JdbcColumn column : targetTableSchema.getColumns()) {
+                    if (column.isUniqueKey()) {
+                        builder.add(column.getName());
+                    }
+                }
+                task.setMergeKeys(Optional.<List<String>>of(builder.build()));
+                if (task.getMergeKeys().get().isEmpty()) {
+                    throw new ConfigException("Merging mode is used but the target table does not have primary keys. Please set merge_keys option.");
+                }
+            }
+            logger.info("Using merge keys: {}", task.getMergeKeys().get());
         } else {
-            task.setMultipleLoadTablePrefix(Optional.<String>absent());
+            task.setMergeKeys(Optional.<List<String>>absent());
         }
-
-        task.setLoadSchema(matchSchemaByColumnNames(schema, targetTableSchema));
     }
 
-    protected String generateSwapTableName(PluginTask task, JdbcOutputConnection con) throws SQLException
+    protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con, int suffixLength, int maxLength) throws SQLException
     {
-        String tableName = task.getTable();
+        Charset tableNameCharset = con.getTableNameCharset();
+        String tableName = baseTableName;
         String suffix = "_bl_tmp";
         String uniqueSuffix = getTransactionUniqueName() + suffix;
 
         // way to count length of table name varies by DBMSs (bytes or characters),
         // so truncate swap table name by one character.
-        while (!isValidIdentifier(con, tableName + "_" + uniqueSuffix)) {
+        while (!checkTableNameLength(tableName + "_" + uniqueSuffix, tableNameCharset, suffixLength, maxLength)) {
             if (uniqueSuffix.length() > 8 + suffix.length()) {
                 // truncate transaction unique name
                 // (include 8 characters of the transaction name at least)
@@ -352,43 +517,88 @@ public abstract class AbstractJdbcOutputPlugin
         return tableName + "_" + uniqueSuffix;
     }
 
-    // subclass should override and return if identifier (ex. table name) is valid for the DBMS.
-    protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
+    private static JdbcSchema applyColumnOptionsToNewTableSchema(JdbcSchema schema, final Map<String, JdbcColumnOption> columnOptions)
     {
-        return true;
+        return new JdbcSchema(Lists.transform(schema.getColumns(), new Function<JdbcColumn, JdbcColumn>() {
+            public JdbcColumn apply(JdbcColumn c)
+            {
+                JdbcColumnOption option = columnOptionOf(columnOptions, c);
+                if (option.getType().isPresent()) {
+                    return JdbcColumn.newTypeDeclaredColumn(
+                            c.getName(), Types.OTHER,  // sqlType, isNotNull, and isUniqueKey are ignored
+                            option.getType().get(), false, false);
+                }
+                return c;
+            }
+        }));
+    }
+
+    protected static List<ColumnSetter> newColumnSetters(ColumnSetterFactory factory,
+            JdbcSchema targetTableSchema, Schema inputValueSchema,
+            Map<String, JdbcColumnOption> columnOptions)
+    {
+        ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
+        int schemaColumnIndex = 0;
+        for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
+            if (targetColumn.isSkipColumn()) {
+                builder.add(factory.newSkipColumnSetter());
+            } else {
+                //String columnOptionKey = inputValueSchema.getColumn(schemaColumnIndex).getName();
+                JdbcColumnOption option = columnOptionOf(columnOptions, targetColumn);
+                builder.add(factory.newColumnSetter(targetColumn, option));
+                schemaColumnIndex++;
+            }
+        }
+        return builder.build();
+    }
+
+    private static JdbcColumnOption columnOptionOf(Map<String, JdbcColumnOption> columnOptions, JdbcColumn targetColumn)
+    {
+        return Optional.fromNullable(columnOptions.get(targetColumn.getName())).or(
+                    // default column option
+                    new Supplier<JdbcColumnOption>()
+                    {
+                        public JdbcColumnOption get()
+                        {
+                            return Exec.newConfigSource().loadConfig(JdbcColumnOption.class);
+                        }
+                    });
+    }
+
+    private boolean checkTableNameLength(String tableName, Charset tableNameCharset, int suffixLength, int maxLength)
+    {
+        return tableNameCharset.encode(tableName).remaining() + suffixLength <= maxLength;
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
+        JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
+
         switch (task.getMode()) {
-        case INSERT:
-            // aggregate insert into target
-            //con.gatherInsertTables();
-            throw new UnsupportedOperationException("not implemented yet"); // TODO
         case INSERT_DIRECT:
+        case MERGE_DIRECT:
             // already done
             break;
+
+        case INSERT:
+            // aggregate insert into target
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), false);
+            break;
+
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
-            throw new UnsupportedOperationException("not implemented yet");
-            //break;
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), true);
+            break;
+
         case MERGE:
             // aggregate merge into target
-            throw new UnsupportedOperationException("not implemented yet");
-            //break;
-        case REPLACE:
-            if (taskCount == 1) {
-                // swap table
-                con.replaceTable(task.getSwapTable().get(), task.getLoadSchema(), task.getTable());
-            } else {
-                // aggregate insert into swap table & swap table
-                throw new UnsupportedOperationException("not implemented yet");
-            }
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getTable(), task.getMergeKeys().get());
             break;
-        case REPLACE_INPLACE:
+
+        case REPLACE:
             // swap table
-            con.replaceTable(task.getSwapTable().get(), task.getLoadSchema(), task.getTable());
+            con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getTable());
             break;
         }
     }
@@ -397,19 +607,11 @@ public abstract class AbstractJdbcOutputPlugin
             List<CommitReport> successCommitReports)
         throws SQLException
     {
-        if (task.getSwapTable().isPresent()) {
-            con.dropTableIfExists(task.getSwapTable().get());
-        }
-        if (task.getMultipleLoadTablePrefix().isPresent()) {
-            for (int i=0; i < taskCount; i++) {
-                con.dropTableIfExists(formatMultipleLoadTableName(task, i));
+        if (task.getIntermediateTables().isPresent()) {
+            for (String intermTable : task.getIntermediateTables().get()) {
+                con.dropTableIfExists(intermTable);
             }
         }
-    }
-
-    static String formatMultipleLoadTableName(PluginTask task, int taskIndex)
-    {
-        return task.getMultipleLoadTablePrefix().get() + String.format("%04x", taskIndex);
     }
 
     protected JdbcSchema newJdbcSchemaForNewTable(Schema schema)
@@ -420,52 +622,51 @@ public abstract class AbstractJdbcOutputPlugin
             c.visit(new ColumnVisitor() {
                 public void booleanColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                            columnName, "BOOLEAN",
-                            Types.BOOLEAN, 1, 0, false));
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.BOOLEAN, "BOOLEAN",
+                            1, 0, false, false));
                 }
 
                 public void longColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                            columnName, "BIGINT",
-                            Types.BIGINT, 22, 0, false));
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.BIGINT, "BIGINT",
+                            22, 0, false, false));
                 }
 
                 public void doubleColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                            columnName, "DOUBLE PRECISION",
-                            Types.FLOAT, 24, 0, false));
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.FLOAT, "DOUBLE PRECISION",
+                            24, 0, false, false));
                 }
 
                 public void stringColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                                columnName, "CLOB",
-                                Types.CLOB, 4000, 0, false));  // TODO size type param
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.CLOB, "CLOB",
+                            4000, 0, false, false));  // TODO size type param
                 }
 
                 public void timestampColumn(Column column)
                 {
-                    columns.add(new JdbcColumn(
-                                columnName, "TIMESTAMP",
-                                Types.TIMESTAMP, 26, 0, false));  // size type param is from postgresql.
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.TIMESTAMP, "TIMESTAMP",
+                            26, 0, false, false));  // size type param is from postgresql
                 }
             });
         }
         return new JdbcSchema(columns.build());
     }
 
-    public JdbcSchema newJdbcSchemaFromExistentTable(JdbcOutputConnection connection,
+    public Optional<JdbcSchema> newJdbcSchemaFromTableIfExists(JdbcOutputConnection connection,
             String tableName) throws SQLException
     {
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
-        String schemaNamePattern = JdbcUtils.escapeSearchString(connection.getSchemaName(), escape);
 
-        ResultSet rs = dbm.getPrimaryKeys(null, schemaNamePattern, tableName);
-        ImmutableList.Builder<String> primaryKeysBuilder = ImmutableList.builder();
+        ResultSet rs = dbm.getPrimaryKeys(null, connection.getSchemaName(), tableName);
+        ImmutableSet.Builder<String> primaryKeysBuilder = ImmutableSet.builder();
         try {
             while(rs.next()) {
                 primaryKeysBuilder.add(rs.getString("COLUMN_NAME"));
@@ -473,48 +674,49 @@ public abstract class AbstractJdbcOutputPlugin
         } finally {
             rs.close();
         }
-        ImmutableList<String> primaryKeys = primaryKeysBuilder.build();
+        ImmutableSet<String> primaryKeys = primaryKeysBuilder.build();
 
-        String tableNamePattern = JdbcUtils.escapeSearchString(tableName, escape);
-        ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
-        rs = dbm.getColumns(null, schemaNamePattern, tableNamePattern, null);
+        ImmutableList.Builder<JdbcColumn> builder = ImmutableList.builder();
+        rs = dbm.getColumns(null,
+                JdbcUtils.escapeSearchString(connection.getSchemaName(), escape),
+                JdbcUtils.escapeSearchString(tableName, escape),
+                null);
         try {
-            while(rs.next()) {
+            while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
-                String typeName = rs.getString("TYPE_NAME");
-                boolean isPrimaryKey = primaryKeys.contains(columnName);
-                typeName = typeName.toUpperCase(Locale.ENGLISH);
+                String simpleTypeName = rs.getString("TYPE_NAME").toUpperCase(Locale.ENGLISH);
+                boolean isUniqueKey = primaryKeys.contains(columnName);
                 int sqlType = rs.getInt("DATA_TYPE");
                 int colSize = rs.getInt("COLUMN_SIZE");
                 int decDigit = rs.getInt("DECIMAL_DIGITS");
                 if (rs.wasNull()) {
                     decDigit = -1;
                 }
-                //rs.getString("IS_NULLABLE").equals("NO")  // "YES" or ""  // TODO
+                boolean isNotNull = "NO".equals(rs.getString("IS_NULLABLE"));
                 //rs.getString("COLUMN_DEF") // or null  // TODO
-                columns.add(new JdbcColumn(
-                            columnName, typeName,
-                            sqlType, colSize, decDigit, isPrimaryKey));
+                builder.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, sqlType, simpleTypeName, colSize, decDigit, isNotNull, isUniqueKey));
+                // We can't get declared column name using JDBC API.
+                // Subclasses need to overwrite it.
             }
         } finally {
             rs.close();
         }
-        return new JdbcSchema(columns.build());
+        List<JdbcColumn> columns = builder.build();
+        if (columns.isEmpty()) {
+            return Optional.absent();
+        } else {
+            return Optional.of(new JdbcSchema(columns));
+        }
     }
 
     private JdbcSchema matchSchemaByColumnNames(Schema inputSchema, JdbcSchema targetTableSchema)
     {
         ImmutableList.Builder<JdbcColumn> jdbcColumns = ImmutableList.builder();
 
-        outer : for (Column column : inputSchema.getColumns()) {
-            for (JdbcColumn jdbcColumn : targetTableSchema.getColumns()) {
-                if (jdbcColumn.getName().equals(column.getName())) {
-                    jdbcColumns.add(jdbcColumn);
-                    continue outer;
-                }
-            }
-
-            jdbcColumns.add(JdbcColumn.skipColumn());
+        for (Column column : inputSchema.getColumns()) {
+            Optional<JdbcColumn> c = targetTableSchema.findColumn(column.getName());
+            jdbcColumns.add(c.or(JdbcColumn.skipColumn()));
         }
 
         return new JdbcSchema(jdbcColumns.build());
@@ -525,63 +727,43 @@ public abstract class AbstractJdbcOutputPlugin
         final PluginTask task = taskSource.loadTask(getTaskClass());
         final Mode mode = task.getMode();
 
-        BatchInsert batch;
+        // instantiate BatchInsert without table name
+        BatchInsert batch = null;
         try {
-            batch = newBatchInsert(task);
+            batch = newBatchInsert(task,
+                    task.getMode() == Mode.MERGE_DIRECT ?
+                        task.getMergeKeys() :
+                        Optional.<List<String>>absent());
         } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);
         }
+
         try {
+            // configure PageReader -> BatchInsert
             PageReader reader = new PageReader(schema);
-            ColumnSetterFactory factory = newColumnSetterFactory(batch, reader, null);  // TODO TimestampFormatter
 
-            JdbcSchema loadSchema = task.getLoadSchema();
+            List<ColumnSetter> columnSetters = newColumnSetters(
+                    new ColumnSetterFactory(batch, task.getDefaultTimeZone()),
+                    task.getTargetTableSchema(), schema,
+                    task.getColumnOptions());
+            JdbcSchema insertIntoSchema = filterSkipColumns(task.getTargetTableSchema());
 
-            ImmutableList.Builder<JdbcColumn> insertColumns = ImmutableList.builder();
-            ImmutableList.Builder<ColumnSetter> columnSetters = ImmutableList.builder();
-            for (JdbcColumn c : loadSchema.getColumns()) {
-                if (c.isSkipColumn()) {
-                    columnSetters.add(factory.newSkipColumnSetter());
-                } else {
-                    columnSetters.add(factory.newColumnSetter(c));
-                    insertColumns.add(c);
-                }
+            // configure BatchInsert -> an intermediate table (!isDirectModify) or the target table (isDirectModify)
+            String destTable;
+            if (mode.tempTablePerTask()) {
+                destTable = task.getIntermediateTables().get().get(taskIndex);
+            } else if (mode.isDirectModify()) {
+                destTable = task.getTable();
+            } else {
+                destTable = task.getIntermediateTables().get().get(0);
             }
-            final JdbcSchema insertSchema = new JdbcSchema(insertColumns.build());
+            batch.prepare(destTable, insertIntoSchema);
 
-            final BatchInsert b = batch;
-            withRetry(new IdempotentSqlRunnable() {
-                public void run() throws SQLException
-                {
-                    String loadTable;
-                    boolean createTable;
-                    if (mode.usesMultipleLoadTables()) {
-                        // insert, truncate_insert, merge, replace
-                        loadTable = formatMultipleLoadTableName(task, taskIndex);
-                        JdbcOutputConnection con = newConnection(task, true, true);
-                        try {
-                            con.createTableIfNotExists(loadTable, insertSchema);
-                        } finally {
-                            con.close();
-                        }
-
-                    } else if (!mode.usesMultipleLoadTables() && mode.createAndSwapTable()) {
-                        // replace_inplace
-                        loadTable = task.getSwapTable().get();
-
-                    } else {
-                        // insert_direct
-                        loadTable = task.getTable();
-                    }
-                    b.prepare(loadTable, insertSchema);
-                }
-            });
-
-            PluginPageOutput output = newPluginPageOutput(reader, batch, columnSetters.build(), task);
+            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
             batch = null;
             return output;
 
-        } catch (SQLException | InterruptedException ex) {
+        } catch (SQLException ex) {
             throw new RuntimeException(ex);
 
         } finally {
@@ -595,39 +777,32 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
-            TimestampFormatter timestampFormatter)
-    {
-        return new ColumnSetterFactory(batch, pageReader, timestampFormatter);
-    }
-
-    protected PluginPageOutput newPluginPageOutput(PageReader reader,
-                                                   BatchInsert batch, List<ColumnSetter> columnSetters,
-                                                   PluginTask task)
-    {
-        return new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
-    }
-
     public static class PluginPageOutput
             implements TransactionalPageOutput
     {
         protected final List<Column> columns;
-        protected final List<ColumnSetter> columnSetters;
+        protected final List<ColumnSetterVisitor> columnVisitors;
         private final PageReader pageReader;
         private final BatchInsert batch;
         private final int batchSize;
-        private final int foraceBatchFlushSize;
+        private final int forceBatchFlushSize;
 
-        public PluginPageOutput(PageReader pageReader,
+        public PluginPageOutput(final PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
                 int batchSize)
         {
             this.pageReader = pageReader;
             this.batch = batch;
             this.columns = pageReader.getSchema().getColumns();
-            this.columnSetters = columnSetters;
+            this.columnVisitors = ImmutableList.copyOf(Lists.transform(
+                        columnSetters, new Function<ColumnSetter, ColumnSetterVisitor>() {
+                            public ColumnSetterVisitor apply(ColumnSetter setter)
+                            {
+                                return new ColumnSetterVisitor(pageReader, setter);
+                            }
+                        }));
             this.batchSize = batchSize;
-            this.foraceBatchFlushSize = batchSize * 2;
+            this.forceBatchFlushSize = batchSize * 2;
         }
 
         @Override
@@ -636,7 +811,7 @@ public abstract class AbstractJdbcOutputPlugin
             try {
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
-                    if (batch.getBatchWeight() > foraceBatchFlushSize) {
+                    if (batch.getBatchWeight() > forceBatchFlushSize) {
                         batch.flush();
                     }
                     handleColumnsSetters();
@@ -683,12 +858,11 @@ public abstract class AbstractJdbcOutputPlugin
 
         protected void handleColumnsSetters()
         {
-            int size = columnSetters.size();
+            int size = columnVisitors.size();
             for (int i=0; i < size; i++) {
-                columns.get(i).visit(columnSetters.get(i));
+                columns.get(i).visit(columnVisitors.get(i));
             }
         }
-
     }
 
     public static interface IdempotentSqlRunnable
@@ -707,17 +881,17 @@ public abstract class AbstractJdbcOutputPlugin
     {
         try {
             retryExecutor()
-                .setRetryLimit(12)
-                .setInitialRetryWait(1000)
-                .setMaxRetryWait(30 * 60 * 1000)
-                .runInterruptible(new IdempotentOperation<Void>() {
+                .withRetryLimit(12)
+                .withInitialRetryWait(1000)
+                .withMaxRetryWait(30 * 60 * 1000)
+                .runInterruptible(new Retryable<Void>() {
                     public Void call() throws Exception
                     {
                         op.run();
                         return null;
                     }
 
-                    public void onRetry(Throwable exception, int retryCount, int retryLimit, int retryWait)
+                    public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
                     {
                         if (exception instanceof SQLException) {
                             SQLException ex = (SQLException) exception;
@@ -736,7 +910,7 @@ public abstract class AbstractJdbcOutputPlugin
                         }
                     }
 
-                    public void onGiveup(Throwable firstException, Throwable lastException)
+                    public void onGiveup(Exception firstException, Exception lastException)
                     {
                         if (firstException instanceof SQLException) {
                             SQLException ex = (SQLException) firstException;
@@ -746,7 +920,7 @@ public abstract class AbstractJdbcOutputPlugin
                         }
                     }
 
-                    public boolean isRetryableException(Throwable exception)
+                    public boolean isRetryableException(Exception exception)
                     {
                         //if (exception instanceof SQLException) {
                         //    SQLException ex = (SQLException) exception;

@@ -2,7 +2,6 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import org.embulk.spi.PageReader;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
@@ -10,34 +9,45 @@ import org.embulk.output.jdbc.BatchInsert;
 public class NullColumnSetter
         extends ColumnSetter
 {
-    public NullColumnSetter(BatchInsert batch, PageReader pageReader,
-            JdbcColumn column)
+    public NullColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
-        super(batch, pageReader, column);
+        super(batch, column, defaultValue);
     }
 
-    protected void booleanValue(boolean v) throws IOException, SQLException
+    @Override
+    public void booleanValue(boolean v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
-    protected void longValue(long v) throws IOException, SQLException
+    @Override
+    public void longValue(long v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
-    protected void doubleValue(double v) throws IOException, SQLException
+    @Override
+    public void doubleValue(double v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
-    protected void stringValue(String v) throws IOException, SQLException
+    @Override
+    public void stringValue(String v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
     }
 
-    protected void timestampValue(Timestamp v) throws IOException, SQLException
+    @Override
+    public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        nullValue();
+        defaultValue.setNull();
+    }
+
+    @Override
+    public void nullValue() throws IOException, SQLException
+    {
+        defaultValue.setNull();
     }
 }

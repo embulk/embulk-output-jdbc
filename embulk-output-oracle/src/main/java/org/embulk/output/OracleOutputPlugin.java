@@ -1,10 +1,12 @@
 package org.embulk.output;
 
+import java.util.List;
+import java.util.Properties;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
-import java.util.Properties;
-
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -12,23 +14,16 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.StandardBatchInsert;
-import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.oracle.DirectBatchInsert;
 import org.embulk.output.oracle.InsertMethod;
 import org.embulk.output.oracle.OracleCharset;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
-import org.embulk.output.oracle.setter.OracleColumnSetterFactory;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.time.TimestampFormatter;
-
-import com.google.common.base.Optional;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private static final int MAX_TABLE_NAME_LENGTH = 30;
-
     public interface OraclePluginTask
             extends PluginTask
     {
@@ -68,6 +63,15 @@ public class OracleOutputPlugin
     protected Class<? extends PluginTask> getTaskClass()
     {
         return OraclePluginTask.class;
+    }
+
+    @Override
+    protected Features getFeatures(PluginTask task)
+    {
+        return new Features()
+            .setMaxTableNameLength(30)
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setIgnoreMergeKeys(false);
     }
 
     @Override
@@ -118,10 +122,10 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        if (task.getMode().isMerge()) {
-            throw new UnsupportedOperationException("mode 'merge' is not implemented for this type");
+        if (mergeKeys.isPresent()) {
+            throw new UnsupportedOperationException("Oracle output plugin doesn't support 'merge_direct' mode.");
         }
 
         OraclePluginTask oracleTask = (OraclePluginTask) task;
@@ -130,7 +134,7 @@ public class OracleOutputPlugin
         if (oracleTask.getInsertMethod() == InsertMethod.oci) {
             OracleCharset charset;
             try (JdbcOutputConnection connection = connector.connect(true)) {
-                charset = ((OracleOutputConnection)connection).getCharset();
+                charset = ((OracleOutputConnection)connection).getOracleCharset();
             }
 
             return new DirectBatchInsert(
@@ -142,22 +146,6 @@ public class OracleOutputPlugin
                     oracleTask.getBatchSize());
         }
 
-        return new StandardBatchInsert(getConnector(task, true));
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
     }
-
-    @Override
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, PageReader pageReader,
-            TimestampFormatter timestampFormatter)
-    {
-        return new OracleColumnSetterFactory(batch, pageReader, timestampFormatter);
-    }
-
-    @Override
-    protected boolean isValidIdentifier(JdbcOutputConnection con, String identifier) throws SQLException
-    {
-        OracleCharset charset = ((OracleOutputConnection)con).getCharset();
-        ByteBuffer buffer = charset.javaCharset.encode(identifier);
-        return buffer.remaining() <= MAX_TABLE_NAME_LENGTH;
-    }
-
 }

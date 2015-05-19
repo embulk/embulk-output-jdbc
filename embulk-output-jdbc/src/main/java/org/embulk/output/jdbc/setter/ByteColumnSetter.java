@@ -2,15 +2,17 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.math.RoundingMode;
+import com.google.common.math.DoubleMath;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class ByteColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
+    public ByteColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
@@ -19,43 +21,56 @@ public class DoubleColumnSetter
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setByte();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        batch.setByte(v ? (byte) 1 : (byte) 0);
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        if (v > Byte.MAX_VALUE || v < Byte.MIN_VALUE) {
+            defaultValue.setByte();
+        } else {
+            batch.setByte((byte) v);
+        }
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setDouble(v);
+        long lv;
+        try {
+            // TODO configurable rounding mode
+            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
+        } catch (ArithmeticException ex) {
+            // NaN / Infinite / -Infinite
+            defaultValue.setByte();
+            return;
+        }
+        longValue(lv);
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
+        byte sv;
         try {
-            dv = Double.parseDouble(v);
+            sv = Byte.parseByte(v);
         } catch (NumberFormatException e) {
-            defaultValue.setDouble();
+            defaultValue.setByte();
             return;
         }
-        batch.setDouble(dv);
+        batch.setByte(sv);
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setByte();
     }
 }

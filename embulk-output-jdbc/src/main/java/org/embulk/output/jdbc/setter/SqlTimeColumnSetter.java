@@ -2,15 +2,15 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import org.embulk.spi.ColumnVisitor;
+import java.sql.Time;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 
-public class DoubleColumnSetter
+public class SqlTimeColumnSetter
         extends ColumnSetter
 {
-    public DoubleColumnSetter(BatchInsert batch, JdbcColumn column,
+    public SqlTimeColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
@@ -19,43 +19,37 @@ public class DoubleColumnSetter
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setDouble(v ? 1.0 : 0.0);
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setDouble((double) v);
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setDouble(v);
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        double dv;
-        try {
-            dv = Double.parseDouble(v);
-        } catch (NumberFormatException e) {
-            defaultValue.setDouble();
-            return;
-        }
-        batch.setDouble(dv);
+        defaultValue.setSqlTime();
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        defaultValue.setDouble();
+        Time t = new Time(v.toEpochMilli());
+        batch.setSqlTime(t, getSqlType());
     }
 }
