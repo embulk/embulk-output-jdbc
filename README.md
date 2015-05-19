@@ -38,7 +38,6 @@ See [embulk-output-redshift](embulk-output-redshift/).
 - **options**: extra JDBC properties (hash, default: {})
 - **mode**: "insert", "insert_direct", "truncate_insert", or "replace". See bellow (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
-- **timestamp_format**: strftime(3) format when embulk writes a timestamp value to a VARCHAR or CLOB column (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
 - **max_table_name_length**: maximum length of table name in this RDBMS (integer, default: 256)
 - **default_timezone**: If input column type (embulk type) is timestamp and destination column type is `string` or `nstring`, this plugin needs to format the timestamp into a string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
