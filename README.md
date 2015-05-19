@@ -71,13 +71,33 @@ See [embulk-output-redshift](embulk-output-redshift/).
 ```yaml
 out:
   type: jdbc
-  driver_path: /opt/oracle/ojdbc6.jar
-  driver_class: oracle.jdbc.driver.OracleDriver
-  url: jdbc:oracle:thin:@127.0.0.1:1521:mydb
+  driver_path: /usr/local/nz/lib/nzjdbc3.jar
+  driver_class: org.netezza.Driver
+  url: jdbc:jdbc:netezza://127.0.0.1:5480/mydb
   user: myuser
   password: "mypassword"
   table: my_table
   mode: insert
+```
+
+Advanced configuration:
+
+```yaml
+out:
+  type: jdbc
+  driver_path: /usr/local/nz/lib/nzjdbc3.jar
+  driver_class: org.netezza.Driver
+  url: jdbc:jdbc:netezza://127.0.0.1:5480/mydb
+  user: myuser
+  password: "mypassword"
+  table: my_table
+  options: {loglevel: 2}
+  mode: insert_direct
+  column_options:
+    my_col_1: {type: 'VARCHAR(255)'}
+    my_col_3: {type: 'INT NOT NULL'}
+    my_col_4: {value_type: string, timestamp_format: `%Y-%m-%d %H:%M:%S %z`, timezone: '-0700'}
+    my_col_5: {type: 'DECIMAL(18,9)', value_type: pass}
 ```
 
 ### Build

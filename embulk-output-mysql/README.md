@@ -66,6 +66,25 @@ out:
   mode: insert
 ```
 
+Advanced configuration:
+
+```yaml
+out:
+  type: mysql
+  host: localhost
+  user: root
+  password: ""
+  database: my_database
+  table: my_table
+  options: {connectTimeout: 20000}
+  mode: insert_direct
+  column_options:
+    my_col_1: {type: 'TEXT'}
+    my_col_3: {type: 'INT NOT NULL'}
+    my_col_4: {value_type: string, timestamp_format: `%Y-%m-%d %H:%M:%S %z`, timezone: '-0700'}
+    my_col_5: {type: 'DECIMAL(18,9)', value_type: pass}
+```
+
 ### Build
 
 ```

@@ -67,6 +67,29 @@ out:
   mode: insert
 ```
 
+Advanced configuration:
+
+```yaml
+out:
+  type: redshift
+  host: myinstance.us-west-2.redshift.amazonaws.com
+  user: pg
+  password: ""
+  database: my_database
+  table: my_table
+  access_key_id: ABCXYZ123ABCXYZ123
+  secret_access_key: AbCxYz123aBcXyZ123
+  s3_bucket: my-redshift-transfer-bucket
+  iam_user_name: my-s3-read-only
+  options: {loglevel: 2}
+  mode: insert_direct
+  column_options:
+    my_col_1: {type: 'VARCHAR(255)'}
+    my_col_3: {type: 'INT NOT NULL'}
+    my_col_4: {value_type: string, timestamp_format: `%Y-%m-%d %H:%M:%S %z`, timezone: '-0700'}
+    my_col_5: {type: 'DECIMAL(18,9)', value_type: pass}
+```
+
 ### Build
 
 ```
