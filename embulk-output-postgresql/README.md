@@ -17,12 +17,15 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **database**: destination database name (string, required)
 - **schema**: destination schema name (string, default: "public")
 - **table**: destination table name (string, required)
+- **options**: extra connection properties (hash, default: {})
 - **mode**: "replace", "merge" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
-- **timestamp_format**: strftime(3) format when embulk writes a timestamp value to a VARCHAR or CLOB column (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
-- **timezone**: timezone used to format a timestamp value using `timestamp_format` (string, default: UTC)
-- **options**: extra connection properties (hash, default: {})
-- **string_pass_through**: if a value is string, writes it to database without conversion regardless of the target table's column type. Usually, if the target table's column type is not string while the value is string, embulk writes NULL. But if this option is true, embulk lets the database parse the string into the column type. If the conversion fails, the task fails. (boolean, default: false)
+- **default_timezone**: If input column type (embulk type) is timestamp and destination column type is `string` or `nstring`, this plugin needs to format the timestamp into a string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
+- **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
+  - **type**: type of a column when this plugin creates new tables (e.g. `VARCHAR(255)`, `INTEGER NOT NULL UNIQUE`). This used when this plugin creates intermediate tables (insert, truncate_insert and merge modes), when it creates the target table (insert_direct and replace modes), and when it creates nonexistent target table automatically. (string, default: depends on input column type. `BIGINT` if input column type is long, `BOOLEAN` if boolean, `DOUBLE PRECISION` if double, `CLOB` if string, `TIMESTAMP` if timestamp)
+  - **value_type**: This plugin converts input column type (embulk type) into a database type to build a INSERT statement. This value_type option controls the type of the value in a INSERT statement. (string, default: depends on input column type. Available values options are: `byte, `short`, `int`, `long`, `double`, `float`, `boolean`, `string`, `nstring`, `date`, `time`, `timestamp`, `decimal`, `null`, `pass`)
+  - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
+  - **timezone**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. And if the input column type is timestamp and value_type is `date`, this plugin needs to consider timezone. In those cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 
 ### Modes
 
@@ -42,10 +45,6 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query.
   * Transactional: Yes.
   * Resumable: Yes.
-* **merge_direct**:
-  * Behavior: This mode inserts rows to the target table directory using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query.
-  * Transactional: No.
-  * Resumable: No.
 * **replace**:
   * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
   * Transactional: Yes.

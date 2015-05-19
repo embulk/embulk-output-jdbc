@@ -35,13 +35,17 @@ See [embulk-output-redshift](embulk-output-redshift/).
 - **password**: database login password (string, optional)
 - **schema**: destination schema name (string, default: use default schema)
 - **table**: destination table name (string, required)
+- **options**: extra JDBC properties (hash, default: {})
 - **mode**: "insert", "insert_direct", "truncate_insert", or "replace". See bellow (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
-- **options**: extra JDBC properties (hash, default: {})
 - **timestamp_format**: strftime(3) format when embulk writes a timestamp value to a VARCHAR or CLOB column (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
-- **timezone**: timezone used to format a timestamp value using `timestamp_format` (string, default: UTC)
 - **max_table_name_length**: maximum length of table name in this RDBMS (integer, default: 256)
-- **string_pass_through**: if a value is string, writes it to database without conversion regardless of the target table's column type. Usually, if the target table's column type is not string while the value is string, embulk writes NULL. But if this option is true, embulk lets the database parse the string into the column type. If the conversion fails, depending on the database implementation, the task fails. (boolean, default: false)
+- **default_timezone**: If input column type (embulk type) is timestamp and destination column type is `string` or `nstring`, this plugin needs to format the timestamp into a string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
+- **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
+  - **type**: type of a column when this plugin creates new tables (e.g. `VARCHAR(255)`, `INTEGER NOT NULL UNIQUE`). This used when this plugin creates intermediate tables (insert and truncate_insert modes), when it creates the target table (replace mode), and when it creates nonexistent target table automatically. (string, default: depends on input column type. `BIGINT` if input column type is long, `BOOLEAN` if boolean, `DOUBLE PRECISION` if double, `CLOB` if string, `TIMESTAMP` if timestamp)
+  - **value_type**: This plugin converts input column type (embulk type) into a database type to build a INSERT statement. This value_type option controls the type of the value in a INSERT statement. (string, default: depends on input column type. Available values options are: `byte, `short`, `int`, `long`, `double`, `float`, `boolean`, `string`, `nstring`, `date`, `time`, `timestamp`, `decimal`, `null`, `pass`)
+  - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
+  - **timezone**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. And if the input column type is timestamp and value_type is `date`, this plugin needs to consider timezone. In those cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 
 ### Modes
 
