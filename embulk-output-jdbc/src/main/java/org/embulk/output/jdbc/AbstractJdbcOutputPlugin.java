@@ -15,11 +15,13 @@ import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import org.slf4j.Logger;
+import org.joda.time.DateTimeZone;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Function;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +62,7 @@ public abstract class AbstractJdbcOutputPlugin
     private final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
-            extends Task, TimestampFormatter.FormatterTask
+            extends Task
     {
         @Config("options")
         @ConfigDefault("{}")
@@ -81,13 +83,13 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("null")
         public Optional<List<String>> getMergeKeys();
 
-        @Config("timestamp_format")
-        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
-        public TimestampFormat getTimestampFormat();
-
         @Config("column_options")
         @ConfigDefault("{}")
-        public Map<String, ColumnOption> getColumnOptions();
+        public Map<String, JdbcColumnOption> getColumnOptions();
+
+        @Config("default_timezone")
+        @ConfigDefault("\"UTC\"")
+        public DateTimeZone getDefaultTimeZone();
 
         public void setMergeKeys(Optional<List<String>> keys);
 
@@ -99,14 +101,6 @@ public abstract class AbstractJdbcOutputPlugin
 
         public Optional<List<String>> getIntermediateTables();
         public void setIntermediateTables(Optional<List<String>> names);
-    }
-
-    public static interface ColumnOption
-            extends Task
-    {
-        @Config("value_type")
-        @ConfigDefault("\"coalesce\"")
-        public String getValueType();
     }
 
     public static class Features
@@ -436,8 +430,9 @@ public abstract class AbstractJdbcOutputPlugin
 
         // validate column_options
         newColumnSetters(
-                newColumnSetterFactory(null, task.getTimestampFormat().newFormatter(task)),  // TODO create a dummy BatchInsert
-                task.getTargetTableSchema(), schema, task.getColumnOptions());
+                new ColumnSetterFactory(null, task.getDefaultTimeZone()),  // TODO create a dummy BatchInsert
+                task.getTargetTableSchema(), schema,
+                task.getColumnOptions());
 
         // normalize merge_key parameter for merge modes
         if (mode.isMerge()) {
@@ -680,8 +675,9 @@ public abstract class AbstractJdbcOutputPlugin
             PageReader reader = new PageReader(schema);
 
             List<ColumnSetter> columnSetters = newColumnSetters(
-                    newColumnSetterFactory(batch, task.getTimestampFormat().newFormatter(task)),
-                    task.getTargetTableSchema(), schema, task.getColumnOptions());
+                    new ColumnSetterFactory(batch, task.getDefaultTimeZone()),
+                    task.getTargetTableSchema(), schema,
+                    task.getColumnOptions());
             JdbcSchema insertIntoSchema = filterSkipColumns(task.getTargetTableSchema());
 
             // configure BatchInsert -> an intermediate table (!isDirectModify) or the target table (isDirectModify)
@@ -713,13 +709,9 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, TimestampFormatter timestampFormatter)
-    {
-        return new ColumnSetterFactory(batch, timestampFormatter);
-    }
-
     protected static List<ColumnSetter> newColumnSetters(ColumnSetterFactory factory,
-            JdbcSchema targetTableSchema, Schema inputValueSchema, Map<String, ColumnOption> columnOptions)
+            JdbcSchema targetTableSchema, Schema inputValueSchema,
+            Map<String, JdbcColumnOption> columnOptions)
     {
         ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
         int schemaColumnIndex = 0;
@@ -728,13 +720,16 @@ public abstract class AbstractJdbcOutputPlugin
                 builder.add(factory.newSkipColumnSetter());
             } else {
                 Column c = inputValueSchema.getColumn(schemaColumnIndex);
-                Optional<ColumnOption> columnOption = Optional.fromNullable(columnOptions.get(c.getName()));
-
-                String valueType = "coalesce";
-                if (columnOption.isPresent()) {
-                    valueType = columnOption.get().getValueType();
-                }
-                builder.add(factory.newColumnSetter(targetColumn, valueType));
+                JdbcColumnOption option = Optional.fromNullable(columnOptions.get(c.getName())).or(
+                        // default column option
+                        new Supplier<JdbcColumnOption>()
+                        {
+                            public JdbcColumnOption get()
+                            {
+                                return Exec.newConfigSource().loadConfig(JdbcColumnOption.class);
+                            }
+                        });
+                builder.add(factory.newColumnSetter(targetColumn, option));
                 schemaColumnIndex++;
             }
         }

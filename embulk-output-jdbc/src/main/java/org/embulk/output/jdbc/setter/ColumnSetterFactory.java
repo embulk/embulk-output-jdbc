@@ -1,21 +1,22 @@
 package org.embulk.output.jdbc.setter;
 
 import java.sql.Types;
+import org.joda.time.DateTimeZone;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.output.jdbc.JdbcColumnOption;
 import org.embulk.config.ConfigException;
 
 public class ColumnSetterFactory
 {
     protected final BatchInsert batch;
-    protected final TimestampFormatter timestampFormatter;
+    protected final DateTimeZone defaultTimeZone;
 
-    public ColumnSetterFactory(BatchInsert batch,
-            TimestampFormatter timestampFormatter)
+    public ColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
     {
         this.batch = batch;
-        this.timestampFormatter = timestampFormatter;
+        this.defaultTimeZone = defaultTimeZone;
     }
 
     public SkipColumnSetter newSkipColumnSetter()
@@ -23,11 +24,11 @@ public class ColumnSetterFactory
         return new SkipColumnSetter(batch);
     }
 
-    public ColumnSetter newColumnSetter(JdbcColumn column, String valueType)
+    public ColumnSetter newColumnSetter(JdbcColumn column, JdbcColumnOption option)
     {
-        switch (valueType) {
+        switch (option.getValueType()) {
         case "coalesce":
-            return newColumnSetter(column);
+            return newCoalesceColumnSetter(column, option);
         case "byte":
             return new ByteColumnSetter(batch, column);
         case "short":
@@ -43,11 +44,11 @@ public class ColumnSetterFactory
         case "boolean":
             return new BooleanColumnSetter(batch, column);
         case "string":
-            return new StringColumnSetter(batch, column, timestampFormatter);
+            return new StringColumnSetter(batch, column, newTimestampFormatter(option));
         case "nstring":
-            return new NStringColumnSetter(batch, column, timestampFormatter);
+            return new NStringColumnSetter(batch, column, newTimestampFormatter(option));
         case "data":
-            return new SqlDateColumnSetter(batch, column, timestampFormatter.getTimeZone());
+            return new SqlDateColumnSetter(batch, column, getTimeZone(option));
         case "time":
             return new SqlTimeColumnSetter(batch, column);
         case "timestamp":
@@ -57,27 +58,26 @@ public class ColumnSetterFactory
         case "null":
             return new NullColumnSetter(batch, column);
         case "pass":
-            return new PassThroughColumnSetter(batch, column, timestampFormatter);
+            return new PassThroughColumnSetter(batch, column, newTimestampFormatter(option));
         default:
-            throw new ConfigException(String.format("Unknown value_type '%s' for column '%s'", valueType, column.getName()));
+            throw new ConfigException(String.format("Unknown value_type '%s' for column '%s'", option.getValueType(), column.getName()));
         }
     }
 
-    public ColumnSetter newStringPassThroughColumnSetter(JdbcColumn column)
+    protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
-        System.out.println("string pass through: "+column);
-        switch(column.getSqlType()) {
-        // setNString, NClob
-        case Types.NCHAR:
-        case Types.NVARCHAR:
-        case Types.LONGNVARCHAR:
-            return new NStringColumnSetter(batch, column, timestampFormatter);
-        default:
-            return new StringColumnSetter(batch, column, timestampFormatter);
-        }
+        return new TimestampFormatter(
+                option.getJRuby(),
+                option.getTimestampFormat().getFormat(),
+                option.getTimeZone().or(defaultTimeZone));
     }
 
-    public ColumnSetter newColumnSetter(JdbcColumn column)
+    protected DateTimeZone getTimeZone(JdbcColumnOption option)
+    {
+        return option.getTimeZone().or(defaultTimeZone);
+    }
+
+    public ColumnSetter newCoalesceColumnSetter(JdbcColumn column, JdbcColumnOption option)
     {
         switch(column.getSqlType()) {
         // setByte
@@ -115,13 +115,13 @@ public class ColumnSetterFactory
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
         case Types.CLOB:
-            return new StringColumnSetter(batch, column, timestampFormatter);
+            return new StringColumnSetter(batch, column, newTimestampFormatter(option));
 
         // setNString, NClob
         case Types.NCHAR:
         case Types.NVARCHAR:
         case Types.LONGNVARCHAR:
-            return new NStringColumnSetter(batch, column, timestampFormatter);
+            return new NStringColumnSetter(batch, column, newTimestampFormatter(option));
 
         // TODO
         //// setBytes Blob
@@ -133,7 +133,7 @@ public class ColumnSetterFactory
 
         // Time
         case Types.DATE:
-            return new SqlDateColumnSetter(batch, column, timestampFormatter.getTimeZone());
+            return new SqlDateColumnSetter(batch, column, getTimeZone(option));
         case Types.TIME:
             return new SqlTimeColumnSetter(batch, column);
         case Types.TIMESTAMP:
