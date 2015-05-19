@@ -386,6 +386,10 @@ public abstract class AbstractJdbcOutputPlugin
     protected void doBegin(JdbcOutputConnection con,
             PluginTask task, final Schema schema, int taskCount) throws SQLException
     {
+        if (schema.getColumnCount() == 0) {
+            throw new IllegalArgumentException("task count == 0 is not supported");
+        }
+
         Mode mode = task.getMode();
         Optional<JdbcSchema> initialTargetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable());
 
@@ -428,16 +432,14 @@ public abstract class AbstractJdbcOutputPlugin
         JdbcSchema targetTableSchema;
         if (mode.ignoreTargetTableSchema() && taskCount != 0) {
             String firstItermTable = task.getIntermediateTables().get().get(0);
-            targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable)
-                .or(new JdbcSchema(ImmutableList.<JdbcColumn>of()));
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
         } else if (initialTargetTableSchema.isPresent()) {
             targetTableSchema = initialTargetTableSchema.get();
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
             con.createTableIfNotExists(task.getTable(), newTableSchema);
-            targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable())
-                .or(new JdbcSchema(ImmutableList.<JdbcColumn>of()));
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable()).get();
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
