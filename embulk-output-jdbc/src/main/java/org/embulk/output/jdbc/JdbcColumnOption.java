@@ -12,6 +12,10 @@ import org.embulk.spi.time.TimestampFormat;
 public interface JdbcColumnOption
         extends Task
 {
+    @Config("type")
+    @ConfigDefault("null")
+    public Optional<String> getType();
+
     @Config("value_type")
     @ConfigDefault("\"coalesce\"")
     public String getValueType();

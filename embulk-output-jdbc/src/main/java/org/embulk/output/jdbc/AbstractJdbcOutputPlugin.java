@@ -384,13 +384,20 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     protected void doBegin(JdbcOutputConnection con,
-            PluginTask task, Schema schema, int taskCount) throws SQLException
+            PluginTask task, final Schema schema, int taskCount) throws SQLException
     {
         Mode mode = task.getMode();
         Optional<JdbcSchema> initialTargetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable());
 
         // TODO get CREATE TABLE statement from task if set
-        JdbcSchema newTableSchema = initialTargetTableSchema.or(newJdbcSchemaForNewTable(schema));
+        JdbcSchema newTableSchema = applyColumnOptionsToNewTableSchema(
+                initialTargetTableSchema.or(new Supplier<JdbcSchema>() {
+                    public JdbcSchema get()
+                    {
+                        return newJdbcSchemaForNewTable(schema);
+                    }
+                }),
+                task.getColumnOptions());
 
         // create intermediate tables
         if (!mode.isDirectModify()) {
@@ -506,6 +513,54 @@ public abstract class AbstractJdbcOutputPlugin
 
         }
         return tableName + "_" + uniqueSuffix;
+    }
+
+    private static JdbcSchema applyColumnOptionsToNewTableSchema(JdbcSchema schema, final Map<String, JdbcColumnOption> columnOptions)
+    {
+        return new JdbcSchema(Lists.transform(schema.getColumns(), new Function<JdbcColumn, JdbcColumn>() {
+            public JdbcColumn apply(JdbcColumn c)
+            {
+                JdbcColumnOption option = columnOptionOf(columnOptions, c);
+                if (option.getType().isPresent()) {
+                    return JdbcColumn.newTypeDeclaredColumn(
+                            c.getName(), Types.OTHER,  // sqlType, isNotNull, and isUniqueKey are ignored
+                            option.getType().get(), false, false);
+                }
+                return c;
+            }
+        }));
+    }
+
+    protected static List<ColumnSetter> newColumnSetters(ColumnSetterFactory factory,
+            JdbcSchema targetTableSchema, Schema inputValueSchema,
+            Map<String, JdbcColumnOption> columnOptions)
+    {
+        ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
+        int schemaColumnIndex = 0;
+        for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
+            if (targetColumn.isSkipColumn()) {
+                builder.add(factory.newSkipColumnSetter());
+            } else {
+                //String columnOptionKey = inputValueSchema.getColumn(schemaColumnIndex).getName();
+                JdbcColumnOption option = columnOptionOf(columnOptions, targetColumn);
+                builder.add(factory.newColumnSetter(targetColumn, option));
+                schemaColumnIndex++;
+            }
+        }
+        return builder.build();
+    }
+
+    private static JdbcColumnOption columnOptionOf(Map<String, JdbcColumnOption> columnOptions, JdbcColumn targetColumn)
+    {
+        return Optional.fromNullable(columnOptions.get(targetColumn.getName())).or(
+                    // default column option
+                    new Supplier<JdbcColumnOption>()
+                    {
+                        public JdbcColumnOption get()
+                        {
+                            return Exec.newConfigSource().loadConfig(JdbcColumnOption.class);
+                        }
+                    });
     }
 
     private boolean checkTableNameLength(String tableName, Charset tableNameCharset, int suffixLength, int maxLength)
@@ -718,33 +773,6 @@ public abstract class AbstractJdbcOutputPlugin
                 }
             }
         }
-    }
-
-    protected static List<ColumnSetter> newColumnSetters(ColumnSetterFactory factory,
-            JdbcSchema targetTableSchema, Schema inputValueSchema,
-            Map<String, JdbcColumnOption> columnOptions)
-    {
-        ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
-        int schemaColumnIndex = 0;
-        for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
-            if (targetColumn.isSkipColumn()) {
-                builder.add(factory.newSkipColumnSetter());
-            } else {
-                Column c = inputValueSchema.getColumn(schemaColumnIndex);
-                JdbcColumnOption option = Optional.fromNullable(columnOptions.get(c.getName())).or(
-                        // default column option
-                        new Supplier<JdbcColumnOption>()
-                        {
-                            public JdbcColumnOption get()
-                            {
-                                return Exec.newConfigSource().loadConfig(JdbcColumnOption.class);
-                            }
-                        });
-                builder.add(factory.newColumnSetter(targetColumn, option));
-                schemaColumnIndex++;
-            }
-        }
-        return builder.build();
     }
 
     public static class PluginPageOutput
