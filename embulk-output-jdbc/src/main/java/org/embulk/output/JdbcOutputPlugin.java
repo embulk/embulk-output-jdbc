@@ -86,7 +86,6 @@ public class JdbcOutputPlugin
             props.setProperty("password", t.getPassword().get());
         }
 
-
         return new GenericOutputConnector(t.getUrl(), props, t.getDriverClass(),
                 t.getSchema().orNull());
     }

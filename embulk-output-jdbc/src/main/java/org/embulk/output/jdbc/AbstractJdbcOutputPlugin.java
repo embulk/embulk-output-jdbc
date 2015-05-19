@@ -391,6 +391,8 @@ public abstract class AbstractJdbcOutputPlugin
         }
 
         Mode mode = task.getMode();
+        logger.info("Using {} mode", mode);
+
         Optional<JdbcSchema> initialTargetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable());
 
         // TODO get CREATE TABLE statement from task if set
