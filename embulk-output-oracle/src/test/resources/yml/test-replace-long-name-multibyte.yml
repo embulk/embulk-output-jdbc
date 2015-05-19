@@ -22,4 +22,10 @@ out:
     password: test_pw
     table: ＴＥＳＴ12345678901234567890
     mode: replace
+    column_options:
+      VARCHAR2_ITEM: {type: 'VARCHAR2(40)'}
+      INTEGER_ITEM: {type: 'NUMBER(4,0)'}
+      NUMBER_ITEM: {type: 'NUMBER(10,2)'}
+      DATE_ITEM: {type: 'DATE'}
+      TIMESTAMP_ITEM: {type: 'TIMESTAMP'}
     #driver_path: driver/ojdbc7.jar

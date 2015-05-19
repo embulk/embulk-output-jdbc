@@ -89,7 +89,7 @@ public class OracleOutputPluginTestImpl
 
         run("/yml/test-insert.yml");
 
-        assertGeneratedTable(table);
+        assertGeneratedTable1(table);
     }
 
     public void testInsertDirect() throws Exception
@@ -151,7 +151,7 @@ public class OracleOutputPluginTestImpl
 
         run("/yml/test-replace.yml");
 
-        assertGeneratedTable(table);
+        assertGeneratedTable2(table);
     }
 
     public void testReplaceCreate() throws Exception
@@ -162,7 +162,7 @@ public class OracleOutputPluginTestImpl
 
         run("/yml/test-replace.yml");
 
-        assertGeneratedTable(table);
+        assertGeneratedTable2(table);
     }
 
 
@@ -175,7 +175,7 @@ public class OracleOutputPluginTestImpl
 
         run("/yml/test-replace-long-name.yml");
 
-        assertGeneratedTable(table);
+        assertGeneratedTable2(table);
     }
 
     public void testReplaceLongNameMultibyte() throws Exception
@@ -184,7 +184,7 @@ public class OracleOutputPluginTestImpl
 
         run("/yml/test-replace-long-name-multibyte.yml");
 
-        assertGeneratedTable(table);
+        assertGeneratedTable2(table);
     }
 
     public void testStringTimestamp() throws Exception
@@ -265,12 +265,12 @@ public class OracleOutputPluginTestImpl
         }
     }
 
-    private void assertGeneratedTable(String table) throws Exception
+    private void assertGeneratedTable1(String table) throws Exception
     {
-        assertGeneratedTable(table, TimeZone.getTimeZone("GMT"));
+        assertGeneratedTable1(table, TimeZone.getTimeZone("GMT"));
     }
 
-    private void assertGeneratedTable(String table, TimeZone timeZone) throws Exception
+    private void assertGeneratedTable1(String table, TimeZone timeZone) throws Exception
     {
         List<List<Object>> rows = select(table);
 
@@ -298,6 +298,52 @@ public class OracleOutputPluginTestImpl
             assertEquals(new BigDecimal("-9999"), i2.next());
             assertEquals("-99999999.99", i2.next());
             assertEquals(toOracleTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/06 23:59:59", timeZone), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+    }
+
+    private void assertGeneratedTable2(String table) throws Exception
+    {
+        assertGeneratedTable2(table, TimeZone.getTimeZone("GMT"));
+    }
+
+    private void assertGeneratedTable2(String table, TimeZone timeZone) throws Exception
+    {
+        List<List<Object>> rows = select(table);
+
+        /*
+        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
+        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
+        A003,,,,,
+        */
+
+        assertEquals(3, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals("ABCDE", i2.next());
+            assertEquals(new BigDecimal("0"), i2.next());
+            assertEquals(new BigDecimal("123.45"), i2.next());
+            assertEquals(toTimestamp("2015/03/05 00:00:00", timeZone), i2.next());
+            assertEquals(toOracleTimestamp("2015/03/05 12:34:56", timeZone), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals("あいうえお", i2.next());
+            assertEquals(new BigDecimal("-9999"), i2.next());
+            assertEquals(new BigDecimal("-99999999.99"), i2.next());
+            assertEquals(toTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
             assertEquals(toOracleTimestamp("2015/03/06 23:59:59", timeZone), i2.next());
         }
         {
