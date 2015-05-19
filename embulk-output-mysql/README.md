@@ -37,7 +37,7 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Transactional: No. If fails, the target table could have some rows inserted.
   * Resumable: No.
 * **truncate_insert**:
-  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
+  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
   * Transactional: Yes.
   * Resumable: Yes.
 * **merge**:
@@ -49,7 +49,7 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Transactional: No.
   * Resumable: No.
 * **replace**:
-  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the lst `INSERT ...` query.
+  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
   * Transactional: Yes.
   * Resumable: No.
 
