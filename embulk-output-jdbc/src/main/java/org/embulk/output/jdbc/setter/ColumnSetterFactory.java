@@ -52,7 +52,7 @@ public class ColumnSetterFactory
             return new StringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
         case "nstring":
             return new NStringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
-        case "data":
+        case "date":
             return new SqlDateColumnSetter(batch, column, newDefaultValueSetter(column, option), getTimeZone(option));
         case "time":
             return new SqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option));
