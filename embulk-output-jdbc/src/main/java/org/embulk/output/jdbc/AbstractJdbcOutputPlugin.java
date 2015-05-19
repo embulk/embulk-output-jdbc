@@ -387,7 +387,10 @@ public abstract class AbstractJdbcOutputPlugin
             PluginTask task, Schema schema, int taskCount) throws SQLException
     {
         Mode mode = task.getMode();
-        JdbcSchema newTableSchema = newJdbcSchemaForNewTable(schema);  // TODO get CREATE TABLE statement from task
+        Optional<JdbcSchema> initialTargetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable());
+
+        // TODO get CREATE TABLE statement from task if set
+        JdbcSchema newTableSchema = initialTargetTableSchema.or(newJdbcSchemaForNewTable(schema));
 
         // create intermediate tables
         if (!mode.isDirectModify()) {
@@ -416,15 +419,18 @@ public abstract class AbstractJdbcOutputPlugin
 
         // build JdbcSchema from a table
         JdbcSchema targetTableSchema;
-        if (mode.ignoreTargetTableSchema()) {
-            // TODO NullPointerException if taskCount == 0
+        if (mode.ignoreTargetTableSchema() && taskCount != 0) {
             String firstItermTable = task.getIntermediateTables().get().get(0);
-            targetTableSchema = newJdbcSchemaFromExistentTable(con, firstItermTable);
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable)
+                .or(new JdbcSchema(ImmutableList.<JdbcColumn>of()));
+        } else if (initialTargetTableSchema.isPresent()) {
+            targetTableSchema = initialTargetTableSchema.get();
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
             con.createTableIfNotExists(task.getTable(), newTableSchema);
-            targetTableSchema = newJdbcSchemaFromExistentTable(con, task.getTable());
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable())
+                .or(new JdbcSchema(ImmutableList.<JdbcColumn>of()));
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
@@ -596,7 +602,7 @@ public abstract class AbstractJdbcOutputPlugin
         return new JdbcSchema(columns.build());
     }
 
-    public JdbcSchema newJdbcSchemaFromExistentTable(JdbcOutputConnection connection,
+    public Optional<JdbcSchema> newJdbcSchemaFromTableIfExists(JdbcOutputConnection connection,
             String tableName) throws SQLException
     {
         DatabaseMetaData dbm = connection.getMetaData();
@@ -613,7 +619,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
         ImmutableSet<String> primaryKeys = primaryKeysBuilder.build();
 
-        ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
+        ImmutableList.Builder<JdbcColumn> builder = ImmutableList.builder();
         rs = dbm.getColumns(null,
                 JdbcUtils.escapeSearchString(connection.getSchemaName(), escape),
                 JdbcUtils.escapeSearchString(tableName, escape),
@@ -631,7 +637,7 @@ public abstract class AbstractJdbcOutputPlugin
                 }
                 boolean isNotNull = "NO".equals(rs.getString("IS_NULLABLE"));
                 //rs.getString("COLUMN_DEF") // or null  // TODO
-                columns.add(JdbcColumn.newGenericTypeColumn(
+                builder.add(JdbcColumn.newGenericTypeColumn(
                             columnName, sqlType, simpleTypeName, colSize, decDigit, isNotNull, isUniqueKey));
                 // We can't get declared column name using JDBC API.
                 // Subclasses need to overwrite it.
@@ -639,7 +645,12 @@ public abstract class AbstractJdbcOutputPlugin
         } finally {
             rs.close();
         }
-        return new JdbcSchema(columns.build());
+        List<JdbcColumn> columns = builder.build();
+        if (columns.isEmpty()) {
+            return Optional.absent();
+        } else {
+            return Optional.of(new JdbcSchema(columns));
+        }
     }
 
     private JdbcSchema matchSchemaByColumnNames(Schema inputSchema, JdbcSchema targetTableSchema)

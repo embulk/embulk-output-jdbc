@@ -24,7 +24,7 @@ public class JdbcColumn
             @JsonProperty("sizeTypeParameter") int sizeTypeParameter,
             @JsonProperty("scaleTypeParameter") int scaleTypeParameter,
             @JsonProperty("declaredType") Optional<String> declaredType,
-            @JsonProperty("isNotNull") boolean isNotNull,
+            @JsonProperty("notNull") boolean isNotNull,
             @JsonProperty("uniqueKey") boolean isUniqueKey)
     {
         this.name = name;
