@@ -66,7 +66,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         @Config("options")
         @ConfigDefault("{}")
-        public Properties getOptions();
+        public ToStringMap getOptions();
 
         @Config("table")
         public String getTable();
