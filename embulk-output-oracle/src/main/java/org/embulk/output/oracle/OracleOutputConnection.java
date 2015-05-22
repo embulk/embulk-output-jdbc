@@ -18,8 +18,8 @@ public class OracleOutputConnection
 {
     private static final Map<String, String> CHARSET_NAMES = new HashMap<String, String>();
     static {
-        CHARSET_NAMES.put("JA16SJIS", "Shift_JIS");
-        CHARSET_NAMES.put("JA16SJISTILDE", "Shift_JIS");
+        CHARSET_NAMES.put("JA16SJIS", "MS932");
+        CHARSET_NAMES.put("JA16SJISTILDE", "MS932");
         CHARSET_NAMES.put("JA16EUC", "EUC-JP");
         CHARSET_NAMES.put("JA16EUCTILDE", "EUC-JP");
         CHARSET_NAMES.put("AL32UTF8", "UTF-8");
