@@ -21,6 +21,9 @@ out:
     user: TEST_USER
     password: test_pw
     table: TEST1
-    mode: insert
+    mode: insert_direct
     insert_method: oci
+    column_options:
+      INTEGER_ITEM: {value_type: pass}
+      NUMBER_ITEM: {value_type: pass}
     #driver_path: driver/ojdbc7.jar
