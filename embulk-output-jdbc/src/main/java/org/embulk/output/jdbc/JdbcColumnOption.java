@@ -17,7 +17,7 @@ public interface JdbcColumnOption
     public Optional<String> getType();
 
     @Config("value_type")
-    @ConfigDefault("\"coalesce\"")
+    @ConfigDefault("\"coerce\"")
     public String getValueType();
 
     @Config("timestamp_format")

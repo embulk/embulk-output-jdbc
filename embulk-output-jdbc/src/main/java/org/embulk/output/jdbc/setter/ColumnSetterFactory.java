@@ -32,7 +32,7 @@ public class ColumnSetterFactory
     public ColumnSetter newColumnSetter(JdbcColumn column, JdbcColumnOption option)
     {
         switch (option.getValueType()) {
-        case "coalesce":
+        case "coerce":
             return newCoalesceColumnSetter(column, option);
         case "byte":
             return new ByteColumnSetter(batch, column, newDefaultValueSetter(column, option));
