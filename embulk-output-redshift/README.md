@@ -81,7 +81,7 @@ out:
   secret_access_key: AbCxYz123aBcXyZ123
   s3_bucket: my-redshift-transfer-bucket
   iam_user_name: my-s3-read-only
-  options: {loglevel: 2}
+  options: {loglevel: "2"}
   mode: insert_direct
   column_options:
     my_col_1: {type: 'VARCHAR(255)'}
