@@ -90,7 +90,7 @@ out:
   user: myuser
   password: "mypassword"
   table: my_table
-  options: {loglevel: 2}
+  options: {loglevel: "2"}
   mode: insert_direct
   column_options:
     my_col_1: {type: 'VARCHAR(255)'}
