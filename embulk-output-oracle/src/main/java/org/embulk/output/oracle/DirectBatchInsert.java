@@ -247,7 +247,7 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void setBigDecimal(BigDecimal v) throws IOException, SQLException
     {
-        throw new SQLException("Unsupported");
+        buffer.addValue(v);
     }
 
     @Override
