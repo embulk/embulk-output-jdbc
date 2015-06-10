@@ -664,6 +664,11 @@ public abstract class AbstractJdbcOutputPlugin
     public Optional<JdbcSchema> newJdbcSchemaFromTableIfExists(JdbcOutputConnection connection,
             String tableName) throws SQLException
     {
+        if (!connection.tableExists(tableName)) {
+            // DatabaseMetaData.getPrimaryKeys fails if table does not exist
+            return Optional.absent();
+        }
+
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
 
