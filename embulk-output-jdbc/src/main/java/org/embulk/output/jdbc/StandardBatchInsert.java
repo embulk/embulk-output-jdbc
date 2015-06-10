@@ -1,6 +1,7 @@
 package org.embulk.output.jdbc;
 
 import java.util.List;
+import java.util.Calendar;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -163,21 +164,21 @@ public class StandardBatchInsert
         nextColumn(v.length + 4);
     }
 
-    public void setSqlDate(Date v, int sqlType) throws IOException, SQLException
+    public void setSqlDate(Date v, Calendar cal) throws IOException, SQLException
     {
-        batch.setObject(index, v, sqlType);
+        batch.setDate(index, v, cal);
         nextColumn(32);
     }
 
-    public void setSqlTime(Time v, int sqlType) throws IOException, SQLException
+    public void setSqlTime(Time v, Calendar cal) throws IOException, SQLException
     {
-        batch.setObject(index, v, sqlType);
+        batch.setTime(index, v);
         nextColumn(32);
     }
 
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException
+    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException, SQLException
     {
-        batch.setObject(index, v, sqlType);
+        batch.setTimestamp(index, v, cal);
         nextColumn(32);
     }
 

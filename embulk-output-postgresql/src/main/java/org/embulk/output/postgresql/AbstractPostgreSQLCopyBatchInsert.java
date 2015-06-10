@@ -1,5 +1,6 @@
 package org.embulk.output.postgresql;
 
+import java.util.Calendar;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.Writer;
@@ -167,19 +168,19 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         setEscapedString(String.valueOf(v));
     }
 
-    public void setSqlDate(Date v, int sqlType) throws IOException
+    public void setSqlDate(Date v, Calendar cal) throws IOException
     {
         appendDelimiter();
         writer.write(v.toString());
     }
 
-    public void setSqlTime(Time v, int sqlType) throws IOException
+    public void setSqlTime(Time v, Calendar cal) throws IOException
     {
         appendDelimiter();
         writer.write(v.toString());
     }
 
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException
+    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException
     {
         appendDelimiter();
         writer.write(v.toString());
