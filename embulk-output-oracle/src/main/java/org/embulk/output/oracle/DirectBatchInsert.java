@@ -12,7 +12,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
@@ -67,10 +66,10 @@ public class DirectBatchInsert implements BatchInsert
          * boolean      -> unused
          * byte         -> unused
          * short        -> unused
-         * int          -> unused
-         * long         -> unused
-         * BigDecimal   -> unused
-         * String       -> CHAR,VARCHAR,LONGVARCHAR,CLOB, NCHAR,NVARCHAR,NCLOB, NUMBER
+         * int          -> NUMBER
+         * long         -> NUMBER
+         * BigDecimal   -> NUMBER
+         * String       -> CHAR,VARCHAR,LONGVARCHAR,CLOB,NCHAR,NVARCHAR,NCLOB,NUMBER
          * NString      -> unused
          * bytes        -> unused
          * SqlDate      -> unused

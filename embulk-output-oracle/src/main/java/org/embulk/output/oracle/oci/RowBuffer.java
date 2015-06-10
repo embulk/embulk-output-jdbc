@@ -15,7 +15,6 @@ public class RowBuffer
     private int currentPosition = 0;
     private final Charset charset;
 
-
     public RowBuffer(TableDefinition table, int rowCount, Charset charset)
     {
         this.table = table;
