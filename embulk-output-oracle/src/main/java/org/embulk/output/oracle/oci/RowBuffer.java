@@ -1,7 +1,9 @@
 package org.embulk.output.oracle.oci;
 
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+
 
 public class RowBuffer
 {
@@ -12,7 +14,6 @@ public class RowBuffer
     private int currentColumn = 0;
     private int currentPosition = 0;
     private final Charset charset;
-
 
     public RowBuffer(TableDefinition table, int rowCount, Charset charset)
     {
@@ -57,6 +58,11 @@ public class RowBuffer
         }
 
         next();
+    }
+
+    public void addValue(BigDecimal value)
+    {
+        addValue(value.toPlainString());
     }
 
     private void next()
