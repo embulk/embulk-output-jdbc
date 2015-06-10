@@ -664,6 +664,8 @@ public abstract class AbstractJdbcOutputPlugin
     public Optional<JdbcSchema> newJdbcSchemaFromTableIfExists(JdbcOutputConnection connection,
             String tableName) throws SQLException
     {
+        if (! connection.tableExists(tableName)) return Optional.absent();
+
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
 
