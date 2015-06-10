@@ -25,5 +25,4 @@ out:
     insert_method: oci
     column_options:
       INTEGER_ITEM: {value_type: pass}
-      NUMBER_ITEM: {value_type: pass}
     #driver_path: driver/ojdbc7.jar
