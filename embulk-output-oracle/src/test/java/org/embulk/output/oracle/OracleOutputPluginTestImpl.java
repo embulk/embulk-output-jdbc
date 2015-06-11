@@ -196,7 +196,7 @@ public class OracleOutputPluginTestImpl
 
         run("/yml/test-string-timestamp.yml");
 
-        assertTable(table, TimeZone.getDefault());
+        assertTable(table);
     }
 
     private void dropTable(String table) throws SQLException
@@ -220,12 +220,9 @@ public class OracleOutputPluginTestImpl
 
     private void assertTable(String table) throws Exception
     {
-        assertTable(table, TimeZone.getTimeZone("GMT"));
-    }
-
-
-    private void assertTable(String table, TimeZone timeZone) throws Exception
-    {
+    	// datetime of UTC will be inserted by embulk.
+    	// datetime of default timezone will be selected by JDBC.
+    	TimeZone timeZone = TimeZone.getDefault();
         List<List<Object>> rows = select(table);
 
         /*
@@ -267,11 +264,9 @@ public class OracleOutputPluginTestImpl
 
     private void assertGeneratedTable1(String table) throws Exception
     {
-        assertGeneratedTable1(table, TimeZone.getTimeZone("GMT"));
-    }
-
-    private void assertGeneratedTable1(String table, TimeZone timeZone) throws Exception
-    {
+    	// datetime of UTC will be inserted by embulk.
+    	// datetime of default timezone will be selected by JDBC.
+    	TimeZone timeZone = TimeZone.getDefault();
         List<List<Object>> rows = select(table);
 
         /*
@@ -313,11 +308,9 @@ public class OracleOutputPluginTestImpl
 
     private void assertGeneratedTable2(String table) throws Exception
     {
-        assertGeneratedTable2(table, TimeZone.getTimeZone("GMT"));
-    }
-
-    private void assertGeneratedTable2(String table, TimeZone timeZone) throws Exception
-    {
+    	// datetime of UTC will be inserted by embulk.
+    	// datetime of default timezone will be selected by JDBC.
+    	TimeZone timeZone = TimeZone.getDefault();
         List<List<Object>> rows = select(table);
 
         /*
