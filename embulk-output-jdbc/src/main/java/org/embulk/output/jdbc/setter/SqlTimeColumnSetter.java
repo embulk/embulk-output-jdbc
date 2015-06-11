@@ -1,5 +1,6 @@
 package org.embulk.output.jdbc.setter;
 
+import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -10,10 +11,14 @@ import org.embulk.output.jdbc.BatchInsert;
 public class SqlTimeColumnSetter
         extends ColumnSetter
 {
+    private final Calendar calendar;
+
     public SqlTimeColumnSetter(BatchInsert batch, JdbcColumn column,
-            DefaultValueSetter defaultValue)
+            DefaultValueSetter defaultValue,
+            Calendar calendar)
     {
         super(batch, column, defaultValue);
+        this.calendar = calendar;
     }
 
     @Override
@@ -49,7 +54,6 @@ public class SqlTimeColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        Time t = new Time(v.toEpochMilli());
-        batch.setSqlTime(t, getSqlType());
+        batch.setSqlTime(v, calendar);
     }
 }

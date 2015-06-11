@@ -13,6 +13,14 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.postgresql.PostgreSQLOutputConnector;
 import org.embulk.output.postgresql.PostgreSQLCopyBatchInsert;
 
+import com.google.common.collect.ImmutableList;
+import java.sql.Types;
+import org.embulk.spi.Schema;
+import org.embulk.spi.ColumnVisitor;
+import org.embulk.spi.Column;
+import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.output.jdbc.JdbcSchema;
+
 public class PostgreSQLOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
@@ -105,5 +113,53 @@ public class PostgreSQLOutputPlugin
             throw new UnsupportedOperationException("PostgreSQL output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         return new PostgreSQLCopyBatchInsert(getConnector(task, true));
+    }
+
+    // TODO This is almost copy from AbstractJdbcOutputPlugin excepting type of TIMESTAMP -> TIMESTAMP WITH TIME ZONE.
+    //      AbstractJdbcOutputPlugin should have better extensibility.
+    @Override
+    protected JdbcSchema newJdbcSchemaForNewTable(Schema schema)
+    {
+        final ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
+        for (Column c : schema.getColumns()) {
+            final String columnName = c.getName();
+            c.visit(new ColumnVisitor() {
+                public void booleanColumn(Column column)
+                {
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.BOOLEAN, "BOOLEAN",
+                            1, 0, false, false));
+                }
+
+                public void longColumn(Column column)
+                {
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.BIGINT, "BIGINT",
+                            22, 0, false, false));
+                }
+
+                public void doubleColumn(Column column)
+                {
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.FLOAT, "DOUBLE PRECISION",
+                            24, 0, false, false));
+                }
+
+                public void stringColumn(Column column)
+                {
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.CLOB, "CLOB",
+                            4000, 0, false, false));  // TODO size type param
+                }
+
+                public void timestampColumn(Column column)
+                {
+                    columns.add(JdbcColumn.newGenericTypeColumn(
+                            columnName, Types.TIMESTAMP, "TIMESTAMP WITH TIME ZONE",
+                            26, 0, false, false));  // size type param is from postgresql
+                }
+            });
+        }
+        return new JdbcSchema(columns.build());
     }
 }

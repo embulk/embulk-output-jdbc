@@ -1,5 +1,6 @@
 package org.embulk.output.jdbc.setter;
 
+import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.embulk.spi.time.Timestamp;
@@ -10,10 +11,14 @@ import org.embulk.output.jdbc.BatchInsert;
 public class PassThroughColumnSetter
         extends ColumnSetter
 {
+    private final Calendar calendar;
+
     public PassThroughColumnSetter(BatchInsert batch, JdbcColumn column,
-            DefaultValueSetter defaultValue)
+            DefaultValueSetter defaultValue,
+            Calendar calendar)
     {
         super(batch, column, defaultValue);
+        this.calendar = calendar;
     }
 
     @Override
@@ -49,8 +54,6 @@ public class PassThroughColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
-        t.setNanos(v.getNano());
-        batch.setSqlTimestamp(t, getSqlType());
+        batch.setSqlTimestamp(v, calendar);
     }
 }

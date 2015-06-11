@@ -1,15 +1,16 @@
 package org.embulk.output.jdbc;
 
 import java.util.List;
+import java.util.Calendar;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Date;
 import java.sql.Time;
-import java.sql.Timestamp;
 import com.google.common.base.Optional;
 import org.slf4j.Logger;
+import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Exec;
 
 public class StandardBatchInsert
@@ -163,21 +164,31 @@ public class StandardBatchInsert
         nextColumn(v.length + 4);
     }
 
-    public void setSqlDate(Date v, int sqlType) throws IOException, SQLException
+    public void setSqlDate(Timestamp v, Calendar cal) throws IOException, SQLException
     {
-        batch.setObject(index, v, sqlType);
+        // JavaDoc of java.sql.Time says:
+        // >> To conform with the definition of SQL DATE, the millisecond values wrapped by a java.sql.Date instance must be 'normalized' by setting the hours, minutes, seconds, and milliseconds to zero in the particular time zone with which the instance is associated.
+        cal.setTimeInMillis(v.getEpochSecond() * 1000);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        Date normalized = new Date(cal.getTimeInMillis());
+        batch.setDate(index, normalized, cal);
         nextColumn(32);
     }
 
-    public void setSqlTime(Time v, int sqlType) throws IOException, SQLException
+    public void setSqlTime(Timestamp v, Calendar cal) throws IOException, SQLException
     {
-        batch.setObject(index, v, sqlType);
+        Time t = new Time(v.toEpochMilli());
+        batch.setTime(index, t, cal);
         nextColumn(32);
     }
 
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException
+    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException, SQLException
     {
-        batch.setObject(index, v, sqlType);
+        java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
+        t.setNanos(v.getNano());
+        batch.setTimestamp(index, t, cal);
         nextColumn(32);
     }
 
