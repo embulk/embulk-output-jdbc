@@ -150,8 +150,6 @@ public class PostgreSQLOutputConnection
             return "TEXT";
         case "BLOB":
             return "BYTEA";
-        case "TIMESTAMP":
-            return "TIMESTAMP WITH TIME ZONE";
         default:
             return super.buildColumnTypeName(c);
         }
