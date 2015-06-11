@@ -393,7 +393,10 @@ public abstract class AbstractJdbcOutputPlugin
         Mode mode = task.getMode();
         logger.info("Using {} mode", mode);
 
-        Optional<JdbcSchema> initialTargetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable());
+        Optional<JdbcSchema> initialTargetTableSchema =
+            mode.ignoreTargetTableSchema() ?
+                Optional.<JdbcSchema>absent() :
+                newJdbcSchemaFromTableIfExists(con, task.getTable());
 
         // TODO get CREATE TABLE statement from task if set
         JdbcSchema newTableSchema = applyColumnOptionsToNewTableSchema(
@@ -432,11 +435,11 @@ public abstract class AbstractJdbcOutputPlugin
 
         // build JdbcSchema from a table
         JdbcSchema targetTableSchema;
-        if (mode.ignoreTargetTableSchema() && taskCount != 0) {
+        if (initialTargetTableSchema.isPresent()) {
+            targetTableSchema = initialTargetTableSchema.get();
+        } else if (task.getIntermediateTables().isPresent() && !task.getIntermediateTables().get().isEmpty()) {
             String firstItermTable = task.getIntermediateTables().get().get(0);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
-        } else if (initialTargetTableSchema.isPresent()) {
-            targetTableSchema = initialTargetTableSchema.get();
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz

@@ -1,12 +1,11 @@
 package org.embulk.output.jdbc;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
+import org.embulk.spi.time.Timestamp;
 
 public interface BatchInsert
 {
@@ -46,9 +45,9 @@ public interface BatchInsert
 
     public void setBytes(byte[] v) throws IOException, SQLException;
 
-    public void setSqlDate(Date v, int sqlType) throws IOException, SQLException;
+    public void setSqlDate(Timestamp v, Calendar cal) throws IOException, SQLException;
 
-    public void setSqlTime(Time v, int sqlType) throws IOException, SQLException;
+    public void setSqlTime(Timestamp v, Calendar cal) throws IOException, SQLException;
 
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException;
+    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException, SQLException;
 }

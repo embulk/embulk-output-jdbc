@@ -1,5 +1,7 @@
 package org.embulk.output.postgresql;
 
+import java.util.Calendar;
+import java.util.Locale;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.Writer;
@@ -10,8 +12,8 @@ import java.nio.charset.Charset;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.SQLException;
+import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.BatchInsert;
 
 public abstract class AbstractPostgreSQLCopyBatchInsert
@@ -167,22 +169,50 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         setEscapedString(String.valueOf(v));
     }
 
-    public void setSqlDate(Date v, int sqlType) throws IOException
+    public void setSqlDate(Timestamp v, Calendar cal) throws IOException
     {
         appendDelimiter();
-        writer.write(v.toString());
+        cal.setTimeInMillis(v.getEpochSecond() * 1000);
+        String f = String.format(Locale.ENGLISH, "%02d-%02d-%02d",
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH) + 1,
+                cal.get(Calendar.DAY_OF_MONTH));
+        writer.write(f);
     }
 
-    public void setSqlTime(Time v, int sqlType) throws IOException
+    public void setSqlTime(Timestamp v, Calendar cal) throws IOException
     {
         appendDelimiter();
-        writer.write(v.toString());
+        cal.setTimeInMillis(v.getEpochSecond() * 1000);
+        String f = String.format(Locale.ENGLISH, "%02d:%02d:%02d.%06d",
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                cal.get(Calendar.SECOND),
+                v.getNano() / 1000);
+        writer.write(f);
     }
 
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException
+    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException
     {
         appendDelimiter();
-        writer.write(v.toString());
+        cal.setTimeInMillis(v.getEpochSecond() * 1000);
+        int zoneOffset = cal.get(Calendar.ZONE_OFFSET) / 1000 / 60;  // zone offset considering DST in minute
+        String offset;
+        if (zoneOffset >= 0) {
+            offset = String.format(Locale.ENGLISH, "+%02d%02d", zoneOffset / 60, zoneOffset % 60);
+        } else {
+            offset = String.format(Locale.ENGLISH, "-%02d%02d", -zoneOffset / 60, -zoneOffset % 60);
+        }
+        String f = String.format(Locale.ENGLISH, "%d-%02d-%02d %02d:%02d:%02d.%06d%s",
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH) + 1,
+                cal.get(Calendar.DAY_OF_MONTH),
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                cal.get(Calendar.SECOND),
+                v.getNano() / 1000,
+                offset);
+        writer.write(f);
     }
 
     // Escape \, \n, \t, \r

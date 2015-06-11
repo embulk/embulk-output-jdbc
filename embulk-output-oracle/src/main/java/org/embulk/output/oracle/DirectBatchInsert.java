@@ -2,16 +2,14 @@ package org.embulk.output.oracle;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Calendar;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
@@ -20,6 +18,7 @@ import org.embulk.output.oracle.oci.OCIManager;
 import org.embulk.output.oracle.oci.OCIWrapper;
 import org.embulk.output.oracle.oci.RowBuffer;
 import org.embulk.output.oracle.oci.TableDefinition;
+import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
@@ -80,7 +79,7 @@ public class DirectBatchInsert implements BatchInsert
 
         formats = new DateFormat[insertSchema.getCount()];
         List<ColumnDefinition> columns = new ArrayList<ColumnDefinition>();
-        Timestamp dummy = new Timestamp(System.currentTimeMillis());
+        java.sql.Timestamp dummy = new java.sql.Timestamp(System.currentTimeMillis());
         for (int i = 0; i < insertSchema.getCount(); i++) {
             JdbcColumn insertColumn = insertSchema.getColumn(i);
             switch (insertColumn.getSqlType()) {
@@ -268,21 +267,24 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
-    public void setSqlDate(Date v, int sqlType) throws IOException, SQLException
+    public void setSqlDate(Timestamp v, Calendar calendar) throws IOException, SQLException
     {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlTime(Time v, int sqlType) throws IOException, SQLException
+    public void setSqlTime(Timestamp v, Calendar calendar) throws IOException, SQLException
     {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlTimestamp(Timestamp v, int sqlType) throws IOException, SQLException
+    public void setSqlTimestamp(Timestamp v, Calendar calendar) throws IOException, SQLException
     {
-        buffer.addValue(formats[buffer.getCurrentColumn()].format(v));
+        java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
+        t.setNanos(v.getNano());
+        DateFormat format = formats[buffer.getCurrentColumn()];
+        format.setTimeZone(calendar.getTimeZone());
+        buffer.addValue(format.format(t));
     }
-
 }
