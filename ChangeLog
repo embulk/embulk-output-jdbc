@@ -1,3 +1,19 @@
+Release 0.4.0 - 2015-06-11
+
+* Fixed timezone handling. Now behavior is independent from JVM's execution
+  environment.
+* replace mode ignores schema of existent table. You can use truncate_insert
+  mode instead to keep the schema.
+* PostgreSQL output uses TIMESTAMP WITH TIME ZONE for the type of timestamp.
+* PostgreSQL output stores time with microseconds in addition to seconds.
+  value by default.
+* Oracle output supports column_options.value_type=decimal.
+* Oracle output uses MS932 instead of Shift_JIS
+* options: parameter accepts integer values in addition to strings.
+* Fixed MySQL exception when the destination table does not exist.
+* Redshift can store a string "\N" and NULL correctly.
+
+
 Release 0.3.0 - 2015-05-18
 
 This release requires embulk >= 0.6.8.
