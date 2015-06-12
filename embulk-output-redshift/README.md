@@ -17,6 +17,11 @@ Redshift output plugins for Embulk loads records to Redshift.
 - **database**: destination database name (string, required)
 - **schema**: destination schema name (string, default: "public")
 - **table**: destination table name (string, required)
+- **access_key_id**: access key id for AWS
+- **secret_access_key: secret access key for AWS
+- **iam_user_name: IAM user name for uploading temporary files to S3. The user should have permissions of `s3:GetObject`, `s3:PutObject`, `s3:ListBucket` and `sts:GetFederationToken`.
+- **s3_bucket: S3 bucket name for temporary files
+- **s3_key: S3 key prefix for temporary files (string, default:"")
 - **options**: extra connection properties (hash, default: {})
 - **mode**: "replace" or "insert" (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
@@ -62,8 +67,9 @@ out:
   table: my_table
   access_key_id: ABCXYZ123ABCXYZ123
   secret_access_key: AbCxYz123aBcXyZ123
-  s3_bucket: my-redshift-transfer-bucket
   iam_user_name: my-s3-read-only
+  s3_bucket: my-redshift-transfer-bucket
+  s3_key: temp/redshift
   mode: insert
 ```
 
@@ -79,8 +85,9 @@ out:
   table: my_table
   access_key_id: ABCXYZ123ABCXYZ123
   secret_access_key: AbCxYz123aBcXyZ123
-  s3_bucket: my-redshift-transfer-bucket
   iam_user_name: my-s3-read-only
+  s3_bucket: my-redshift-transfer-bucket
+  s3_key: temp/redshift
   options: {loglevel: 2}
   mode: insert_direct
   column_options:
