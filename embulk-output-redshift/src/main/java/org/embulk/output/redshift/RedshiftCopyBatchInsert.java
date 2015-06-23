@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Closeable;
-import java.io.Writer;
 import java.io.BufferedWriter;
-import java.sql.Connection;
 import java.sql.SQLException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
@@ -35,6 +33,7 @@ public class RedshiftCopyBatchInsert
     private final Logger logger = Exec.getLogger(RedshiftCopyBatchInsert.class);
     private final RedshiftOutputConnector connector;
     private final String s3BucketName;
+    private final String s3KeyPrefix;
     private final String iamReaderUserName;
     private final AmazonS3Client s3;
     private final AWSSecurityTokenServiceClient sts;
@@ -47,12 +46,17 @@ public class RedshiftCopyBatchInsert
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS STATUPDATE OFF COMPUPDATE OFF";
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
-            AWSCredentialsProvider credentialsProvider, String s3BucketName,
+            AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
             String iamReaderUserName) throws IOException, SQLException
     {
         super();
         this.connector = connector;
         this.s3BucketName = s3BucketName;
+        if (s3KeyPrefix.isEmpty() || s3KeyPrefix.endsWith("/")) {
+            this.s3KeyPrefix = s3KeyPrefix;
+        } else {
+            this.s3KeyPrefix = s3KeyPrefix + "/";
+        }
         this.iamReaderUserName = iamReaderUserName;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
@@ -83,7 +87,7 @@ public class RedshiftCopyBatchInsert
         File file = closeCurrentFile();  // flush buffered data in writer
 
         // TODO multi-threading
-        new UploadAndCopyTask(file, batchRows, UUID.randomUUID().toString()).call();
+        new UploadAndCopyTask(file, batchRows, s3KeyPrefix + UUID.randomUUID().toString()).call();
         new DeleteFileFinalizer(file).close();
 
         fileCount++;
