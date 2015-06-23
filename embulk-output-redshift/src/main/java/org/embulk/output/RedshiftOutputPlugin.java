@@ -58,9 +58,9 @@ public class RedshiftOutputPlugin
         @Config("s3_bucket")
         public String getS3Bucket();
 
-        @Config("s3_key")
+        @Config("s3_key_prefix")
         @ConfigDefault("\"\"")
-        public String getS3Key();
+        public String getS3KeyPrefix();
     }
 
     @Override
@@ -146,6 +146,6 @@ public class RedshiftOutputPlugin
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3Key(), t.getIamUserName());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName());
     }
 }
