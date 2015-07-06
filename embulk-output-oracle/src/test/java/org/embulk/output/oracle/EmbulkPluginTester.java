@@ -80,9 +80,13 @@ public class EmbulkPluginTester
         };
         Injector injector = service.getInjector();
         ConfigSource config = injector.getInstance(ConfigLoader.class).fromYamlFile(new File(ymlPath));
-        ExecSession session = new ExecSession(injector, config);
-        BulkLoader loader = injector.getInstance(BulkLoader.class);
-        ExecutionResult result = loader.run(session, config);
+        ExecSession session = ExecSession.builder(injector).fromExecConfig(config).build();
+        try {
+            BulkLoader loader = injector.getInstance(BulkLoader.class);
+            ExecutionResult result = loader.run(session, config);
+        } finally {
+            session.cleanup();
+        }
     }
 
     private File convert(String yml) {

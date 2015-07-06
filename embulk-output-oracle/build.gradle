@@ -2,5 +2,5 @@
 
 dependencies {
     compile project(':embulk-output-jdbc')
-    testCompile 'org.embulk:embulk-standards:0.5.5'
+    testCompile 'org.embulk:embulk-standards:0.6.16'
 }

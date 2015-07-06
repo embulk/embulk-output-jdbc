@@ -97,4 +97,9 @@ public class EmptyConfigSource implements ConfigSource
         return null;
     }
 
+    @Override
+    public ConfigSource remove(String s) {
+        return null;
+    }
+
 }

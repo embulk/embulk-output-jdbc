@@ -28,8 +28,8 @@ subprojects {
     }
 
     dependencies {
-        compile  'org.embulk:embulk-core:0.6.8'
-        provided 'org.embulk:embulk-core:0.6.8'
+        compile  'org.embulk:embulk-core:0.6.16'
+        provided 'org.embulk:embulk-core:0.6.16'
         testCompile 'junit:junit:4.+'
     }
 
