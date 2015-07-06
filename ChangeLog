@@ -1,3 +1,11 @@
+Release 0.4.1 - 2015-07-06
+
+This release requires embulk >= 0.6.16.
+
+* Enabled to specify S3 key prefix for Redshift temporary files.
+* Fixed a bug that causes SQLException on commit in INSERT/TRUNCATE_INSERT/MERGE modes when no input file exists (@muziyoshiz++).
+
+
 Release 0.4.0 - 2015-06-11
 
 * Fixed timezone handling. Now behavior is independent from JVM's execution
