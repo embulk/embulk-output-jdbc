@@ -104,6 +104,12 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testInsert() throws Exception
+    {
+        invoke("testInsert");
+    }
+
+    @Test
     public void testInsertDirect() throws Exception
     {
         invoke("testInsertDirect");

@@ -69,6 +69,18 @@ public class OracleOutputPluginTestImpl
     }
 
 
+    public void testInsert() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/yml/test-insert.yml");
+
+        assertTable(table);
+    }
+
     public void testInsertDirect() throws Exception
     {
         String table = "TEST1";
