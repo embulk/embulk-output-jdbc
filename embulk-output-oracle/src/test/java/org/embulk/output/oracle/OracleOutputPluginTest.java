@@ -109,12 +109,11 @@ public class OracleOutputPluginTest
         invoke("testInsert");
     }
 
-    /*
     @Test
     public void testInsertEmpty() throws Exception
     {
         invoke("testInsertEmpty");
-    }*/
+    }
 
     @Test
     public void testInsertDirect() throws Exception
