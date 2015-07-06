@@ -1,0 +1,27 @@
+in:
+  type: file
+  path_prefix: '/data/test2/'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: ID, type: string}
+    - {name: VARCHAR2_ITEM, type: string}
+    - {name: INTEGER_ITEM, type: long}
+    - {name: NUMBER_ITEM, type: string}
+    - {name: DATE_ITEM, type: timestamp, format: '%Y/%m/%d'}
+    - {name: TIMESTAMP_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
+out:
+    type: oracle
+    host: localhost
+    database: TESTDB
+    user: TEST_USER
+    password: test_pw
+    table: TEST1
+    mode: insert
+    #driver_path: driver/ojdbc7.jar
+    column_options:
+      VARCHAR2_ITEM: {type: VARCHAR2(40)}

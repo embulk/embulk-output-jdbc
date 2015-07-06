@@ -31,7 +31,7 @@ public class OracleOutputPluginTest
     public static void beforeClass() throws Exception
     {
         if (System.getProperty("path.separator").equals(";")) {
-            // forw Windows
+            // for Windows
             System.setProperty("file.encoding", "MS932");
         }
 
@@ -109,6 +109,13 @@ public class OracleOutputPluginTest
         invoke("testInsert");
     }
 
+    /*
+    @Test
+    public void testInsertEmpty() throws Exception
+    {
+        invoke("testInsertEmpty");
+    }*/
+
     @Test
     public void testInsertDirect() throws Exception
     {
@@ -119,6 +126,12 @@ public class OracleOutputPluginTest
     public void testInsertDirectCreate() throws Exception
     {
         invoke("testInsertDirectCreate");
+    }
+
+    @Test
+    public void testInsertDirectEmpty() throws Exception
+    {
+        invoke("testInsertDirectEmpty");
     }
 
     @Test
@@ -150,6 +163,12 @@ public class OracleOutputPluginTest
     public void testReplace() throws Exception
     {
         invoke("testReplace");
+    }
+
+    @Test
+    public void testReplaceEmpty() throws Exception
+    {
+        invoke("testReplaceEmpty");
     }
 
     @Test
