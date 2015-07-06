@@ -104,34 +104,34 @@ public class OracleOutputPluginTest
     }
 
     @Test
-    public void testInsert() throws Exception
-    {
-        invoke("testInsert");
-    }
-
-    @Test
-    public void testInsertCreate() throws Exception
-    {
-        invoke("testInsertCreate");
-    }
-
-    @Test
     public void testInsertDirect() throws Exception
     {
+        invoke("testInsertDirect");
+    }
+
+    @Test
+    public void testInsertDirectCreate() throws Exception
+    {
+        invoke("testInsertDirectCreate");
+    }
+
+    @Test
+    public void testInsertDirectDirectMethod() throws Exception
+    {
         // ArrayIndexOutOfBoundsException thrown if using 12c driver.
-        invoke(test11g, "testInsertDirect");
+        invoke(test11g, "testInsertDirectDirectMethod");
     }
 
     @Test
-    public void testInsertOCI() throws Exception
+    public void testInsertDirectOCIMethod() throws Exception
     {
-        invoke("testInsertOCI");
+        invoke("testInsertDirectOCIMethod");
     }
 
     @Test
-    public void testInsertOCISplit() throws Exception
+    public void testInsertDirectOCIMethodSplit() throws Exception
     {
-        invoke("testInsertOCISplit");
+        invoke("testInsertDirectOCIMethodSplit");
     }
 
     @Test

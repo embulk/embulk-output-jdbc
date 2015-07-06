@@ -69,29 +69,6 @@ public class OracleOutputPluginTestImpl
     }
 
 
-    public void testInsert() throws Exception
-    {
-        String table = "TEST1";
-
-        dropTable(table);
-        createTable(table);
-
-        run("/yml/test-insert.yml");
-
-        assertTable(table);
-    }
-
-    public void testInsertCreate() throws Exception
-    {
-        String table = "TEST1";
-
-        dropTable(table);
-
-        run("/yml/test-insert.yml");
-
-        assertGeneratedTable1(table);
-    }
-
     public void testInsertDirect() throws Exception
     {
         String table = "TEST1";
@@ -104,19 +81,42 @@ public class OracleOutputPluginTestImpl
         assertTable(table);
     }
 
-    public void testInsertOCI() throws Exception
+    public void testInsertDirectCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        run("/yml/test-insert-direct.yml");
+
+        assertGeneratedTable1(table);
+    }
+
+    public void testInsertDirectDirectMethod() throws Exception
     {
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-oci.yml");
+        run("/yml/test-insert-direct-direct-method.yml");
 
         assertTable(table);
     }
 
-    public void testInsertOCISplit() throws Exception
+    public void testInsertDirectOCIMethod() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/yml/test-insert-direct-oci-method.yml");
+
+        assertTable(table);
+    }
+
+    public void testInsertDirectOCIMethodSplit() throws Exception
     {
         tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
 
@@ -125,7 +125,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-oci-split.yml");
+        run("/yml/test-insert-direct-oci-method-split.yml");
 
         assertTable(table);
     }
@@ -220,9 +220,9 @@ public class OracleOutputPluginTestImpl
 
     private void assertTable(String table) throws Exception
     {
-    	// datetime of UTC will be inserted by embulk.
-    	// datetime of default timezone will be selected by JDBC.
-    	TimeZone timeZone = TimeZone.getDefault();
+        // datetime of UTC will be inserted by embulk.
+        // datetime of default timezone will be selected by JDBC.
+        TimeZone timeZone = TimeZone.getDefault();
         List<List<Object>> rows = select(table);
 
         /*
@@ -264,9 +264,9 @@ public class OracleOutputPluginTestImpl
 
     private void assertGeneratedTable1(String table) throws Exception
     {
-    	// datetime of UTC will be inserted by embulk.
-    	// datetime of default timezone will be selected by JDBC.
-    	TimeZone timeZone = TimeZone.getDefault();
+        // datetime of UTC will be inserted by embulk.
+        // datetime of default timezone will be selected by JDBC.
+        TimeZone timeZone = TimeZone.getDefault();
         List<List<Object>> rows = select(table);
 
         /*
@@ -308,9 +308,9 @@ public class OracleOutputPluginTestImpl
 
     private void assertGeneratedTable2(String table) throws Exception
     {
-    	// datetime of UTC will be inserted by embulk.
-    	// datetime of default timezone will be selected by JDBC.
-    	TimeZone timeZone = TimeZone.getDefault();
+        // datetime of UTC will be inserted by embulk.
+        // datetime of default timezone will be selected by JDBC.
+        TimeZone timeZone = TimeZone.getDefault();
         List<List<Object>> rows = select(table);
 
         /*
