@@ -1,6 +1,6 @@
 in:
   type: file
-  path_prefix: '/data/test1/test1.csv'
+  path_prefix: '/data/test2/'
   parser:
     charset: UTF-8
     newline: CRLF
@@ -21,7 +21,11 @@ out:
     user: TEST_USER
     password: test_pw
     table: TEST1
-    mode: insert
-    #driver_path: driver/ojdbc7.jar
+    mode: replace
     column_options:
-      VARCHAR2_ITEM: {type: VARCHAR2(40)}
+      VARCHAR2_ITEM: {type: 'VARCHAR2(40)'}
+      INTEGER_ITEM: {type: 'NUMBER(4,0)'}
+      NUMBER_ITEM: {type: 'NUMBER(10,2)'}
+      DATE_ITEM: {type: 'DATE'}
+      TIMESTAMP_ITEM: {type: 'TIMESTAMP'}
+    #driver_path: driver/ojdbc7.jar

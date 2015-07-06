@@ -21,7 +21,6 @@ out:
     user: TEST_USER
     password: test_pw
     table: TEST1
-    mode: insert
+    mode: insert_direct
+    insert_method: direct
     #driver_path: driver/ojdbc7.jar
-    column_options:
-      VARCHAR2_ITEM: {type: VARCHAR2(40)}
