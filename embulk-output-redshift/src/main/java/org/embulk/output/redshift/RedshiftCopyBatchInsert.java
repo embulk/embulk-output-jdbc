@@ -1,15 +1,23 @@
 package org.embulk.output.redshift;
 
-import java.util.zip.GZIPOutputStream;
-import java.util.concurrent.Callable;
-import java.util.UUID;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Closeable;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.sql.SQLException;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
+
+import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
+import org.embulk.spi.Exec;
+import org.slf4j.Logger;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
@@ -19,13 +27,9 @@ import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
-import com.amazonaws.services.securitytoken.model.Credentials;
-import org.slf4j.Logger;
-import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.JdbcSchema;
-import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 
 public class RedshiftCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
@@ -37,6 +41,7 @@ public class RedshiftCopyBatchInsert
     private final String iamReaderUserName;
     private final AmazonS3Client s3;
     private final AWSSecurityTokenServiceClient sts;
+    private final ExecutorService executorService;
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
@@ -60,6 +65,8 @@ public class RedshiftCopyBatchInsert
         this.iamReaderUserName = iamReaderUserName;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
+
+        this.executorService = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -86,28 +93,37 @@ public class RedshiftCopyBatchInsert
     {
         File file = closeCurrentFile();  // flush buffered data in writer
 
-        // TODO multi-threading
-        new UploadAndCopyTask(file, batchRows, s3KeyPrefix + UUID.randomUUID().toString()).call();
-        new DeleteFileFinalizer(file).close();
+        UploadAndCopyTask task = new UploadAndCopyTask(file, batchRows, s3KeyPrefix + UUID.randomUUID().toString());
+        executorService.submit(task);
 
         fileCount++;
         totalRows += batchRows;
         batchRows = 0;
 
         openNewFile();
-        file.delete();
     }
 
     @Override
     public void finish() throws IOException, SQLException
     {
         super.finish();
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         logger.info("Loaded {} files.", fileCount);
     }
 
     @Override
     public void close() throws IOException, SQLException
     {
+        if (!executorService.isShutdown()) {
+            executorService.shutdown();
+        }
         s3.shutdown();
         closeCurrentFile().delete();
         if (connection != null) {
@@ -175,11 +191,18 @@ public class RedshiftCopyBatchInsert
                 logger.info(String.format("Loaded file %s (%.2f seconds for COPY)", s3KeyName, seconds));
 
             } finally {
-                con.close();
+                try {
+                    con.close();
+                } finally {
+                    file.delete();
+                    s3.deleteObject(s3BucketName, s3KeyName);
+                }
             }
 
             return null;
         }
+
+
 
         private String buildCopySQL(BasicSessionCredentials creds)
         {
@@ -202,17 +225,4 @@ public class RedshiftCopyBatchInsert
         }
     }
 
-    private static class DeleteFileFinalizer implements Closeable
-    {
-        private File file;
-
-        public DeleteFileFinalizer(File file) {
-            this.file = file;
-        }
-
-        @Override
-        public void close() throws IOException {
-            file.delete();
-        }
-    }
 }
