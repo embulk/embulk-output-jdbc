@@ -6,10 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
@@ -47,6 +51,7 @@ public class RedshiftCopyBatchInsert
     private String copySqlBeforeFrom = null;
     private long totalRows;
     private int fileCount;
+    private List<Future<Void>> uploadAndCopyFutures;
 
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS STATUPDATE OFF COMPUPDATE OFF";
 
@@ -67,6 +72,7 @@ public class RedshiftCopyBatchInsert
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
 
         this.executorService = Executors.newCachedThreadPool();
+        this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
     }
 
     @Override
@@ -94,7 +100,7 @@ public class RedshiftCopyBatchInsert
         File file = closeCurrentFile();  // flush buffered data in writer
 
         UploadAndCopyTask task = new UploadAndCopyTask(file, batchRows, s3KeyPrefix + UUID.randomUUID().toString());
-        executorService.submit(task);
+        uploadAndCopyFutures.add(executorService.submit(task));
 
         fileCount++;
         totalRows += batchRows;
@@ -108,11 +114,18 @@ public class RedshiftCopyBatchInsert
     {
         super.finish();
 
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        for (Future<Void> uploadAndCopyFuture : uploadAndCopyFutures) {
+            try {
+                uploadAndCopyFuture.get();
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof SQLException) {
+                    throw (SQLException)e.getCause();
+                }
+                throw new RuntimeException(e);
+            }
         }
 
         logger.info("Loaded {} files.", fileCount);
@@ -121,9 +134,11 @@ public class RedshiftCopyBatchInsert
     @Override
     public void close() throws IOException, SQLException
     {
-        if (!executorService.isShutdown()) {
-            executorService.shutdown();
-        }
+        executorService.shutdownNow();
+        try {
+            executorService.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {}
+
         s3.shutdown();
         closeCurrentFile().delete();
         if (connection != null) {
