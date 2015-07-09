@@ -99,8 +99,13 @@ public class RedshiftCopyBatchInsert
     {
         File file = closeCurrentFile();  // flush buffered data in writer
 
-        UploadAndCopyTask task = new UploadAndCopyTask(file, batchRows, s3KeyPrefix + UUID.randomUUID().toString());
-        uploadAndCopyFutures.add(executorService.submit(task));
+        String s3KeyName = s3KeyPrefix + UUID.randomUUID().toString();
+        UploadTask uploadTask = new UploadTask(file, batchRows, s3KeyName);
+        Future<Void> uploadFuture = executorService.submit(uploadTask);
+        uploadAndCopyFutures.add(uploadFuture);
+
+        CopyTask copyTask = new CopyTask(uploadFuture, s3KeyName);
+        uploadAndCopyFutures.add(executorService.submit(copyTask));
 
         fileCount++;
         totalRows += batchRows;
@@ -172,46 +177,72 @@ public class RedshiftCopyBatchInsert
                 c.getSessionToken());
     }
 
-    private class UploadAndCopyTask implements Callable<Void>
+    private class UploadTask implements Callable<Void>
     {
         private final File file;
         private final int batchRows;
         private final String s3KeyName;
 
-        public UploadAndCopyTask(File file, int batchRows, String s3KeyName)
+        public UploadTask(File file, int batchRows, String s3KeyName)
         {
             this.file = file;
             this.batchRows = batchRows;
             this.s3KeyName = s3KeyName;
         }
 
-        public Void call() throws SQLException {
+        public Void call() {
             logger.info(String.format("Uploading file id %s to S3 (%,d bytes %,d rows)",
                         s3KeyName, file.length(), batchRows));
-            s3.putObject(s3BucketName, s3KeyName, file);
 
-            RedshiftOutputConnection con = connector.connect(true);
             try {
-                logger.info("Running COPY from file {}", s3KeyName);
-
-                // create temporary credential right before COPY operation because
-                // it has timeout.
-                // TODO skip this step if iamReaderUserName is not set
-                BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
-
                 long startTime = System.currentTimeMillis();
-                con.runCopy(buildCopySQL(creds));
+                s3.putObject(s3BucketName, s3KeyName, file);
                 double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
 
-                logger.info(String.format("Loaded file %s (%.2f seconds for COPY)", s3KeyName, seconds));
-
+                logger.info(String.format("Uploaded file %s (%.2f seconds)", s3KeyName, seconds));
             } finally {
+                file.delete();
+            }
+
+            return null;
+        }
+    }
+
+    private class CopyTask implements Callable<Void>
+    {
+        private final Future<Void> uploadFuture;
+        private final String s3KeyName;
+
+        public CopyTask(Future<Void> uploadFuture, String s3KeyName)
+        {
+            this.uploadFuture = uploadFuture;
+            this.s3KeyName = s3KeyName;
+        }
+
+        public Void call() throws SQLException, InterruptedException, ExecutionException {
+            try {
+                uploadFuture.get();
+
+                RedshiftOutputConnection con = connector.connect(true);
                 try {
-                    con.close();
+                    logger.info("Running COPY from file {}", s3KeyName);
+
+                    // create temporary credential right before COPY operation because
+                    // it has timeout.
+                    // TODO skip this step if iamReaderUserName is not set
+                    BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
+
+                    long startTime = System.currentTimeMillis();
+                    con.runCopy(buildCopySQL(creds));
+                    double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
+
+                    logger.info(String.format("Loaded file %s (%.2f seconds for COPY)", s3KeyName, seconds));
+
                 } finally {
-                    file.delete();
-                    s3.deleteObject(s3BucketName, s3KeyName);
+                    con.close();
                 }
+            } finally {
+                s3.deleteObject(s3BucketName, s3KeyName);
             }
 
             return null;
@@ -239,5 +270,4 @@ public class RedshiftCopyBatchInsert
             return sb.toString();
         }
     }
-
 }
