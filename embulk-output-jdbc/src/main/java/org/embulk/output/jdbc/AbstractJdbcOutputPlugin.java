@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.IOException;
@@ -26,13 +25,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginClassLoader;
 import org.embulk.spi.Exec;
@@ -357,7 +356,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     public void cleanup(TaskSource taskSource,
             Schema schema, final int taskCount,
-            final List<CommitReport> successCommitReports)
+            final List<TaskReport> successTaskReports)
     {
         final PluginTask task = taskSource.loadTask(getTaskClass());
 
@@ -368,7 +367,7 @@ public abstract class AbstractJdbcOutputPlugin
                     {
                         JdbcOutputConnection con = newConnection(task, true, true);
                         try {
-                            doCleanup(con, task, taskCount, successCommitReports);
+                            doCleanup(con, task, taskCount, successTaskReports);
                         } finally {
                             con.close();
                         }
@@ -610,7 +609,7 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     protected void doCleanup(JdbcOutputConnection con, PluginTask task, int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
         throws SQLException
     {
         if (task.getIntermediateTables().isPresent()) {
@@ -862,9 +861,9 @@ public abstract class AbstractJdbcOutputPlugin
         }
 
         @Override
-        public CommitReport commit()
+        public TaskReport commit()
         {
-            return Exec.newCommitReport();
+            return Exec.newTaskReport();
         }
 
         protected void handleColumnsSetters()
