@@ -23,5 +23,3 @@ out:
     table: TEST1
     mode: insert
     #driver_path: driver/ojdbc7.jar
-    column_options:
-      VARCHAR2_ITEM: {type: VARCHAR2(40)}
