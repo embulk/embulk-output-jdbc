@@ -32,7 +32,7 @@ public class EmbulkPluginTester
 
     private final List<PluginDefinition> plugins = new ArrayList<PluginDefinition>();
 
-    EmbulkEmbed embulk;
+    private EmbulkEmbed embulk;
 
     public EmbulkPluginTester()
     {
