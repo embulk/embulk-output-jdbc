@@ -11,13 +11,13 @@ import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
@@ -31,16 +31,16 @@ import com.google.common.base.Optional;
 public class LocalFileSplitInputPlugin
         implements FileInputPlugin
 {
-	public interface PluginTask
+    public interface PluginTask
             extends Task
     {
         @Config("path")
         public String getPath();
-        
+
         @Config("tasks")
         @ConfigDefault("null")
         public Optional<Integer> getTasks();
-        
+
         @Config("header_line")
         @ConfigDefault("false")
         public boolean getHeaderLine();
@@ -59,24 +59,24 @@ public class LocalFileSplitInputPlugin
 
         int tasks;
         if (task.getTasks().isPresent()) {
-        	tasks = task.getTasks().get();
-        	if (tasks <= 0) {
-        		throw new IllegalArgumentException(String.format("'tasks' is %d but must be greater than 0", tasks));
-        	}
+            tasks = task.getTasks().get();
+            if (tasks <= 0) {
+                throw new IllegalArgumentException(String.format("'tasks' is %d but must be greater than 0", tasks));
+            }
         } else {
-        	tasks = Runtime.getRuntime().availableProcessors() * 2;
+            tasks = Runtime.getRuntime().availableProcessors() * 2;
         }
 
         long size = new File(task.getPath()).length();
         List<PartialFile> files = new ArrayList<PartialFile>();
         for (int i = 0; i < tasks; i++) {
-        	long start = size * i / tasks;
-        	long end = size * (i + 1) / tasks;
-        	if (start < end) {
-        		files.add(new PartialFile(task.getPath(), start, end));
-        	}
+            long start = size * i / tasks;
+            long end = size * (i + 1) / tasks;
+            if (start < end) {
+                files.add(new PartialFile(task.getPath(), start, end));
+            }
         }
-        
+
         task.setFiles(files);
 
         return resume(task.dump(), task.getFiles().size(), control);
@@ -93,9 +93,7 @@ public class LocalFileSplitInputPlugin
     }
 
     @Override
-    public void cleanup(TaskSource taskSource,
-            int taskCount,
-            List<CommitReport> successCommitReports)
+    public void cleanup(TaskSource taskSource, int taskCount, List<TaskReport> successCommitReports)
     { }
 
     @Override
@@ -129,44 +127,44 @@ public class LocalFileSplitInputPlugin
                     return null;
                 }
                 opened = true;
-                
+
                 InputStream in = new PartialFileInputStream(new FileInputStream(file.getPath()), file.getStart(), file.getEnd());
                 if (file.getStart() > 0 && hasHeader) {
-                	in = new SequenceInputStream(openHeader(file.getPath()), in);
+                    in = new SequenceInputStream(openHeader(file.getPath()), in);
                 }
                 return in;
             }
 
             @Override
             public void close() { }
-            
+
             private InputStream openHeader(String path) throws IOException
             {
-            	ByteArrayOutputStream header = new ByteArrayOutputStream();
-            	try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(path))) {
-            		while (true) {
-            			int c = in.read();
-            			if (c < 0) {
-            				break;
-            			}
-            			
-        				header.write(c);
-        				
-            			if (c == '\n') {
-            				break;
-            			}
-            			
-            			if (c == '\r') {
-            				int c2 = in.read();
-            				if (c2 == '\n') {
-            					header.write(c2);
-            				}
-            				break;
-            			}
-            		}
-            	}
-            	header.close();
-            	return new ByteArrayInputStream(header.toByteArray());
+                ByteArrayOutputStream header = new ByteArrayOutputStream();
+                try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(path))) {
+                    while (true) {
+                        int c = in.read();
+                        if (c < 0) {
+                            break;
+                        }
+
+                        header.write(c);
+
+                        if (c == '\n') {
+                            break;
+                        }
+
+                        if (c == '\r') {
+                            int c2 = in.read();
+                            if (c2 == '\n') {
+                                header.write(c2);
+                            }
+                            break;
+                        }
+                    }
+                }
+                header.close();
+                return new ByteArrayInputStream(header.toByteArray());
             }
         }
 
@@ -179,9 +177,9 @@ public class LocalFileSplitInputPlugin
         public void abort() { }
 
         @Override
-        public CommitReport commit()
+        public TaskReport commit()
         {
-            return Exec.newCommitReport();
+            return Exec.newTaskReport();
         }
     }
 }

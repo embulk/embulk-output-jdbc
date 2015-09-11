@@ -31,15 +31,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
-import org.embulk.output.OracleOutputPlugin;
+import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.spi.InputPlugin;
-import org.embulk.spi.OutputPlugin;
 
 
 public class OracleOutputPluginTestImpl
 {
-    private EmbulkPluginTester tester = new EmbulkPluginTester(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
+    private EmbulkPluginTester tester;
+    private String pluginName;
 
+    public void setTester(EmbulkPluginTester tester) {
+        this.tester = tester;
+    }
+
+    public void setPluginName(String pluginName) {
+        this.pluginName = pluginName;
+    }
 
     public String beforeClass()
     {
@@ -507,6 +514,7 @@ public class OracleOutputPluginTestImpl
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempYmlPath))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
+                        line = line.replaceAll("type: oracle", "type: " + pluginName);
                         Matcher matcher = pathPrefixPattern.matcher(line);
                         if (matcher.matches()) {
                             int group = 2;
