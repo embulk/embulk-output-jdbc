@@ -49,7 +49,7 @@ public class PostgreSQLOutputPlugin
         public String getSchema();
 
         @Config("ssl")
-        @ConfigDefault("\"false\"")
+        @ConfigDefault("false")
         public boolean getSsl();
     }
 
