@@ -47,6 +47,10 @@ public class PostgreSQLOutputPlugin
         @Config("schema")
         @ConfigDefault("\"public\"")
         public String getSchema();
+
+        @Config("ssl")
+        @ConfigDefault("false")
+        public boolean getSsl();
     }
 
     @Override
@@ -80,16 +84,13 @@ public class PostgreSQLOutputPlugin
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
         props.setProperty("tcpKeepAlive", "true");
 
-        // TODO
-        //switch t.getSssl() {
-        //when "disable":
-        //    break;
-        //when "enable":
-        //    props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");  // disable server-side validation
-        //when "verify":
-        //    props.setProperty("ssl", "true");
-        //    break;
-        //}
+        if (t.getSsl()) {
+            // TODO add ssl_verify (boolean) option to allow users to verify certification.
+            //      see embulk-input-ftp for SSL implementation.
+            props.setProperty("ssl", "true");
+            props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");  // disable server-side validation
+        }
+        // setting ssl=false enables SSL. See org.postgresql.core.v3.openConnectionImpl.
 
         if (!retryableMetadataOperation) {
             // non-retryable batch operation uses longer timeout
