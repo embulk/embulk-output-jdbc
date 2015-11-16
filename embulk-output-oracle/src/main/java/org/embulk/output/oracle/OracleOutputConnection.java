@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -161,5 +162,18 @@ public class OracleOutputConnection
             }
         }
         return charset;
+    }
+
+    private static final String[] STANDARD_SIZE_TYPE_NAMES = {
+        "VARCHAR2", "NVARCHAR2",
+    };
+
+    @Override
+    protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
+    {
+        if (Arrays.asList(STANDARD_SIZE_TYPE_NAMES).contains(convertedTypeName)) {
+            return ColumnDeclareType.SIZE;
+        }
+        return super.getColumnDeclareType(convertedTypeName, col);
     }
 }
