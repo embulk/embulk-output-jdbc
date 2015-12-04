@@ -18,4 +18,4 @@ fi
 
 mkdir -p ../../../../lib/embulk/linux_x64
 
-gcc -fPIC -I. -I"$JAVA_HOME/include" -I"$OCI_PATH/sdk/include" -I../../../main/cpp/common -L"$OCI_PATH" -shared ../../../main/cpp/common/embulk-output-oracle.cpp ../../../main/cpp/common/dir-path-load.cpp -locci -lclntsh -lstdc++ -o ../../../../lib/embulk/linux_x64/libembulk-output-oracle.so
+gcc -fPIC -I. -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -I"$OCI_PATH/sdk/include" -I../../../main/cpp/common -L"$OCI_PATH" -shared ../../../main/cpp/common/embulk-output-oracle.cpp ../../../main/cpp/common/dir-path-load.cpp -locci -lclntsh -lstdc++ -o ../../../../lib/embulk/linux_x64/libembulk-output-oracle.so
