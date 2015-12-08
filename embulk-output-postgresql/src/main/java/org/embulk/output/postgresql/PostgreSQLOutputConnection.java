@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
-import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;

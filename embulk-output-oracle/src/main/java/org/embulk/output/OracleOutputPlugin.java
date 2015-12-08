@@ -3,7 +3,6 @@ package org.embulk.output;
 import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -19,7 +18,6 @@ import org.embulk.output.oracle.InsertMethod;
 import org.embulk.output.oracle.OracleCharset;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
-import org.embulk.spi.PageReader;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
