@@ -1,3 +1,12 @@
+Release 0.4.2 - 2015-12-08
+
+This release requires embulk >= 0.7.1.
+
+* Support Oracle VARCHAR2 in insert mode.
+* Support SSL in PostrgreSQL.
+* Bump AWS Java SDK version to fix date problem under Java 8u60 (@dlackty++).
+* Enabled to build native library for embulk-output-oracle in linux Java 8.
+
 Release 0.4.1 - 2015-07-06
 
 This release requires embulk >= 0.6.16.
