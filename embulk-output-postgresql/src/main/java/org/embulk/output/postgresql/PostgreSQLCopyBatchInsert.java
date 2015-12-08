@@ -3,11 +3,9 @@ package org.embulk.output.postgresql;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
-import java.sql.Connection;
 import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcSchema;
 

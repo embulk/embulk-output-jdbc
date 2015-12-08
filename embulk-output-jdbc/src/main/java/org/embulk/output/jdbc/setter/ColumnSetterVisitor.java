@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.time.Timestamp;
 
 public class ColumnSetterVisitor
         implements ColumnVisitor

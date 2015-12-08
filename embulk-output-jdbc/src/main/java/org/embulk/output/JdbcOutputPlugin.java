@@ -1,7 +1,6 @@
 package org.embulk.output;
 
 import java.util.List;
-import java.util.Set;
 import java.util.Properties;
 import java.sql.Driver;
 import java.io.IOException;

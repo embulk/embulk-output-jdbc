@@ -5,7 +5,6 @@ import java.sql.Driver;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.embulk.output.jdbc.JdbcOutputConnector;
-import org.embulk.output.jdbc.JdbcOutputConnection;
 
 public class MySQLOutputConnector
         implements JdbcOutputConnector

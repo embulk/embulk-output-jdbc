@@ -3,7 +3,6 @@ package org.embulk.output.jdbc.setter;
 import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Date;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;

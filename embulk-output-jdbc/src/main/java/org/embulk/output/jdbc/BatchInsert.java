@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import org.embulk.spi.time.Timestamp;
 
 public interface BatchInsert

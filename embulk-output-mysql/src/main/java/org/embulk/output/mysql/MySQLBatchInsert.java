@@ -3,7 +3,6 @@ package org.embulk.output.mysql;
 import java.util.List;
 import java.io.IOException;
 import java.sql.Types;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
 import org.embulk.output.jdbc.StandardBatchInsert;

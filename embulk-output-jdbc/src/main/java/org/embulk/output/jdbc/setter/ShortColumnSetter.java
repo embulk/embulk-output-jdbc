@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.math.RoundingMode;
 import com.google.common.math.DoubleMath;
-import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
