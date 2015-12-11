@@ -64,7 +64,6 @@ See [embulk-output-redshift](embulk-output-redshift/).
   * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: No. If fails, the target table could be dropped.
   * Resumable: No.
-
 * **merge**:
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, merges the intermediate tables into the target table. Namely, if primary keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted.
   * Transactional: Yes.
