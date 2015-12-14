@@ -44,7 +44,7 @@ Oracle output plugins for Embulk loads records to Oracle.
   * Transactional: Yes.
   * Resumable: Yes.
 * **replace**:
-  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
+  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: Yes.
   * Resumable: No.
 
