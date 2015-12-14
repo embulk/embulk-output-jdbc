@@ -40,6 +40,10 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
   * Transactional: Yes.
   * Resumable: Yes.
+* **replace**:
+  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
+  * Transactional: No. If fails, the target table could be dropped (because MySQL can't rollback DDL).
+  * Resumable: No.
 * **merge**:
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query.
   * Transactional: Yes.
@@ -47,10 +51,6 @@ MySQL output plugins for Embulk loads records to MySQL.
 * **merge_direct**:
   * Behavior: This mode inserts rows to the target table directory using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query.
   * Transactional: No.
-  * Resumable: No.
-* **replace**:
-  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
-  * Transactional: Yes.
   * Resumable: No.
 
 ### Example

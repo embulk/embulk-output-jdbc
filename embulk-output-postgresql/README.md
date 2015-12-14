@@ -42,14 +42,14 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
   * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
   * Transactional: Yes.
   * Resumable: Yes.
+* **replace**:
+  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
+  * Transactional: Yes.
+  * Resumable: No.
 * **merge**:
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `with updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query.
   * Transactional: Yes.
   * Resumable: Yes.
-* **replace**:
-  * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
-  * Transactional: Yes.
-  * Resumable: No.
 
 ### Example
 
