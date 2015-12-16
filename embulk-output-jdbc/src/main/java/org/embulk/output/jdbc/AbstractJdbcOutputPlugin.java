@@ -92,6 +92,9 @@ public abstract class AbstractJdbcOutputPlugin
         public void setFeatures(Features features);
         public Features getFeatures();
 
+        public Optional<JdbcSchema> getNewTableSchema();
+        public void setNewTableSchema(Optional<JdbcSchema> schema);
+
         public JdbcSchema getTargetTableSchema();
         public void setTargetTableSchema(JdbcSchema schema);
 
@@ -433,14 +436,17 @@ public abstract class AbstractJdbcOutputPlugin
         JdbcSchema targetTableSchema;
         if (initialTargetTableSchema.isPresent()) {
             targetTableSchema = initialTargetTableSchema.get();
+            task.setNewTableSchema(Optional.absent());
         } else if (task.getIntermediateTables().isPresent() && !task.getIntermediateTables().get().isEmpty()) {
             String firstItermTable = task.getIntermediateTables().get().get(0);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
+            task.setNewTableSchema(Optional.of(newTableSchema));
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
             con.createTableIfNotExists(task.getTable(), newTableSchema);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable()).get();
+            task.setNewTableSchema(Optional.absent());
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
@@ -588,21 +594,33 @@ public abstract class AbstractJdbcOutputPlugin
 
         case INSERT:
             // aggregate insert into target
+            if (task.getNewTableSchema().isPresent()) {
+                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+            }
             con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), false);
             break;
 
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
+            if (task.getNewTableSchema().isPresent()) {
+                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+            }
             con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), true);
             break;
 
         case MERGE:
             // aggregate merge into target
+            if (task.getNewTableSchema().isPresent()) {
+                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+            }
             con.collectMerge(task.getIntermediateTables().get(), schema, task.getTable(), task.getMergeKeys().get());
             break;
 
         case REPLACE:
             // swap table
+            if (task.getNewTableSchema().isPresent()) {
+                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+            }
             con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getTable());
             break;
         }
