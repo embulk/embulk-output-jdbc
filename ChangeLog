@@ -1,3 +1,9 @@
+Release 0.4.3 - 2015-12-17
+
+* insert, truncate_insert and merge modes support to create the target table automatically if not exists.
+  (insert_direct, merge_direct and replace mode already supported.)
+* Update README about modes.
+
 Release 0.4.2 - 2015-12-08
 
 This release requires embulk >= 0.7.1.
