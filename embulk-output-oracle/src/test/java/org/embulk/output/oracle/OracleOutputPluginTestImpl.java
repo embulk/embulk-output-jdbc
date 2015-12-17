@@ -65,8 +65,8 @@ public class OracleOutputPluginTestImpl
 
         } catch (SQLException e) {
             System.err.println(e);
-            //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
-            System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
+            //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
+            System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;
@@ -89,6 +89,17 @@ public class OracleOutputPluginTestImpl
         assertTable(table);
     }
 
+    public void testInsertCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        run("/yml/test-insert.yml");
+
+        assertGeneratedTable1(table);
+    }
+
     public void testInsertEmpty() throws Exception
     {
         String table = "TEST1";
@@ -99,6 +110,30 @@ public class OracleOutputPluginTestImpl
         run("/yml/test-insert-empty.yml");
 
         assertTableEmpty(table);
+    }
+
+    public void testTruncateInsert() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        run("/yml/test-truncate-insert.yml");
+
+        assertTable(table);
+    }
+
+    public void testTruncateInsertCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        run("/yml/test-truncate-insert.yml");
+
+        assertGeneratedTable1(table);
     }
 
     public void testInsertDirect() throws Exception
@@ -236,7 +271,7 @@ public class OracleOutputPluginTestImpl
 
     public void testReplaceLongNameMultibyte() throws Exception
     {
-        String table = "ＴＥＳＴ12345678901234567890";
+        String table = "ＴＥＳＴ123456789012345678";
 
         run("/yml/test-replace-long-name-multibyte.yml");
 
@@ -272,6 +307,11 @@ public class OracleOutputPluginTestImpl
                 + "TIMESTAMP_ITEM  TIMESTAMP,"
                 + "PRIMARY KEY (ID))", table);
         executeSQL(sql);
+    }
+
+    private void insertRecord(String table) throws SQLException
+    {
+        executeSQL(String.format("INSERT INTO %s VALUES('9999', NULL, NULL, NULL, NULL, NULL)", table));
     }
 
     private void assertTable(String table) throws Exception

@@ -20,12 +20,6 @@ out:
     database: TESTDB
     user: TEST_USER
     password: test_pw
-    table: ＴＥＳＴ123456789012345678
-    mode: replace
-    column_options:
-      VARCHAR2_ITEM: {type: 'VARCHAR2(40)'}
-      INTEGER_ITEM: {type: 'NUMBER(4,0)'}
-      NUMBER_ITEM: {type: 'NUMBER(10,2)'}
-      DATE_ITEM: {type: 'DATE'}
-      TIMESTAMP_ITEM: {type: 'TIMESTAMP'}
+    table: TEST1
+    mode: truncate_insert
     #driver_path: driver/ojdbc7.jar
