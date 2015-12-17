@@ -618,9 +618,6 @@ public abstract class AbstractJdbcOutputPlugin
 
         case REPLACE:
             // swap table
-            if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
-            }
             con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getTable());
             break;
         }
