@@ -32,11 +32,11 @@ Oracle output plugins for Embulk loads records to Oracle.
 ### Modes
 
 * **insert**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes. This mode successfully writes all rows, or fails with writing zero rows.
   * Resumable: Yes.
 * **insert_direct**:
-  * Behavior: This mode inserts rows to the target table directly.
+  * Behavior: This mode inserts rows to the target table directly. If the target table doesn't exist, it is created automatically.
   * Transactional: No. If fails, the target table could have some rows inserted.
   * Resumable: No.
 * **truncate_insert**:
@@ -155,6 +155,6 @@ For Linux (x64) (only Ubuntu Server 14.04 is tested)
 (6) Execute src/main/cpp/linux/build.sh .
 
 ***
-<img src="https://www.yourkit.com/images/yklogo.png" alt="YourKit"/> is used to improve performance of embulk-output-oracle.  
-YourKit supports open source projects with its full-featured Java Profiler.  
-YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>, innovative and intelligent tools for profiling Java and .NET applications.  
+<img src="https://www.yourkit.com/images/yklogo.png" alt="YourKit"/> is used to improve performance of embulk-output-oracle.
+YourKit supports open source projects with its full-featured Java Profiler.
+YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>, innovative and intelligent tools for profiling Java and .NET applications.

@@ -29,11 +29,11 @@ MySQL output plugins for Embulk loads records to MySQL.
 ### Modes
 
 * **insert**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes. This mode successfully writes all rows, or fails with writing zero rows.
   * Resumable: Yes.
 * **insert_direct**:
-  * Behavior: This mode inserts rows to the target table directly.
+  * Behavior: This mode inserts rows to the target table directly. If the target table doesn't exist, it is created automatically.
   * Transactional: No. If fails, the target table could have some rows inserted.
   * Resumable: No.
 * **truncate_insert**:
@@ -45,11 +45,11 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Transactional: No. If fails, the target table could be dropped (because MySQL can't rollback DDL).
   * Resumable: No.
 * **merge**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
   * Resumable: Yes.
 * **merge_direct**:
-  * Behavior: This mode inserts rows to the target table directory using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query.
+  * Behavior: This mode inserts rows to the target table directory using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query. If the target table doesn't exist, it is created automatically.
   * Transactional: No.
   * Resumable: No.
 
