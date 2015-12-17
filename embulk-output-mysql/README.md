@@ -49,7 +49,7 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Transactional: Yes.
   * Resumable: Yes.
 * **merge_direct**:
-  * Behavior: This mode inserts rows to the target table directory using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query. If the target table doesn't exist, it is created automatically.
+  * Behavior: This mode inserts rows to the target table directly using `INSERT INTO ... ON DUPLICATE KEY UPDATE ...` query. If the target table doesn't exist, it is created automatically.
   * Transactional: No.
   * Resumable: No.
 
