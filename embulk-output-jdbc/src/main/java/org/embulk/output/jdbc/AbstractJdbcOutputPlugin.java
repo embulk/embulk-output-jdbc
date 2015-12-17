@@ -436,7 +436,7 @@ public abstract class AbstractJdbcOutputPlugin
         JdbcSchema targetTableSchema;
         if (initialTargetTableSchema.isPresent()) {
             targetTableSchema = initialTargetTableSchema.get();
-            task.setNewTableSchema(Optional.absent());
+            task.setNewTableSchema(Optional.<JdbcSchema>absent());
         } else if (task.getIntermediateTables().isPresent() && !task.getIntermediateTables().get().isEmpty()) {
             String firstItermTable = task.getIntermediateTables().get().get(0);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
@@ -446,7 +446,7 @@ public abstract class AbstractJdbcOutputPlugin
             // CREATE TABLE IF NOT EXISTS xyz
             con.createTableIfNotExists(task.getTable(), newTableSchema);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable()).get();
-            task.setNewTableSchema(Optional.absent());
+            task.setNewTableSchema(Optional.<JdbcSchema>absent());
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
