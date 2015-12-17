@@ -65,8 +65,8 @@ public class OracleOutputPluginTestImpl
 
         } catch (SQLException e) {
             System.err.println(e);
-            //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
-            System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw').");
+            //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
+            System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;
@@ -271,7 +271,7 @@ public class OracleOutputPluginTestImpl
 
     public void testReplaceLongNameMultibyte() throws Exception
     {
-        String table = "ＴＥＳＴ12345678901234567890";
+        String table = "ＴＥＳＴ123456789012345678";
 
         run("/yml/test-replace-long-name-multibyte.yml");
 

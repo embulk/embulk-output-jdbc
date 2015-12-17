@@ -20,7 +20,7 @@ out:
     database: TESTDB
     user: TEST_USER
     password: test_pw
-    table: ＴＥＳＴ12345678901234567890
+    table: ＴＥＳＴ123456789012345678
     mode: replace
     column_options:
       VARCHAR2_ITEM: {type: 'VARCHAR2(40)'}
