@@ -50,10 +50,6 @@ Redshift output plugins for Embulk loads records to Redshift.
   * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: Yes.
   * Resumable: No.
-* **merge**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `with updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. If the target table doesn't exist, it is created automatically.
-  * Transactional: Yes.
-  * Resumable: Yes.
 
 ### Example
 
