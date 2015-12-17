@@ -89,6 +89,17 @@ public class OracleOutputPluginTestImpl
         assertTable(table);
     }
 
+    public void testInsertCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        run("/yml/test-insert.yml");
+
+        assertGeneratedTable1(table);
+    }
+
     public void testInsertEmpty() throws Exception
     {
         String table = "TEST1";
@@ -99,6 +110,30 @@ public class OracleOutputPluginTestImpl
         run("/yml/test-insert-empty.yml");
 
         assertTableEmpty(table);
+    }
+
+    public void testTruncateInsert() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        run("/yml/test-truncate-insert.yml");
+
+        assertTable(table);
+    }
+
+    public void testTruncateInsertCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        run("/yml/test-truncate-insert.yml");
+
+        assertGeneratedTable1(table);
     }
 
     public void testInsertDirect() throws Exception
@@ -272,6 +307,11 @@ public class OracleOutputPluginTestImpl
                 + "TIMESTAMP_ITEM  TIMESTAMP,"
                 + "PRIMARY KEY (ID))", table);
         executeSQL(sql);
+    }
+
+    private void insertRecord(String table) throws SQLException
+    {
+        executeSQL(String.format("INSERT INTO %s VALUES('9999', NULL, NULL, NULL, NULL, NULL)", table));
     }
 
     private void assertTable(String table) throws Exception

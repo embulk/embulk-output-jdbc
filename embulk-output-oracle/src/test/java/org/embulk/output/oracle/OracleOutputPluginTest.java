@@ -135,9 +135,27 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testInsertCreate() throws Exception
+    {
+        invoke("testInsertCreate");
+    }
+
+    @Test
     public void testInsertEmpty() throws Exception
     {
         invoke("testInsertEmpty");
+    }
+
+    @Test
+    public void testTruncateInsert() throws Exception
+    {
+        invoke("testTruncateInsert");
+    }
+
+    @Test
+    public void testTruncateInsertCreate() throws Exception
+    {
+        invoke("testTruncateInsertCreate");
     }
 
     @Test
