@@ -68,6 +68,10 @@ See [embulk-output-redshift](embulk-output-redshift/).
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, merges the intermediate tables into the target table. Namely, if primary keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
   * Resumable: Yes.
+* **merge_direct**:
+  * Behavior: This mode merges rows to the target table directly. Namely, if primary keys of an input record already exist in the target table, the target record is updated by the input record, otherwise the input record is inserted. If the target table doesn't exist, it is created automatically.
+  * Transactional: No.
+  * Resumable: No.
 
 ### Example
 
