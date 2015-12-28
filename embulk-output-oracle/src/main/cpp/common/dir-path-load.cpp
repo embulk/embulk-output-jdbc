@@ -116,15 +116,9 @@ static int isValid(EMBULK_OUTPUT_ORACLE_OCI_COL_DEF &colDef) {
 	return colDef.type != 0;
 }
 
-int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *tableName, short charsetId, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs) {
+int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *tableName, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs) {
 	// load table name
 	if (check(context, "OCIAttrSet(OCI_ATTR_NAME)", OCIAttrSet(context->dp, OCI_HTYPE_DIRPATH_CTX, (void*)tableName, (ub4)strlen(tableName), OCI_ATTR_NAME, context->err))) {
-		return OCI_ERROR;
-	}
-
-	// need to set charset explicitly because database charset is not set by default.
-	ub2 tempCharsetId = charsetId;
-	if (check(context, "OCIAttrSet(OCI_ATTR_CHARSET_ID)", OCIAttrSet(context->dp, OCI_HTYPE_DIRPATH_CTX, (void*)&tempCharsetId, sizeof(ub2), OCI_ATTR_CHARSET_ID, context->err))) {
 		return OCI_ERROR;
 	}
 
@@ -154,6 +148,7 @@ int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *
 		if (check(context, "OCIAttrSet(OCI_ATTR_DATA_SIZE)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDef.size, sizeof(ub4), OCI_ATTR_DATA_SIZE, context->err))) {
 			return OCI_ERROR;
 		}
+		// need to set charset explicitly because database charset is not set by default.
 		if (check(context, "OCIAttrSet(OCI_ATTR_CHARSET_ID)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDef.charsetId, sizeof(ub2), OCI_ATTR_CHARSET_ID, context->err))) {
 			return OCI_ERROR;
 		}

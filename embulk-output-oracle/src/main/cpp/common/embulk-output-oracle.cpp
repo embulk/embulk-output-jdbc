@@ -69,9 +69,6 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 	jstring tableNameString = (jstring)env->GetObjectField(table, tableNameFieldID);
 	const char *tableName = env->GetStringUTFChars(tableNameString, NULL);
 	
-	jfieldID charsetIdFieldID = env->GetFieldID(tableClass, "charsetId", "S");
-	short charsetId = env->GetShortField(table, charsetIdFieldID);
-
 	jfieldID columnsFieldID = env->GetFieldID(tableClass, "columns", "[Lorg/embulk/output/oracle/oci/ColumnDefinition;");
 	jobjectArray columnArray = (jobjectArray)env->GetObjectField(table, columnsFieldID);
 	int columnCount = env->GetArrayLength(columnArray);
@@ -80,7 +77,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 	jfieldID columnNameFieldID = env->GetFieldID(columnClass, "columnName", "Ljava/lang/String;");
 	jfieldID columnTypeFieldID = env->GetFieldID(columnClass, "columnType", "I");
 	jfieldID columnSizeFieldID = env->GetFieldID(columnClass, "columnSize", "I");
-	jfieldID columnCharsetIdFieldID = env->GetFieldID(columnClass, "charsetId", "S");
+	jfieldID charsetIdFieldID = env->GetFieldID(columnClass, "charsetId", "S");
 	jfieldID columnDateFormatID = env->GetFieldID(columnClass, "columnDateFormat", "Ljava/lang/String;");
 
 	EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs = new EMBULK_OUTPUT_ORACLE_OCI_COL_DEF[columnCount + 1];
@@ -92,7 +89,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 		colDefs[i].name = env->GetStringUTFChars(columnName, NULL);
 		colDefs[i].type = env->GetIntField(column, columnTypeFieldID);
 		colDefs[i].size = env->GetIntField(column, columnSizeFieldID);
-		colDefs[i].charsetId = env->GetShortField(column, columnCharsetIdFieldID);
+		colDefs[i].charsetId = env->GetShortField(column, charsetIdFieldID);
 
 		jstring columnDateFormat = (jstring)env->GetObjectField(column, columnDateFormatID);
 		if (columnDateFormat != NULL) {
@@ -108,7 +105,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 	colDefs[columnCount].size = 0;
 	colDefs[columnCount].dateFormat = NULL;
 
-	int result = embulk_output_oracle_prepareDirPathStream(context, tableName, charsetId, colDefs);
+	int result = embulk_output_oracle_prepareDirPathStream(context, tableName, colDefs);
 
 	for (int i = 0; i < columnCount; i++) {
 		EMBULK_OUTPUT_ORACLE_OCI_COL_DEF &colDef = colDefs[i];
