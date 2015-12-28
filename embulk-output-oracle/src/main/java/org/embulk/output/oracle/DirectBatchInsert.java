@@ -34,6 +34,7 @@ public class DirectBatchInsert implements BatchInsert
     private final String password;
     private final String table;
     private final OracleCharset charset;
+    private final OracleCharset nationalCharset;
     private final int batchSize;
     private RowBuffer buffer;
     private long totalRows;
@@ -43,13 +44,15 @@ public class DirectBatchInsert implements BatchInsert
     private DateFormat[] formats;
 
 
-    public DirectBatchInsert(String database, String user, String password, String table, OracleCharset charset, int batchSize)
+    public DirectBatchInsert(String database, String user, String password, String table,
+            OracleCharset charset, OracleCharset nationalCharset, int batchSize)
     {
         this.database = database;
         this.user = user;
         this.password = password;
         this.table = table;
         this.charset = charset;
+        this.nationalCharset = nationalCharset;
         this.batchSize = batchSize;
 
         ociKey = Arrays.asList(database, user, table);
@@ -90,7 +93,18 @@ public class DirectBatchInsert implements BatchInsert
                     // TODO: CHAR(n CHAR)
                     columns.add(new ColumnDefinition(insertColumn.getName(),
                             ColumnDefinition.SQLT_CHR,
-                            insertColumn.getSizeTypeParameter()));
+                            insertColumn.getSizeTypeParameter(),
+                            charset.getId()));
+                    break;
+
+                case Types.NCHAR:
+                case Types.NVARCHAR:
+                case Types.LONGNVARCHAR:
+                case Types.NCLOB:
+                    columns.add(new ColumnDefinition(insertColumn.getName(),
+                            ColumnDefinition.SQLT_CHR,
+                            insertColumn.getSizeTypeParameter(),
+                            nationalCharset.getId()));
                     break;
 
                 case Types.DECIMAL:
@@ -102,7 +116,8 @@ public class DirectBatchInsert implements BatchInsert
                     }
                     columns.add(new ColumnDefinition(insertColumn.getName(),
                             ColumnDefinition.SQLT_CHR,
-                            size));
+                            size,
+                            charset.getId()));
                     break;
 
                 case Types.DATE:
@@ -122,6 +137,7 @@ public class DirectBatchInsert implements BatchInsert
                     columns.add(new ColumnDefinition(insertColumn.getName(),
                             ColumnDefinition.SQLT_CHR,
                             javaFormat.format(dummy).length(),
+                            charset.getId(),
                             oracleFormat));
                     break;
 
@@ -257,7 +273,7 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void setNString(String v) throws IOException, SQLException
     {
-        throw new SQLException("Unsupported");
+        buffer.addValue(v, nationalCharset.getJavaCharset());
     }
 
     @Override

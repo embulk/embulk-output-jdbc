@@ -10,7 +10,6 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.oracle.DirectBatchInsert;
@@ -132,9 +131,11 @@ public class OracleOutputPlugin
         JdbcOutputConnector connector = getConnector(task, true);
 
         if (oracleTask.getInsertMethod() == InsertMethod.oci) {
-            OracleCharset charset;
-            try (JdbcOutputConnection connection = connector.connect(true)) {
-                charset = ((OracleOutputConnection)connection).getOracleCharset();
+        	OracleCharset charset;
+        	OracleCharset nationalCharset;
+            try (OracleOutputConnection connection = (OracleOutputConnection)connector.connect(true)) {
+                charset = connection.getOracleCharset();
+                nationalCharset = connection.getOracleNationalCharset();
             }
 
             return new DirectBatchInsert(
@@ -143,6 +144,7 @@ public class OracleOutputPlugin
                     oracleTask.getPassword(),
                     oracleTask.getTable(),
                     charset,
+                    nationalCharset,
                     oracleTask.getBatchSize());
         }
 

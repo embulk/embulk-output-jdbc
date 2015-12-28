@@ -80,6 +80,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 	jfieldID columnNameFieldID = env->GetFieldID(columnClass, "columnName", "Ljava/lang/String;");
 	jfieldID columnTypeFieldID = env->GetFieldID(columnClass, "columnType", "I");
 	jfieldID columnSizeFieldID = env->GetFieldID(columnClass, "columnSize", "I");
+	jfieldID columnCharsetIdFieldID = env->GetFieldID(columnClass, "charsetId", "S");
 	jfieldID columnDateFormatID = env->GetFieldID(columnClass, "columnDateFormat", "Ljava/lang/String;");
 
 	EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs = new EMBULK_OUTPUT_ORACLE_OCI_COL_DEF[columnCount + 1];
@@ -91,6 +92,7 @@ JNIEXPORT jboolean JNICALL Java_org_embulk_output_oracle_oci_OCI_prepareLoad
 		colDefs[i].name = env->GetStringUTFChars(columnName, NULL);
 		colDefs[i].type = env->GetIntField(column, columnTypeFieldID);
 		colDefs[i].size = env->GetIntField(column, columnSizeFieldID);
+		colDefs[i].charsetId = env->GetShortField(column, columnCharsetIdFieldID);
 
 		jstring columnDateFormat = (jstring)env->GetObjectField(column, columnDateFormatID);
 		if (columnDateFormat != NULL) {

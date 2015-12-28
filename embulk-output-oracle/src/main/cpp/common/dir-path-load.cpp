@@ -154,6 +154,9 @@ int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *
 		if (check(context, "OCIAttrSet(OCI_ATTR_DATA_SIZE)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDef.size, sizeof(ub4), OCI_ATTR_DATA_SIZE, context->err))) {
 			return OCI_ERROR;
 		}
+		if (check(context, "OCIAttrSet(OCI_ATTR_CHARSET_ID)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDef.charsetId, sizeof(ub2), OCI_ATTR_CHARSET_ID, context->err))) {
+			return OCI_ERROR;
+		}
 		/*
 		if (check(context, "OCIAttrSet(OCI_ATTR_PRECISION)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDefs[i].precision, sizeof(ub4), OCI_ATTR_PRECISION, context->err))) {
 			return OCI_ERROR;

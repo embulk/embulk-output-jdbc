@@ -45,6 +45,11 @@ public class RowBuffer
 
     public void addValue(String value)
     {
+        addValue(value, charset);
+    }
+
+    public void addValue(String value, Charset charset)
+    {
         if (isFull()) {
             throw new IllegalStateException();
         }

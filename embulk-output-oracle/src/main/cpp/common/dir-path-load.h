@@ -17,6 +17,7 @@ typedef struct _EMBULK_OUTPUT_ORACLE_OCI_COL_DEF {
 	const char *name;
 	ub4 type;
 	ub4 size;
+	ub2 charsetId;
 	const char *dateFormat;
 } EMBULK_OUTPUT_ORACLE_OCI_COL_DEF;
 
