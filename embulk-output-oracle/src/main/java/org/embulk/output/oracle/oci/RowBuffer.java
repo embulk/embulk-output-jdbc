@@ -23,6 +23,10 @@ public class RowBuffer
 
         int rowSize = 0;
         for (ColumnDefinition column : table.columns) {
+            if (column.columnType == ColumnDefinition.SQLT_CHR) {
+                // for length of string
+                rowSize += 2;
+            }
             rowSize += column.columnSize;
         }
 
@@ -57,10 +61,10 @@ public class RowBuffer
         ByteBuffer bytes = charset.encode(value);
         int length = bytes.remaining();
         // TODO:warning or error if truncated
-        bytes.get(buffer, currentPosition, length);
-        if (length < table.columns[currentColumn].columnSize) {
-            buffer[currentPosition + length] = 0;
-        }
+
+        buffer[currentPosition] = (byte)length;
+        buffer[currentPosition + 1] = (byte)(length >> 8);
+        bytes.get(buffer, currentPosition + 2, length);
 
         next();
     }
@@ -72,7 +76,11 @@ public class RowBuffer
 
     private void next()
     {
+        if (table.columns[currentColumn].columnType == ColumnDefinition.SQLT_CHR) {
+            currentPosition += 2;
+        }
         currentPosition += table.columns[currentColumn].columnSize;
+
         currentColumn++;
         if (currentColumn == table.columns.length) {
             currentColumn = 0;

@@ -65,8 +65,8 @@ public class OracleOutputPluginTestImpl
 
         } catch (SQLException e) {
             System.err.println(e);
-            //throw new RuntimeException("You should prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
-            System.err.println("Warning: prepare a schema on Oracle (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
+            //throw new RuntimeException("You should prepare a schema on Oracle 12c (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
+            System.err.println("Warning: prepare a schema on Oracle 12c (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;
@@ -300,8 +300,9 @@ public class OracleOutputPluginTestImpl
     {
         String sql = String.format("CREATE TABLE %s ("
                 + "ID              CHAR(4),"
-                + "VARCHAR2_ITEM   VARCHAR2(40),"
-                + "INTEGER_ITEM     NUMBER(4,0),"
+                + "VARCHAR2_ITEM   VARCHAR2(6),"
+                + "NVARCHAR2_ITEM  NVARCHAR2(12),"
+                + "INTEGER_ITEM    NUMBER(4,0),"
                 + "NUMBER_ITEM     NUMBER(10,2),"
                 + "DATE_ITEM       DATE,"
                 + "TIMESTAMP_ITEM  TIMESTAMP,"
@@ -311,7 +312,7 @@ public class OracleOutputPluginTestImpl
 
     private void insertRecord(String table) throws SQLException
     {
-        executeSQL(String.format("INSERT INTO %s VALUES('9999', NULL, NULL, NULL, NULL, NULL)", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('9999', NULL, NULL, NULL, NULL, NULL, NULL)", table));
     }
 
     private void assertTable(String table) throws Exception
@@ -322,9 +323,9 @@ public class OracleOutputPluginTestImpl
         List<List<Object>> rows = select(table);
 
         /*
-        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
-        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
-        A003,,,,,
+        A001,ABCDE,abcde,,0,123.45,2015/03/05,2015/03/05 12:34:56
+        A002,ＡＢ,ａｂｃｄｅｆ,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
+        A003,,,,,,
         */
 
         assertEquals(3, rows.size());
@@ -333,6 +334,7 @@ public class OracleOutputPluginTestImpl
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A001", i2.next());
             assertEquals("ABCDE", i2.next());
+            assertEquals("abcde", i2.next());
             assertEquals(new BigDecimal("0"), i2.next());
             assertEquals(new BigDecimal("123.45"), i2.next());
             assertEquals(toTimestamp("2015/03/05 00:00:00", timeZone), i2.next());
@@ -341,7 +343,8 @@ public class OracleOutputPluginTestImpl
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A002", i2.next());
-            assertEquals("あいうえお", i2.next());
+            assertEquals("ＡＢ", i2.next());
+            assertEquals("ａｂｃｄｅｆ", i2.next());
             assertEquals(new BigDecimal("-9999"), i2.next());
             assertEquals(new BigDecimal("-99999999.99"), i2.next());
             assertEquals(toTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
@@ -350,6 +353,7 @@ public class OracleOutputPluginTestImpl
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
@@ -372,9 +376,9 @@ public class OracleOutputPluginTestImpl
         List<List<Object>> rows = select(table);
 
         /*
-        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
-        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
-        A003,,,,,
+        A001,ABCDE,abcde,0,123.45,2015/03/05,2015/03/05 12:34:56
+        A002,ＡＢ,ａｂｃｄｅｆ,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
+        A003,,,,,,
         */
 
         assertEquals(3, rows.size());
@@ -383,6 +387,7 @@ public class OracleOutputPluginTestImpl
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A001", i2.next());
             assertEquals("ABCDE", i2.next());
+            assertEquals("abcde", i2.next());
             assertEquals(new BigDecimal("0"), i2.next());
             assertEquals("123.45", i2.next());
             assertEquals(toOracleTimestamp("2015/03/05 00:00:00", timeZone), i2.next());
@@ -391,7 +396,8 @@ public class OracleOutputPluginTestImpl
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A002", i2.next());
-            assertEquals("あいうえお", i2.next());
+            assertEquals("ＡＢ", i2.next());
+            assertEquals("ａｂｃｄｅｆ", i2.next());
             assertEquals(new BigDecimal("-9999"), i2.next());
             assertEquals("-99999999.99", i2.next());
             assertEquals(toOracleTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
@@ -400,6 +406,7 @@ public class OracleOutputPluginTestImpl
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
@@ -416,9 +423,9 @@ public class OracleOutputPluginTestImpl
         List<List<Object>> rows = select(table);
 
         /*
-        A001,ABCDE,0,123.45,2015/03/05,2015/03/05 12:34:56
-        A002,あいうえお,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
-        A003,,,,,
+        A001,ABCDE,abcde,0,123.45,2015/03/05,2015/03/05 12:34:56
+        A002,ＡＢ,ａｂｃｄｅｆ,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
+        A003,,,,,,
         */
 
         assertEquals(3, rows.size());
@@ -427,6 +434,7 @@ public class OracleOutputPluginTestImpl
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A001", i2.next());
             assertEquals("ABCDE", i2.next());
+            assertEquals("abcde", i2.next());
             assertEquals(new BigDecimal("0"), i2.next());
             assertEquals(new BigDecimal("123.45"), i2.next());
             assertEquals(toTimestamp("2015/03/05 00:00:00", timeZone), i2.next());
@@ -435,7 +443,8 @@ public class OracleOutputPluginTestImpl
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A002", i2.next());
-            assertEquals("あいうえお", i2.next());
+            assertEquals("ＡＢ", i2.next());
+            assertEquals("ａｂｃｄｅｆ", i2.next());
             assertEquals(new BigDecimal("-9999"), i2.next());
             assertEquals(new BigDecimal("-99999999.99"), i2.next());
             assertEquals(toTimestamp("2015/03/06 00:00:00", timeZone), i2.next());
@@ -444,6 +453,7 @@ public class OracleOutputPluginTestImpl
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());

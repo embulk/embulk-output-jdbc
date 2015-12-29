@@ -71,8 +71,8 @@ public class DirectBatchInsert implements BatchInsert
          * int          -> NUMBER
          * long         -> NUMBER
          * BigDecimal   -> NUMBER
-         * String       -> CHAR,VARCHAR,LONGVARCHAR,CLOB,NCHAR,NVARCHAR,NCLOB,NUMBER
-         * NString      -> unused
+         * String       -> CHAR,VARCHAR,LONGVARCHAR,CLOB,NUMBER
+         * NString      -> NCHAR,NVARCHAR,LONGNVARCHAR,NCLOB
          * bytes        -> unused
          * SqlDate      -> unused
          * SqlTime      -> unused
