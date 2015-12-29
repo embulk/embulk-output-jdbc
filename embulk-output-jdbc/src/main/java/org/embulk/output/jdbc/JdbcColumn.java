@@ -12,6 +12,7 @@ public class JdbcColumn
     private final int sqlType;
     private final int sizeTypeParameter;
     private final int scaleTypeParameter;
+    private final int dataLength;
     private final Optional<String> declaredType;
     private final boolean isNotNull;
     private final boolean isUniqueKey;
@@ -23,6 +24,7 @@ public class JdbcColumn
             @JsonProperty("simpleTypeName") String simpleTypeName,
             @JsonProperty("sizeTypeParameter") int sizeTypeParameter,
             @JsonProperty("scaleTypeParameter") int scaleTypeParameter,
+            @JsonProperty("dataLength") int dataLength,
             @JsonProperty("declaredType") Optional<String> declaredType,
             @JsonProperty("notNull") boolean isNotNull,
             @JsonProperty("uniqueKey") boolean isUniqueKey)
@@ -32,9 +34,19 @@ public class JdbcColumn
         this.sqlType = sqlType;
         this.sizeTypeParameter = sizeTypeParameter;
         this.scaleTypeParameter = scaleTypeParameter;
+        this.dataLength = dataLength;
         this.declaredType = declaredType;
         this.isNotNull = isNotNull;
         this.isUniqueKey = isUniqueKey;
+    }
+
+    public static JdbcColumn newGenericTypeColumn(String name, int sqlType,
+            String simpleTypeName, int sizeTypeParameter, int scaleTypeParameter, int dataLength,
+            boolean isNotNull, boolean isUniqueKey)
+    {
+        return new JdbcColumn(name, sqlType,
+                simpleTypeName, sizeTypeParameter, scaleTypeParameter, dataLength,
+                Optional.<String>absent(), isNotNull, isUniqueKey);
     }
 
     public static JdbcColumn newGenericTypeColumn(String name, int sqlType,
@@ -42,22 +54,22 @@ public class JdbcColumn
             boolean isNotNull, boolean isUniqueKey)
     {
         return new JdbcColumn(name, sqlType,
-                simpleTypeName, sizeTypeParameter, scaleTypeParameter, Optional.<String>absent(),
-                isNotNull, isUniqueKey);
+                simpleTypeName, sizeTypeParameter, scaleTypeParameter, sizeTypeParameter,
+                Optional.<String>absent(), isNotNull, isUniqueKey);
     }
 
     public static JdbcColumn newTypeDeclaredColumn(String name, int sqlType,
             String declaredType, boolean isNotNull, boolean isUniqueKey)
     {
         return new JdbcColumn(name, sqlType,
-                declaredType, 0, 0, Optional.of(declaredType),
-                isNotNull, isUniqueKey);
+                declaredType, 0, 0, 0,
+                Optional.of(declaredType), isNotNull, isUniqueKey);
     }
 
     @JsonIgnore
     public static JdbcColumn skipColumn()
     {
-        return new JdbcColumn(null, 0, null, 0, 0, Optional.<String>absent(), false, false);
+        return new JdbcColumn(null, 0, null, 0, 0, 0, Optional.<String>absent(), false, false);
     }
 
     @JsonIgnore
@@ -94,6 +106,12 @@ public class JdbcColumn
     public int getScaleTypeParameter()
     {
         return scaleTypeParameter;
+    }
+
+    @JsonProperty("dataLength")
+    public int getDataLength()
+    {
+        return dataLength;
     }
 
     @JsonProperty("declaredType")

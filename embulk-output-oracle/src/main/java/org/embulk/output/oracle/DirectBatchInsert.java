@@ -90,10 +90,9 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.VARCHAR:
                 case Types.LONGVARCHAR:
                 case Types.CLOB:
-                    // TODO: CHAR(n CHAR)
                     columns.add(new ColumnDefinition(insertColumn.getName(),
                             ColumnDefinition.SQLT_CHR,
-                            insertColumn.getSizeTypeParameter(),
+                            insertColumn.getDataLength(),
                             charset.getId()));
                     break;
 
@@ -103,7 +102,7 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.NCLOB:
                     columns.add(new ColumnDefinition(insertColumn.getName(),
                             ColumnDefinition.SQLT_CHR,
-                            insertColumn.getSizeTypeParameter(),
+                            insertColumn.getDataLength(),
                             nationalCharset.getId()));
                     break;
 

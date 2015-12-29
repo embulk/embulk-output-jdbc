@@ -3,6 +3,7 @@ package org.embulk.output.oracle.oci;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.sql.SQLException;
 
 
 public class RowBuffer
@@ -47,12 +48,12 @@ public class RowBuffer
         next();
     }
 
-    public void addValue(String value)
+    public void addValue(String value) throws SQLException
     {
         addValue(value, charset);
     }
 
-    public void addValue(String value, Charset charset)
+    public void addValue(String value, Charset charset) throws SQLException
     {
         if (isFull()) {
             throw new IllegalStateException();
@@ -60,7 +61,13 @@ public class RowBuffer
 
         ByteBuffer bytes = charset.encode(value);
         int length = bytes.remaining();
-        // TODO:warning or error if truncated
+        if (length > 65535) {
+            throw new SQLException(String.format("byte count of string is too large (max : 65535, actual : %d).", length));
+        }
+        if (length > table.columns[currentColumn].columnSize) {
+            throw new SQLException(String.format("byte count of string is too large for column \"%s\" (max : %d, actual : %d).",
+                    table.columns[currentColumn].columnName, table.columns[currentColumn].columnSize, length));
+        }
 
         buffer[currentPosition] = (byte)length;
         buffer[currentPosition + 1] = (byte)(length >> 8);
@@ -69,7 +76,7 @@ public class RowBuffer
         next();
     }
 
-    public void addValue(BigDecimal value)
+    public void addValue(BigDecimal value) throws SQLException
     {
         addValue(value.toPlainString());
     }

@@ -301,7 +301,7 @@ public class OracleOutputPluginTestImpl
         String sql = String.format("CREATE TABLE %s ("
                 + "ID              CHAR(4),"
                 + "VARCHAR2_ITEM   VARCHAR2(6),"
-                + "NVARCHAR2_ITEM  NVARCHAR2(12),"
+                + "NVARCHAR2_ITEM  NVARCHAR2(6),"
                 + "INTEGER_ITEM    NUMBER(4,0),"
                 + "NUMBER_ITEM     NUMBER(10,2),"
                 + "DATE_ITEM       DATE,"

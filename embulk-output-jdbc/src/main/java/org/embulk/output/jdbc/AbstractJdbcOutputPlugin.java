@@ -714,13 +714,14 @@ public abstract class AbstractJdbcOutputPlugin
                 int sqlType = rs.getInt("DATA_TYPE");
                 int colSize = rs.getInt("COLUMN_SIZE");
                 int decDigit = rs.getInt("DECIMAL_DIGITS");
+                int charOctetLength = rs.getInt("CHAR_OCTET_LENGTH");
                 if (rs.wasNull()) {
                     decDigit = -1;
                 }
                 boolean isNotNull = "NO".equals(rs.getString("IS_NULLABLE"));
                 //rs.getString("COLUMN_DEF") // or null  // TODO
                 builder.add(JdbcColumn.newGenericTypeColumn(
-                            columnName, sqlType, simpleTypeName, colSize, decDigit, isNotNull, isUniqueKey));
+                            columnName, sqlType, simpleTypeName, colSize, decDigit, charOctetLength, isNotNull, isUniqueKey));
                 // We can't get declared column name using JDBC API.
                 // Subclasses need to overwrite it.
             }
