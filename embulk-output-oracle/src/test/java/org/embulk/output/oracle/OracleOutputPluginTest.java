@@ -158,6 +158,12 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testTruncateInsertOCIMethod() throws Exception
+    {
+        invoke(test12c, "testTruncateInsertOCIMethod");
+    }
+
+    @Test
     public void testTruncateInsertCreate() throws Exception
     {
         invoke("testTruncateInsertCreate");

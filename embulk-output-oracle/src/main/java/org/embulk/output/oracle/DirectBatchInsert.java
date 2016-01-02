@@ -28,11 +28,10 @@ public class DirectBatchInsert implements BatchInsert
 
     private final Logger logger = Exec.getLogger(DirectBatchInsert.class);
 
-    private final List<String> ociKey;
+    private List<String> ociKey;
     private final String database;
     private final String user;
     private final String password;
-    private final String table;
     private final OracleCharset charset;
     private final OracleCharset nationalCharset;
     private final int batchSize;
@@ -50,12 +49,9 @@ public class DirectBatchInsert implements BatchInsert
         this.database = database;
         this.user = user;
         this.password = password;
-        this.table = table;
         this.charset = charset;
         this.nationalCharset = nationalCharset;
         this.batchSize = batchSize;
-
-        ociKey = Arrays.asList(database, user, table);
     }
 
     @Override
@@ -151,7 +147,8 @@ public class DirectBatchInsert implements BatchInsert
             rowSize += column.columnSize;
         }
 
-        TableDefinition tableDefinition = new TableDefinition(table, columns);
+        TableDefinition tableDefinition = new TableDefinition("\"" + loadTable + "\"", columns);
+        ociKey = Arrays.asList(database, user, loadTable);
         ociManager.open(ociKey, database, user, password, tableDefinition);
 
         buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset.getJavaCharset());

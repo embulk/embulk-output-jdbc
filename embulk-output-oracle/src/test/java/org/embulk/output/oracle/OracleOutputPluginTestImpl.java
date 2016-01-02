@@ -125,6 +125,19 @@ public class OracleOutputPluginTestImpl
         assertTable(table);
     }
 
+    public void testTruncateInsertOCIMethod() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        run("/yml/test-truncate-insert-oci-method.yml");
+
+        assertTable(table);
+    }
+
     public void testTruncateInsertCreate() throws Exception
     {
         String table = "TEST1";
