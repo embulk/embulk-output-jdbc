@@ -714,10 +714,10 @@ public abstract class AbstractJdbcOutputPlugin
                 int sqlType = rs.getInt("DATA_TYPE");
                 int colSize = rs.getInt("COLUMN_SIZE");
                 int decDigit = rs.getInt("DECIMAL_DIGITS");
-                int charOctetLength = rs.getInt("CHAR_OCTET_LENGTH");
                 if (rs.wasNull()) {
                     decDigit = -1;
                 }
+                int charOctetLength = rs.getInt("CHAR_OCTET_LENGTH");
                 boolean isNotNull = "NO".equals(rs.getString("IS_NULLABLE"));
                 //rs.getString("COLUMN_DEF") // or null  // TODO
                 builder.add(JdbcColumn.newGenericTypeColumn(
