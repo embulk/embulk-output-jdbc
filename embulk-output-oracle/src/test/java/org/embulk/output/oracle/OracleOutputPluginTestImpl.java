@@ -246,6 +246,18 @@ public class OracleOutputPluginTestImpl
         assertGeneratedTable2(table);
     }
 
+    public void testReplaceOCIMethod() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/yml/test-replace-oci-method.yml");
+
+        assertGeneratedTable2(table);
+    }
+
     public void testReplaceEmpty() throws Exception
     {
         String table = "TEST1";

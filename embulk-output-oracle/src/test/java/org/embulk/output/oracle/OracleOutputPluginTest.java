@@ -218,6 +218,12 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testReplaceOCIMethod() throws Exception
+    {
+        invoke(test12c, "testReplaceOCIMethod");
+    }
+
+    @Test
     public void testReplaceEmpty() throws Exception
     {
         invoke(test12c, "testReplaceEmpty");
