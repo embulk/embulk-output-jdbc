@@ -25,11 +25,12 @@ public class OracleOutputConnection
         CHARSET_NAMES.put("JA16EUCTILDE", "EUC-JP");
         CHARSET_NAMES.put("AL32UTF8", "UTF-8");
         CHARSET_NAMES.put("UTF8", "UTF-8");
-        CHARSET_NAMES.put("AL16UTF16", "UTF-16");
+        CHARSET_NAMES.put("AL16UTF16", "UTF-16BE");
     }
 
     private final boolean direct;
     private OracleCharset charset;
+    private OracleCharset nationalCharset;
 
     public OracleOutputConnection(Connection connection, boolean autoCommit, boolean direct)
             throws SQLException
@@ -136,33 +137,48 @@ public class OracleOutputConnection
     public synchronized OracleCharset getOracleCharset() throws SQLException
     {
         if (charset == null) {
-            String charsetName = "UTF8";
-            try (Statement statement = connection.createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER='NLS_CHARACTERSET'")) {
-                    if (resultSet.next()) {
-                        String nlsCharacterSet = resultSet.getString(1);
-                        if (CHARSET_NAMES.containsKey(nlsCharacterSet)) {
-                            charsetName = nlsCharacterSet;
-                        }
-                    }
-                }
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement("SELECT NLS_CHARSET_ID(?) FROM DUAL")) {
-                statement.setString(1, charsetName);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (!resultSet.next()) {
-                        throw new SQLException("Unknown NLS_CHARACTERSET : " + charsetName);
-                    }
-
-                    charset = new OracleCharset(charsetName,
-                            resultSet.getShort(1),
-                            Charset.forName(CHARSET_NAMES.get(charsetName)));
-                }
-            }
+        	charset = getOracleCharset("NLS_CHARACTERSET", "UTF8");
         }
         return charset;
     }
+
+    public synchronized OracleCharset getOracleNationalCharset() throws SQLException
+    {
+        if (nationalCharset == null) {
+        	nationalCharset = getOracleCharset("NLS_NCHAR_CHARACTERSET", "AL16UTF16");
+        }
+        return nationalCharset;
+    }
+
+    private OracleCharset getOracleCharset(String parameterName, String defaultCharsetName) throws SQLException
+    {
+        String charsetName = defaultCharsetName;
+        try (PreparedStatement statement = connection.prepareStatement("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER=?")) {
+        	statement.setString(1, parameterName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    String nlsCharacterSet = resultSet.getString(1);
+                    if (CHARSET_NAMES.containsKey(nlsCharacterSet)) {
+                        charsetName = nlsCharacterSet;
+                    }
+                }
+            }
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement("SELECT NLS_CHARSET_ID(?) FROM DUAL")) {
+            statement.setString(1, charsetName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("Unknown " + parameterName + " : " + charsetName);
+                }
+
+                return new OracleCharset(charsetName,
+                        resultSet.getShort(1),
+                        Charset.forName(CHARSET_NAMES.get(charsetName)));
+            }
+        }
+    }
+
 
     private static final String[] STANDARD_SIZE_TYPE_NAMES = {
         "VARCHAR2", "NVARCHAR2",

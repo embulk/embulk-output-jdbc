@@ -10,23 +10,23 @@ static int test(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *db, const
 	}
 
 	EMBULK_OUTPUT_ORACLE_OCI_COL_DEF colDefs[] = {
-		{"ID", SQLT_INT, 4},
-		//{"ID", SQLT_CHR, 8},
-		{"NUM", SQLT_INT, 4},
-		//{"NUM", SQLT_CHR, 12},
-		{"VALUE1", SQLT_CHR, 60},
-		{"VALUE2", SQLT_CHR, 60},
-		{"VALUE3", SQLT_CHR, 60},
-		{"VALUE4", SQLT_CHR, 60},
-		{"VALUE5", SQLT_CHR, 60},
-		{"VALUE6", SQLT_CHR, 60},
-		{"VALUE7", SQLT_CHR, 60},
-		{"VALUE8", SQLT_CHR, 60},
-		{"VALUE9", SQLT_CHR, 60},
-		{"VALUE10", SQLT_CHR, 60},
-		{NULL, 0, 0}
+		{"ID", SQLT_INT, 4, 832},
+		//{"ID", SQLT_CHR, 8, 832},
+		{"NUM", SQLT_INT, 4, 832},
+		//{"NUM", SQLT_CHR, 12, 832},
+		{"VALUE1", SQLT_CHR, 60, 832},
+		{"VALUE2", SQLT_CHR, 60, 832},
+		{"VALUE3", SQLT_CHR, 60, 832},
+		{"VALUE4", SQLT_CHR, 60, 832},
+		{"VALUE5", SQLT_CHR, 60, 832},
+		{"VALUE6", SQLT_CHR, 60, 832},
+		{"VALUE7", SQLT_CHR, 60, 832},
+		{"VALUE8", SQLT_CHR, 60, 832},
+		{"VALUE9", SQLT_CHR, 60, 832},
+		{"VALUE10", SQLT_CHR, 60, 832},
+		{NULL, 0, 0, 832}
 	};
-	if (embulk_output_oracle_prepareDirPathStream(context, "EXAMPLE", 832, colDefs)) {
+	if (embulk_output_oracle_prepareDirPathStream(context, "EXAMPLE", colDefs)) {
 		return OCI_ERROR;
 	}
 

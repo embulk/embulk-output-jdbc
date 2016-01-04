@@ -10,6 +10,7 @@ in:
     columns:
     - {name: ID, type: string}
     - {name: VARCHAR2_ITEM, type: string}
+    - {name: NVARCHAR2_ITEM, type: string}
     - {name: INTEGER_ITEM, type: long}
     - {name: NUMBER_ITEM, type: string}
     - {name: DATE_ITEM, type: string}

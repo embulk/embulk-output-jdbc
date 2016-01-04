@@ -10,6 +10,7 @@ in:
     columns:
     - {name: ID, type: string}
     - {name: VARCHAR2_ITEM, type: string}
+    - {name: NVARCHAR2_ITEM, type: string}
     - {name: INTEGER_ITEM, type: long}
     - {name: NUMBER_ITEM, type: string}
     - {name: DATE_ITEM, type: timestamp, format: '%Y/%m/%d'}
@@ -23,7 +24,8 @@ out:
     table: TEST1
     mode: replace
     column_options:
-      VARCHAR2_ITEM: {type: 'VARCHAR2(40)'}
+      VARCHAR2_ITEM: {type: 'VARCHAR2(6)'}
+      NVARCHAR2_ITEM: {type: 'NVARCHAR2(6)'}
       INTEGER_ITEM: {type: 'NUMBER(4,0)'}
       NUMBER_ITEM: {type: 'NUMBER(10,2)'}
       DATE_ITEM: {type: 'DATE'}

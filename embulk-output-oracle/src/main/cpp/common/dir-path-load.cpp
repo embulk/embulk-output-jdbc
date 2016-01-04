@@ -116,15 +116,9 @@ static int isValid(EMBULK_OUTPUT_ORACLE_OCI_COL_DEF &colDef) {
 	return colDef.type != 0;
 }
 
-int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *tableName, short charsetId, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs) {
+int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, const char *tableName, EMBULK_OUTPUT_ORACLE_OCI_COL_DEF *colDefs) {
 	// load table name
 	if (check(context, "OCIAttrSet(OCI_ATTR_NAME)", OCIAttrSet(context->dp, OCI_HTYPE_DIRPATH_CTX, (void*)tableName, (ub4)strlen(tableName), OCI_ATTR_NAME, context->err))) {
-		return OCI_ERROR;
-	}
-
-	// need to set charset explicitly because database charset is not set by default.
-	ub2 tempCharsetId = charsetId;
-	if (check(context, "OCIAttrSet(OCI_ATTR_CHARSET_ID)", OCIAttrSet(context->dp, OCI_HTYPE_DIRPATH_CTX, (void*)&tempCharsetId, sizeof(ub2), OCI_ATTR_CHARSET_ID, context->err))) {
 		return OCI_ERROR;
 	}
 
@@ -152,6 +146,10 @@ int embulk_output_oracle_prepareDirPathStream(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *
 			return OCI_ERROR;
 		}
 		if (check(context, "OCIAttrSet(OCI_ATTR_DATA_SIZE)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDef.size, sizeof(ub4), OCI_ATTR_DATA_SIZE, context->err))) {
+			return OCI_ERROR;
+		}
+		// need to set charset explicitly because database charset is not set by default.
+		if (check(context, "OCIAttrSet(OCI_ATTR_CHARSET_ID)", OCIAttrSet(column, OCI_DTYPE_PARAM, &colDef.charsetId, sizeof(ub2), OCI_ATTR_CHARSET_ID, context->err))) {
 			return OCI_ERROR;
 		}
 		/*
@@ -273,7 +271,10 @@ int embulk_output_oracle_loadBuffer(EMBULK_OUTPUT_ORACLE_OCI_CONTEXT *context, E
 		for (int col = 0; isValid(colDefs[col]); col++) {
 			ub4 size = colDefs[col].size;
 			if (colDefs[col].type == SQLT_CHR) {
-				size = (ub4)strnlen(current, size);
+				// cannot use strnlen for calulating length of string because UTF-16 string may contain '\0'.
+				unsigned char size1 = *current++;
+				unsigned char size2 = *current++;
+				size = size1 + size2 * 256;
 			}
 
 			if (check(context, "OCIDirPathColArrayEntrySet", OCIDirPathColArrayEntrySet(context->dpca, context->err, colArrayRowCount, col, (ub1*)current, size, OCI_DIRPATH_COL_COMPLETE))) {

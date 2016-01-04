@@ -131,7 +131,12 @@ public class OracleOutputPluginTest
     @Test
     public void testInsert() throws Exception
     {
-        invoke("testInsert");
+        // cannot test with Oracle 11g JDBC driver for Oracle 12c,
+        // because the driver returns sqlType=1111 for NCHAR/NVARCHAR2,
+        // and ColumnSetterFactory#newCoalesceColumnSetter throws Exception.
+        // even if setting {value_type: string} for NCHAR/NVARCHAR2,
+    	// PreparedStatement#setNull(parameterIndex, sqlType=1111) throws Exception.
+        invoke(test12c, "testInsert");
     }
 
     @Test
@@ -143,13 +148,19 @@ public class OracleOutputPluginTest
     @Test
     public void testInsertEmpty() throws Exception
     {
-        invoke("testInsertEmpty");
+        invoke(test12c, "testInsertEmpty");
     }
 
     @Test
     public void testTruncateInsert() throws Exception
     {
-        invoke("testTruncateInsert");
+        invoke(test12c, "testTruncateInsert");
+    }
+
+    @Test
+    public void testTruncateInsertOCIMethod() throws Exception
+    {
+        invoke(test12c, "testTruncateInsertOCIMethod");
     }
 
     @Test
@@ -161,7 +172,7 @@ public class OracleOutputPluginTest
     @Test
     public void testInsertDirect() throws Exception
     {
-        invoke("testInsertDirect");
+        invoke(test12c, "testInsertDirect");
     }
 
     @Test
@@ -173,67 +184,72 @@ public class OracleOutputPluginTest
     @Test
     public void testInsertDirectEmpty() throws Exception
     {
-        invoke("testInsertDirectEmpty");
+        invoke(test12c, "testInsertDirectEmpty");
     }
 
     @Test
     public void testInsertDirectDirectMethod() throws Exception
     {
-        // ArrayIndexOutOfBoundsException thrown if using 12c driver.
-        invoke(test11g, "testInsertDirectDirectMethod");
+        invoke(test12c, "testInsertDirectDirectMethod");
     }
 
     @Test
     public void testInsertDirectOCIMethod() throws Exception
     {
-        invoke("testInsertDirectOCIMethod");
+        invoke(test12c, "testInsertDirectOCIMethod");
     }
 
     @Test
     public void testInsertDirectOCIMethodSplit() throws Exception
     {
-        invoke("testInsertDirectOCIMethodSplit");
+        invoke(test12c, "testInsertDirectOCIMethodSplit");
     }
 
     @Test
     public void testUrl() throws Exception
     {
-        invoke("testUrl");
+        invoke(test12c, "testUrl");
     }
 
     @Test
     public void testReplace() throws Exception
     {
-        invoke("testReplace");
+        invoke(test12c, "testReplace");
+    }
+
+    @Test
+    public void testReplaceOCIMethod() throws Exception
+    {
+        invoke(test12c, "testReplaceOCIMethod");
     }
 
     @Test
     public void testReplaceEmpty() throws Exception
     {
-        invoke("testReplaceEmpty");
+        invoke(test12c, "testReplaceEmpty");
     }
 
     @Test
     public void testReplaceLongName() throws Exception
     {
-        invoke("testReplaceLongName");
+        invoke(test12c, "testReplaceLongName");
     }
 
     @Test
     public void testReplaceLongNameMultibyte() throws Exception
     {
-        invoke("testReplaceLongNameMultibyte");
+        invoke(test12c, "testReplaceLongNameMultibyte");
     }
 
     @Test
     public void testReplaceCreate() throws Exception
     {
-        invoke("testReplaceCreate");
+        invoke(test12c, "testReplaceCreate");
     }
 
     @Test
     public void testStringTimestamp() throws Exception
     {
-        invoke("testStringTimestamp");
+        invoke(test12c, "testStringTimestamp");
     }
 }

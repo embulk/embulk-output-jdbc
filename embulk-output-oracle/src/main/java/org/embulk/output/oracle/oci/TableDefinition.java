@@ -6,19 +6,17 @@ public class TableDefinition
 {
 
     public final String tableName;
-    public final short charsetId;
     public final ColumnDefinition[] columns;
 
 
-    public TableDefinition(String tableName, short charsetId, ColumnDefinition... columns)
+    public TableDefinition(String tableName, ColumnDefinition... columns)
     {
         this.tableName = tableName;
-        this.charsetId = charsetId;
         this.columns = columns;
     }
 
-    public TableDefinition(String tableName, short charsetId, List<ColumnDefinition> columns)
+    public TableDefinition(String tableName, List<ColumnDefinition> columns)
     {
-        this(tableName, charsetId, columns.toArray(new ColumnDefinition[columns.size()]));
+        this(tableName, columns.toArray(new ColumnDefinition[columns.size()]));
     }
 }

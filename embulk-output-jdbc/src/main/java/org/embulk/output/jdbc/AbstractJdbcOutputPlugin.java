@@ -717,10 +717,11 @@ public abstract class AbstractJdbcOutputPlugin
                 if (rs.wasNull()) {
                     decDigit = -1;
                 }
+                int charOctetLength = rs.getInt("CHAR_OCTET_LENGTH");
                 boolean isNotNull = "NO".equals(rs.getString("IS_NULLABLE"));
                 //rs.getString("COLUMN_DEF") // or null  // TODO
                 builder.add(JdbcColumn.newGenericTypeColumn(
-                            columnName, sqlType, simpleTypeName, colSize, decDigit, isNotNull, isUniqueKey));
+                            columnName, sqlType, simpleTypeName, colSize, decDigit, charOctetLength, isNotNull, isUniqueKey));
                 // We can't get declared column name using JDBC API.
                 // Subclasses need to overwrite it.
             }
