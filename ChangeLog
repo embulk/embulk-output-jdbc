@@ -1,3 +1,7 @@
+Release 0.4.4 - 2015-01-04
+
+* Support NCHAR/NVARCHAR2 in Oracle OCI.
+
 Release 0.4.3 - 2015-12-17
 
 * insert, truncate_insert and merge modes support to create the target table automatically if not exists.
