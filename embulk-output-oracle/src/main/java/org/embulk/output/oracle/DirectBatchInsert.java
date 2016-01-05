@@ -186,7 +186,7 @@ public class DirectBatchInsert implements BatchInsert
 
                 OCIWrapper oci = ociManager.get(ociKey);
                 synchronized (oci) {
-                    oci.loadBuffer(buffer.getBuffer(), buffer.getRowCount());
+                    oci.loadBuffer(buffer);
                 }
 
                 totalRows += buffer.getRowCount();

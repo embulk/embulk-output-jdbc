@@ -5,16 +5,21 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
+import org.embulk.output.oracle.oci.ColumnDefinition;
+import org.embulk.output.oracle.oci.TableDefinition;
 
 public class RowBuffer
 {
     private final TableDefinition table;
     private final int rowCount;
-    private final byte[] buffer;
+    private final Charset charset;
+
     private int currentRow = 0;
     private int currentColumn = 0;
-    private int currentPosition = 0;
-    private final Charset charset;
+
+    private final short[] sizes;
+    private final ByteBuffer buffer;
+    private final ByteBuffer defaultBuffer;
 
     public RowBuffer(TableDefinition table, int rowCount, Charset charset)
     {
@@ -24,14 +29,23 @@ public class RowBuffer
 
         int rowSize = 0;
         for (ColumnDefinition column : table.columns) {
-            if (column.columnType == ColumnDefinition.SQLT_CHR) {
-                // for length of string
-                rowSize += 2;
-            }
             rowSize += column.columnSize;
         }
 
-        buffer = new byte[rowSize * rowCount];
+        // should be direct because used by native library
+        buffer = ByteBuffer.allocateDirect(rowSize * rowCount);
+        // position is not updated
+        defaultBuffer = buffer.duplicate();
+
+        sizes = new short[table.columns.length * rowCount];
+    }
+
+    public ByteBuffer getBuffer() {
+        return defaultBuffer;
+    }
+
+    public short[] getSizes() {
+        return sizes;
     }
 
     public void addValue(int value)
@@ -40,12 +54,9 @@ public class RowBuffer
             throw new IllegalStateException();
         }
 
-        buffer[currentPosition] = (byte)value;
-        buffer[currentPosition + 1] = (byte)(value >> 8);
-        buffer[currentPosition + 2] = (byte)(value >> 16);
-        buffer[currentPosition + 3] = (byte)(value >> 24);
+        buffer.putInt(value);
 
-        next();
+        next((short)4);
     }
 
     public void addValue(String value) throws SQLException
@@ -69,11 +80,9 @@ public class RowBuffer
                     table.columns[currentColumn].columnName, table.columns[currentColumn].columnSize, length));
         }
 
-        buffer[currentPosition] = (byte)length;
-        buffer[currentPosition + 1] = (byte)(length >> 8);
-        bytes.get(buffer, currentPosition + 2, length);
+        buffer.put(bytes);
 
-        next();
+        next((short)length);
     }
 
     public void addValue(BigDecimal value) throws SQLException
@@ -81,23 +90,15 @@ public class RowBuffer
         addValue(value.toPlainString());
     }
 
-    private void next()
+    private void next(short size)
     {
-        if (table.columns[currentColumn].columnType == ColumnDefinition.SQLT_CHR) {
-            currentPosition += 2;
-        }
-        currentPosition += table.columns[currentColumn].columnSize;
+        sizes[currentRow * table.columns.length + currentColumn] = size;
 
         currentColumn++;
         if (currentColumn == table.columns.length) {
             currentColumn = 0;
             currentRow++;
         }
-    }
-
-    public byte[] getBuffer()
-    {
-        return buffer;
     }
 
     public int getCurrentColumn()
@@ -117,9 +118,9 @@ public class RowBuffer
 
     public void clear()
     {
-        currentPosition = 0;
         currentRow = 0;
         currentColumn = 0;
+        buffer.clear();
     }
 
 }
