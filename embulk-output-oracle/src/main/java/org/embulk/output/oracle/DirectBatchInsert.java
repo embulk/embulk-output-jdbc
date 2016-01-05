@@ -91,7 +91,7 @@ public class DirectBatchInsert implements BatchInsert
                     columns.add(new ColumnDefinition(insertColumn.getName(),
                             OCI.SQLT_CHR,
                             insertColumn.getDataLength(),
-                            charset.getId()));
+                            charset));
                     break;
 
                 case Types.NCHAR:
@@ -99,9 +99,9 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.LONGNVARCHAR:
                 case Types.NCLOB:
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                    		OCI.SQLT_CHR,
+                    OCI.SQLT_CHR,
                             insertColumn.getDataLength(),
-                            nationalCharset.getId()));
+                            nationalCharset));
                     break;
 
                 case Types.DECIMAL:
@@ -112,9 +112,9 @@ public class DirectBatchInsert implements BatchInsert
                         size += 1;
                     }
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                    		OCI.SQLT_CHR,
+                    OCI.SQLT_CHR,
                             size,
-                            charset.getId()));
+                            charset));
                     break;
 
                 case Types.DATE:
@@ -132,9 +132,9 @@ public class DirectBatchInsert implements BatchInsert
                     }
                     formats[i] = javaFormat;
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                    		OCI.SQLT_CHR,
+                    OCI.SQLT_CHR,
                             javaFormat.format(dummy).length(),
-                            charset.getId(),
+                            charset,
                             oracleFormat));
                     break;
 
@@ -153,7 +153,7 @@ public class DirectBatchInsert implements BatchInsert
         ociKey = Arrays.asList(database, user, loadTable);
         ociManager.open(ociKey, database, user, password, tableDefinition);
 
-        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8), charset.getJavaCharset());
+        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8));
     }
 
     @Override
@@ -271,7 +271,7 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void setNString(String v) throws IOException, SQLException
     {
-        buffer.addValue(v, nationalCharset.getJavaCharset());
+        buffer.addValue(v);
     }
 
     @Override

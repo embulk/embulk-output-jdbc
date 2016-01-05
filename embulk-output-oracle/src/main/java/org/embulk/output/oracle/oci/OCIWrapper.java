@@ -111,7 +111,7 @@ public class OCIWrapper
                     dataSize, (int)dataSize.size(), OCI.OCI_ATTR_DATA_SIZE, errHandle));
 
             // need to set charset explicitly because database charset is not set by default.
-            Pointer charsetId = createPointer(columnDefinition.getCharsetId());
+            Pointer charsetId = createPointer(columnDefinition.getCharset().getId());
             check("OCIAttrSet(OCI_ATTR_CHARSET_ID)", oci.OCIAttrSet(column, OCI.OCI_DTYPE_PARAM,
                     charsetId, (int)charsetId.size(), OCI.OCI_ATTR_CHARSET_ID, errHandle));
 

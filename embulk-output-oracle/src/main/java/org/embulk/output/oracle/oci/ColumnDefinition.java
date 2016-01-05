@@ -1,26 +1,28 @@
 package org.embulk.output.oracle.oci;
 
+import org.embulk.output.oracle.OracleCharset;
+
 public class ColumnDefinition
 {
     private final String columnName;
     private final int dataType;
     private final int dataSize;
-    private final short charsetId;
+    private final OracleCharset charset;
     private final String dateFormat;
 
 
-    public ColumnDefinition(String columnName, int dataType, int dataSize, short charsetId, String dateFormat)
+    public ColumnDefinition(String columnName, int dataType, int dataSize, OracleCharset charset, String dateFormat)
     {
         this.columnName = columnName;
         this.dataType = dataType;
         this.dataSize = dataSize;
-        this.charsetId = charsetId;
+        this.charset = charset;
         this.dateFormat = dateFormat;
     }
 
-    public ColumnDefinition(String columnName, int columnType, int columnSize, short charsetId)
+    public ColumnDefinition(String columnName, int columnType, int columnSize, OracleCharset charset)
     {
-        this(columnName, columnType, columnSize, charsetId, null);
+        this(columnName, columnType, columnSize, charset, null);
     }
 
     public String getColumnName()
@@ -38,9 +40,9 @@ public class ColumnDefinition
         return dataSize;
     }
 
-    public short getCharsetId()
+    public OracleCharset getCharset()
     {
-        return charsetId;
+        return charset;
     }
 
     public String getDateFormat()
