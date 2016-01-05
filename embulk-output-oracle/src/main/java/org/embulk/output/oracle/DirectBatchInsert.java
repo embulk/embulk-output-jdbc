@@ -8,18 +8,20 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Calendar;
+import java.util.List;
+
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.oracle.oci.ColumnDefinition;
+import org.embulk.output.oracle.oci.OCI;
 import org.embulk.output.oracle.oci.OCIManager;
 import org.embulk.output.oracle.oci.OCIWrapper;
 import org.embulk.output.oracle.oci.RowBuffer;
 import org.embulk.output.oracle.oci.TableDefinition;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Exec;
+import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
 
 public class DirectBatchInsert implements BatchInsert
@@ -87,7 +89,7 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.LONGVARCHAR:
                 case Types.CLOB:
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                            ColumnDefinition.SQLT_CHR,
+                            OCI.SQLT_CHR,
                             insertColumn.getDataLength(),
                             charset.getId()));
                     break;
@@ -97,7 +99,7 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.LONGNVARCHAR:
                 case Types.NCLOB:
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                            ColumnDefinition.SQLT_CHR,
+                    		OCI.SQLT_CHR,
                             insertColumn.getDataLength(),
                             nationalCharset.getId()));
                     break;
@@ -110,7 +112,7 @@ public class DirectBatchInsert implements BatchInsert
                         size += 1;
                     }
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                            ColumnDefinition.SQLT_CHR,
+                    		OCI.SQLT_CHR,
                             size,
                             charset.getId()));
                     break;
@@ -130,7 +132,7 @@ public class DirectBatchInsert implements BatchInsert
                     }
                     formats[i] = javaFormat;
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                            ColumnDefinition.SQLT_CHR,
+                    		OCI.SQLT_CHR,
                             javaFormat.format(dummy).length(),
                             charset.getId(),
                             oracleFormat));

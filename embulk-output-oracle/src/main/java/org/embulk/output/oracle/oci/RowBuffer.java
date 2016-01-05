@@ -28,8 +28,8 @@ public class RowBuffer
         this.charset = charset;
 
         int rowSize = 0;
-        for (ColumnDefinition column : table.columns) {
-            rowSize += column.columnSize;
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            rowSize += table.getColumn(i).columnSize;
         }
 
         // should be direct because used by native library
@@ -37,7 +37,7 @@ public class RowBuffer
         // position is not updated
         defaultBuffer = buffer.duplicate();
 
-        sizes = new short[table.columns.length * rowCount];
+        sizes = new short[table.getColumnCount() * rowCount];
     }
 
     public ByteBuffer getBuffer() {
@@ -75,9 +75,10 @@ public class RowBuffer
         if (length > 65535) {
             throw new SQLException(String.format("byte count of string is too large (max : 65535, actual : %d).", length));
         }
-        if (length > table.columns[currentColumn].columnSize) {
+        ColumnDefinition column = table.getColumn(currentColumn);
+        if (length > column.columnSize) {
             throw new SQLException(String.format("byte count of string is too large for column \"%s\" (max : %d, actual : %d).",
-                    table.columns[currentColumn].columnName, table.columns[currentColumn].columnSize, length));
+                    column.columnName, column.columnSize, length));
         }
 
         buffer.put(bytes);
@@ -92,10 +93,10 @@ public class RowBuffer
 
     private void next(short size)
     {
-        sizes[currentRow * table.columns.length + currentColumn] = size;
+        sizes[currentRow * table.getColumnCount() + currentColumn] = size;
 
         currentColumn++;
-        if (currentColumn == table.columns.length) {
+        if (currentColumn == table.getColumnCount()) {
             currentColumn = 0;
             currentRow++;
         }

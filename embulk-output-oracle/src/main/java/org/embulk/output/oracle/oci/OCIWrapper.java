@@ -77,11 +77,11 @@ public class OCIWrapper
         this.tableDefinition = tableDefinition;
 
         // load table name
-        Pointer tableName = createPointer(tableDefinition.tableName);
+        Pointer tableName = createPointer(tableDefinition.getTableName());
         check("OCIAttrSet(OCI_ATTR_NAME)", oci.OCIAttrSet(dpHandle, OCI.OCI_HTYPE_DIRPATH_CTX,
                 tableName, (int)tableName.size(), OCI.OCI_ATTR_NAME, errHandle));
 
-        Pointer cols = createPointer((short)tableDefinition.columns.length);
+        Pointer cols = createPointer((short)tableDefinition.getColumnCount());
         check("OCIAttrSet(OCI_ATTR_NUM_COLS)", oci.OCIAttrSet(dpHandle, OCI.OCI_HTYPE_DIRPATH_CTX,
                 cols, (int)cols.size(), OCI.OCI_ATTR_NUM_COLS, errHandle));
 
@@ -90,8 +90,8 @@ public class OCIWrapper
                 columnsPointer, null, OCI.OCI_ATTR_LIST_COLUMNS, errHandle));
         Pointer columns = columnsPointer.getPointer(0);
 
-        for (int i = 0; i < tableDefinition.columns.length; i++) {
-            ColumnDefinition columnDefinition = tableDefinition.columns[i];
+        for (int i = 0; i < tableDefinition.getColumnCount(); i++) {
+            ColumnDefinition columnDefinition = tableDefinition.getColumn(i);
 
             Pointer columnPointer = createPointerPointer();
             check("OCIParamGet(OCI_DTYPE_PARAM)", oci.OCIParamGet(columns, OCI.OCI_DTYPE_PARAM, errHandle,
@@ -153,7 +153,7 @@ public class OCIWrapper
         int position = 0;
         int rowCount = 0;
         for (int row = 0; row < rowBuffer.getRowCount(); row++) {
-            for (short col = 0; col < tableDefinition.columns.length; col++) {
+            for (short col = 0; col < tableDefinition.getColumnCount(); col++) {
                 short size = sizes[i++];
 
                 check("OCIDirPathColArrayEntrySet", oci.OCIDirPathColArrayEntrySet(dpcaHandle, errHandle,

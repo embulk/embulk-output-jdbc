@@ -9,7 +9,6 @@ import jnr.ffi.types.u_int8_t;
 
 public interface OCI
 {
-
     static short OCI_SUCCESS = 0;
     static short OCI_ERROR = -1;
     static short OCI_INVALID_HANDLE = -2;
@@ -40,6 +39,9 @@ public interface OCI
     static int OCI_DTYPE_PARAM = 53;
 
     static byte OCI_DIRPATH_COL_COMPLETE = 0;
+
+    static int SQLT_CHR = 1;
+    static int SQLT_INT = 3;
 
     short OCIErrorGet(Pointer hndlp,
             @u_int32_t int  recordno,
