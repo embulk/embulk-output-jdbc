@@ -29,7 +29,7 @@ public class RowBuffer
 
         int rowSize = 0;
         for (int i = 0; i < table.getColumnCount(); i++) {
-            rowSize += table.getColumn(i).columnSize;
+            rowSize += table.getColumn(i).getDataSize();
         }
 
         // should be direct because used by native library
@@ -76,9 +76,9 @@ public class RowBuffer
             throw new SQLException(String.format("byte count of string is too large (max : 65535, actual : %d).", length));
         }
         ColumnDefinition column = table.getColumn(currentColumn);
-        if (length > column.columnSize) {
+        if (length > column.getDataSize()) {
             throw new SQLException(String.format("byte count of string is too large for column \"%s\" (max : %d, actual : %d).",
-                    column.columnName, column.columnSize, length));
+                    column.getColumnName(), column.getDataSize(), length));
         }
 
         buffer.put(bytes);

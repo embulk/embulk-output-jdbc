@@ -98,25 +98,25 @@ public class OCIWrapper
                     columnPointer, i + 1));
             Pointer column = columnPointer.getPointer(0);
 
-            Pointer columnName = createPointer(columnDefinition.columnName);
+            Pointer columnName = createPointer(columnDefinition.getColumnName());
             check("OCIAttrSet(OCI_ATTR_NAME)", oci.OCIAttrSet(column, OCI.OCI_DTYPE_PARAM,
                     columnName, (int)columnName.size(), OCI.OCI_ATTR_NAME, errHandle));
 
-            Pointer dataType = createPointer(columnDefinition.columnType);
+            Pointer dataType = createPointer(columnDefinition.getDataType());
             check("OCIAttrSet(OCI_ATTR_DATA_TYPE)", oci.OCIAttrSet(column, OCI.OCI_DTYPE_PARAM,
                     dataType, (int)dataType.size(), OCI.OCI_ATTR_DATA_TYPE, errHandle));
 
-            Pointer dataSize = createPointer(columnDefinition.columnSize);
+            Pointer dataSize = createPointer(columnDefinition.getDataSize());
             check("OCIAttrSet(OCI_ATTR_DATA_SIZE)", oci.OCIAttrSet(column, OCI.OCI_DTYPE_PARAM,
                     dataSize, (int)dataSize.size(), OCI.OCI_ATTR_DATA_SIZE, errHandle));
 
             // need to set charset explicitly because database charset is not set by default.
-            Pointer charsetId = createPointer(columnDefinition.charsetId);
+            Pointer charsetId = createPointer(columnDefinition.getCharsetId());
             check("OCIAttrSet(OCI_ATTR_CHARSET_ID)", oci.OCIAttrSet(column, OCI.OCI_DTYPE_PARAM,
                     charsetId, (int)charsetId.size(), OCI.OCI_ATTR_CHARSET_ID, errHandle));
 
-            if (columnDefinition.columnDateFormat != null) {
-                Pointer dateFormat = createPointer(columnDefinition.columnDateFormat);
+            if (columnDefinition.getDateFormat() != null) {
+                Pointer dateFormat = createPointer(columnDefinition.getDateFormat());
                 check("OCIAttrSet(OCI_ATTR_DATEFORMAT)", oci.OCIAttrSet(column, OCI.OCI_DTYPE_PARAM,
                         dateFormat, (int)dateFormat.size(), OCI.OCI_ATTR_DATEFORMAT, errHandle));
             }

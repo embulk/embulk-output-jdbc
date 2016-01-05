@@ -146,7 +146,7 @@ public class DirectBatchInsert implements BatchInsert
 
         rowSize = 0;
         for (ColumnDefinition column : columns) {
-            rowSize += column.columnSize;
+            rowSize += column.getDataSize();
         }
 
         TableDefinition tableDefinition = new TableDefinition("\"" + loadTable + "\"", columns);
