@@ -30,9 +30,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
-import org.embulk.spi.InputPlugin;
 
 
 public class OracleOutputPluginTestImpl
@@ -210,8 +208,6 @@ public class OracleOutputPluginTestImpl
 
     public void testInsertDirectOCIMethodSplit() throws Exception
     {
-        tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
-
         String table = "TEST1";
 
         dropTable(table);
