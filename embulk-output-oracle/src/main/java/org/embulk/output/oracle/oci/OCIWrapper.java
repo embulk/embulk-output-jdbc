@@ -157,7 +157,7 @@ public class OCIWrapper
                 short size = sizes[i++];
 
                 check("OCIDirPathColArrayEntrySet", oci.OCIDirPathColArrayEntrySet(dpcaHandle, errHandle,
-                        row, col, new BoundedMemoryIO(pointer, position, size), size, OCI.OCI_DIRPATH_COL_COMPLETE));
+                        rowCount, col, new BoundedMemoryIO(pointer, position, size), size, OCI.OCI_DIRPATH_COL_COMPLETE));
 
                 position += size;
             }
@@ -176,8 +176,6 @@ public class OCIWrapper
 
     private void loadRows(int rowCount) throws SQLException
     {
-        logger.info(String.format("OCI : loading %,d rows.", rowCount));
-
         for (int offset = 0; offset < rowCount;) {
             check("OCIDirPathStreamReset", oci.OCIDirPathStreamReset(dpstrHandle, errHandle));
 
