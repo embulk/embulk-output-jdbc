@@ -388,7 +388,7 @@ public class OCIWrapper
 
     private Pointer createPointerPointer()
     {
-        return new ArrayMemoryIO(Runtime.getSystemRuntime(), 8);
+        return new ArrayMemoryIO(Runtime.getSystemRuntime(), com.kenai.jffi.Type.POINTER.size());
     }
 
     private Pointer createPointer(String s)
