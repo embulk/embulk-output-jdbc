@@ -20,7 +20,7 @@ public class OCIWrapper
     private final Logger logger = Exec.getLogger(getClass());
 
     private final Charset systemCharset;
-    private final OCI oci = LibraryLoader.create(OCI.class).load("oci");
+    private final OCI oci;
 
     private Pointer envHandle;
     private Pointer errHandle;
@@ -41,6 +41,28 @@ public class OCIWrapper
     {
         // enable to change default encoding for test
         systemCharset = Charset.forName(System.getProperty("file.encoding"));
+
+        logger.info("Loading OCI library.");
+        oci = loadLibrary();
+    }
+
+    private OCI loadLibrary()
+    {
+        // "oci" for Windows, "clntsh" for Linux
+        StringBuilder libraryNames = new StringBuilder();
+        for (String libraryName : new String[]{"oci", "clntsh"}) {
+            try {
+                return LibraryLoader.create(OCI.class).failImmediately().load(libraryName);
+            } catch (UnsatisfiedLinkError e) {
+            }
+
+            if (libraryNames.length() > 0) {
+                libraryNames.append(" / ");
+            }
+            libraryNames.append(System.mapLibraryName(libraryName));
+        }
+
+        throw new UnsatisfiedLinkError("Cannot find library: " + libraryNames);
     }
 
     public void open(String dbName, String userName, String password) throws SQLException
