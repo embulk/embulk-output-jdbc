@@ -99,7 +99,7 @@ public class DirectBatchInsert implements BatchInsert
                 case Types.LONGNVARCHAR:
                 case Types.NCLOB:
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                    OCI.SQLT_CHR,
+                            OCI.SQLT_CHR,
                             insertColumn.getDataLength(),
                             nationalCharset));
                     break;
@@ -112,7 +112,7 @@ public class DirectBatchInsert implements BatchInsert
                         size += 1;
                     }
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                    OCI.SQLT_CHR,
+                            OCI.SQLT_CHR,
                             size,
                             charset));
                     break;
@@ -132,7 +132,7 @@ public class DirectBatchInsert implements BatchInsert
                     }
                     formats[i] = javaFormat;
                     columns.add(new ColumnDefinition(insertColumn.getName(),
-                    OCI.SQLT_CHR,
+                            OCI.SQLT_CHR,
                             javaFormat.format(dummy).length(),
                             charset,
                             oracleFormat));
