@@ -17,11 +17,11 @@ import org.slf4j.Logger;
 
 public class OCIWrapper
 {
+    private static OCI oci;
+
     private final Logger logger = Exec.getLogger(getClass());
 
     private final Charset systemCharset;
-    private final OCI oci;
-
     private Pointer envHandle;
     private Pointer errHandle;
     private Pointer svcHandlePointer;
@@ -42,12 +42,17 @@ public class OCIWrapper
         // enable to change default encoding for test
         systemCharset = Charset.forName(System.getProperty("file.encoding"));
 
-        logger.info("Loading OCI library.");
-        oci = loadLibrary();
+        synchronized (OCIWrapper.class) {
+            if (oci == null) {
+                oci = loadLibrary();
+            }
+        }
     }
 
     private OCI loadLibrary()
     {
+        logger.info("Loading OCI library.");
+
         // "oci" for Windows, "clntsh" for Linux
         StringBuilder libraryNames = new StringBuilder();
         for (String libraryName : new String[]{"oci", "clntsh"}) {
