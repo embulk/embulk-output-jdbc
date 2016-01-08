@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
+import jnr.ffi.Runtime;
+
 import org.embulk.output.oracle.oci.ColumnDefinition;
 import org.embulk.output.oracle.oci.TableDefinition;
 
@@ -31,7 +33,7 @@ public class RowBuffer
         }
 
         // should be direct because used by native library
-        buffer = ByteBuffer.allocateDirect(rowSize * rowCount);
+        buffer = ByteBuffer.allocateDirect(rowSize * rowCount).order(Runtime.getSystemRuntime().byteOrder());
         // position is not updated
         defaultBuffer = buffer.duplicate();
 
