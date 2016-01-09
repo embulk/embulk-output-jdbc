@@ -56,6 +56,74 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Test
+    public void testInsert() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-insert.yml"));
+
+        assertTable(1, table);
+    }
+
+    @Test
+    public void testInsertCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-insert.yml"));
+
+        assertGeneratedTable(table);
+    }
+
+    @Test
+    public void testTruncateInsert() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-truncate-insert.yml"));
+
+        assertTable(0, table);
+    }
+
+    /*
+    @Test
+    public void testReplace() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-replace.yml"));
+
+        assertTable(1, table);
+    }
+
+    @Test
+    public void testReplaceCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-replace.yml"));
+
+        assertGeneratedTable(table);
+    }
+    */
+
+    @Test
     public void testStringToTimestamp() throws Exception
     {
         String table = "TEST1";

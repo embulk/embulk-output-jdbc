@@ -3,6 +3,7 @@ package org.embulk.output.sqlserver;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -87,6 +88,19 @@ public class SQLServerOutputConnection
         return sb.toString();
     }
 
+    private static final String[] SIMPLE_TYPE_NAMES = {
+        "BIT", "FLOAT",
+    };
+
+    @Override
+    protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
+    {
+        if (Arrays.asList(SIMPLE_TYPE_NAMES).contains(convertedTypeName)) {
+            return ColumnDeclareType.SIMPLE;
+        }
+        return super.getColumnDeclareType(convertedTypeName, col);
+    }
+
     /*
     @Override
     public Charset getTableNameCharset() throws SQLException
@@ -94,17 +108,5 @@ public class SQLServerOutputConnection
         return getOracleCharset().getJavaCharset();
     }
 
-    private static final String[] STANDARD_SIZE_TYPE_NAMES = {
-        "VARCHAR2", "NVARCHAR2",
-    };
-
-    @Override
-    protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
-    {
-        if (Arrays.asList(STANDARD_SIZE_TYPE_NAMES).contains(convertedTypeName)) {
-            return ColumnDeclareType.SIZE;
-        }
-        return super.getColumnDeclareType(convertedTypeName, col);
-    }
     */
 }

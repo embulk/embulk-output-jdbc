@@ -208,6 +208,7 @@ public class JdbcOutputConnection
 
     private static final String[] STANDARD_SIZE_AND_SCALE_TYPE_NAMES = new String[] {
         "DECIMAL",
+        "NUMERIC",
     };
 
     protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
