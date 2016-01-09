@@ -48,7 +48,7 @@ public class EmbulkPluginTester
         plugins.add(new PluginDefinition(iface, name, impl));
     }
 
-    public void run(String ymlPath) throws Exception
+    public void run(File ymlPath) throws Exception
     {
         if (embulk == null) {
             Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
@@ -64,12 +64,12 @@ public class EmbulkPluginTester
             });
             embulk = bootstrap.initializeCloseable();
         }
-
-        ConfigSource config = embulk.newConfigLoader().fromYamlFile(new File(ymlPath));
+        ConfigSource config = embulk.newConfigLoader().fromYamlFile(ymlPath);
         embulk.run(config);
     }
 
-    public void destroy() {
+    public void destroy()
+    {
         if (embulk != null) {
             embulk.destroy();
             embulk = null;

@@ -7,7 +7,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
@@ -72,8 +71,6 @@ public class OracleOutputPluginTestImpl
             //   GRANT DBA TO EMBULK_USER;
         }
 
-        convertPath("/data/test2/").mkdirs();
-
         return null;
     }
 
@@ -107,6 +104,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
+        new File(convertPath("/data/"), "test2").mkdir();
         run("/yml/test-insert-empty.yml");
 
         assertTableEmpty(table);
@@ -168,6 +166,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
+        new File(convertPath("/data/"), "test2").mkdir();
         run("/yml/test-insert-direct-empty.yml");
 
         assertTableEmpty(table);
@@ -579,45 +578,35 @@ public class OracleOutputPluginTestImpl
         tester.run(convertYml(ymlName));
     }
 
-    private String convertYml(String ymlName)
+    private File convertYml(String ymlName) throws Exception
     {
-        try {
-            File ymlPath = convertPath(ymlName);
-            File tempYmlPath = new File(ymlPath.getParentFile(), "temp-" + ymlPath.getName());
-            Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-            try (BufferedReader reader = new BufferedReader(new FileReader(ymlPath))) {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempYmlPath))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        line = line.replaceAll("type: oracle", "type: " + pluginName);
-                        Matcher matcher = pathPrefixPattern.matcher(line);
-                        if (matcher.matches()) {
-                            int group = 2;
-                            writer.write(line.substring(0, matcher.start(group)));
-                            writer.write(convertPath(matcher.group(group)).getAbsolutePath());
-                            writer.write(line.substring(matcher.end(group)));
-                        } else {
-                            writer.write(line);
-                        }
-                        writer.newLine();
+        File ymlPath = convertPath(ymlName);
+        File tempYmlPath = new File(ymlPath.getParentFile(), "temp-" + ymlPath.getName());
+        Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
+        try (BufferedReader reader = new BufferedReader(new FileReader(ymlPath))) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempYmlPath))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.replaceAll("type: oracle", "type: " + pluginName);
+                    Matcher matcher = pathPrefixPattern.matcher(line);
+                    if (matcher.matches()) {
+                        int group = 2;
+                        writer.write(line.substring(0, matcher.start(group)));
+                        writer.write(convertPath(matcher.group(group)).getAbsolutePath());
+                        writer.write(line.substring(matcher.end(group)));
+                    } else {
+                        writer.write(line);
                     }
+                    writer.newLine();
                 }
             }
-            return tempYmlPath.getAbsolutePath();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return tempYmlPath;
     }
 
-    private File convertPath(String name)
+    private File convertPath(String name) throws URISyntaxException
     {
-        try {
-            File root = new File(getClass().getResource("/dummy.txt").toURI()).getParentFile();
-            return new File(root, name);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        return new File(getClass().getResource(name).toURI());
     }
 
 }
