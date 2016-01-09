@@ -22,6 +22,8 @@ public class SQLServerOutputConnection
     protected String buildColumnTypeName(JdbcColumn c)
     {
         switch(c.getSimpleTypeName()) {
+        case "BOOLEAN":
+            return "BIT";
         case "CLOB":
             return "TEXT";
         default:
