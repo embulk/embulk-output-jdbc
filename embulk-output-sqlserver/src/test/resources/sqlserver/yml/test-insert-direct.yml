@@ -18,6 +18,8 @@ in:
     - {name: NUMERIC_ITEM, type: string}
     - {name: SMALLMONEY_ITEM, type: string}
     - {name: MONEY_ITEM, type: string}
+    - {name: REAL_ITEM, type: double}
+    - {name: FLOAT_ITEM, type: double}
 out:
     type: sqlserver
     host: localhost

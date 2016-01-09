@@ -71,6 +71,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(new BigDecimal("3.456"), i2.next());
             assertEquals(new BigDecimal("12.3400"), i2.next());
             assertEquals(new BigDecimal("123.4567"), i2.next());
+            assertEquals(Float.valueOf(0.1234567F), i2.next());
+            assertEquals(Double.valueOf(0.12345678901234D), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -84,10 +86,14 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(new BigDecimal("-99.999"), i2.next());
             assertEquals(new BigDecimal("-214748.3648"), i2.next());
             assertEquals(new BigDecimal("-922337203685477.5808"), i2.next());
+            assertEquals(Float.valueOf(-9999000000F), i2.next());
+            assertEquals(Double.valueOf(-999999999999000000D), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
@@ -121,6 +127,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals("3.456", i2.next());
             assertEquals("12.34", i2.next());
             assertEquals("123.4567", i2.next());
+            assertEquals(Double.valueOf(0.1234567D), i2.next());
+            assertEquals(Double.valueOf(0.12345678901234D), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -134,10 +142,14 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals("-99.999", i2.next());
             assertEquals("-214748.3648", i2.next());
             assertEquals("-922337203685477.5808", i2.next());
+            assertEquals(Double.valueOf(-9999000000D), i2.next());
+            assertEquals(Double.valueOf(-999999999999000000D), i2.next());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
@@ -163,6 +175,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
                 + "NUMERIC_ITEM     NUMERIC(5,3),"
                 + "SMALLMONEY_ITEM  SMALLMONEY,"
                 + "MONEY_ITEM       MONEY,"
+                + "REAL_ITEM        REAL,"
+                + "FLOAT_ITEM       FLOAT,"
                 + "PRIMARY KEY (ID))", table);
         executeSQL(sql);
     }
@@ -170,6 +184,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     private void insertRecord(String table) throws SQLException
     {
         executeSQL(String.format("INSERT INTO %s VALUES('9999', "
+                + "NULL,"
+                + "NULL,"
                 + "NULL,"
                 + "NULL,"
                 + "NULL,"
