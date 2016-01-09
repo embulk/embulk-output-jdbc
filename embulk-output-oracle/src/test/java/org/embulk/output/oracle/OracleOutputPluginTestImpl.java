@@ -2,12 +2,11 @@ package org.embulk.output.oracle;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -30,6 +29,8 @@ import java.util.regex.Pattern;
 import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.spi.InputPlugin;
+
+import com.google.common.io.Files;
 
 
 public class OracleOutputPluginTestImpl
@@ -578,26 +579,22 @@ public class OracleOutputPluginTestImpl
 
     private String convertYml(String ymlName) throws Exception
     {
-        File ymlPath = convertPath(ymlName);
+        StringBuilder builder = new StringBuilder();
         Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-        try (BufferedReader reader = new BufferedReader(new FileReader(ymlPath))) {
-            StringBuilder builder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.replaceAll("type: oracle", "type: " + pluginName);
-                Matcher matcher = pathPrefixPattern.matcher(line);
-                if (matcher.matches()) {
-                    int group = 2;
-                    builder.append(line.substring(0, matcher.start(group)));
-                    builder.append(convertPath(matcher.group(group)).getAbsolutePath());
-                    builder.append(line.substring(matcher.end(group)));
-                } else {
-                    builder.append(line);
-                }
-                builder.append(System.lineSeparator());
+        for (String line : Files.readLines(convertPath(ymlName), Charset.defaultCharset())) {
+            line = line.replaceAll("type: oracle", "type: " + pluginName);
+            Matcher matcher = pathPrefixPattern.matcher(line);
+            if (matcher.matches()) {
+                int group = 2;
+                builder.append(line.substring(0, matcher.start(group)));
+                builder.append(convertPath(matcher.group(group)).getAbsolutePath());
+                builder.append(line.substring(matcher.end(group)));
+            } else {
+                builder.append(line);
             }
-            return builder.toString();
+            builder.append(System.lineSeparator());
         }
+        return builder.toString();
     }
 
     private File convertPath(String name) throws URISyntaxException
