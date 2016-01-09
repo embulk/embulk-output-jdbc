@@ -20,6 +20,18 @@ public class SQLServerOutputConnection
     }
 
     @Override
+    protected String buildRenameTableSql(String fromTable, String toTable)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("EXEC sp_rename ");
+        sb.append(quoteIdentifierString(fromTable));
+        sb.append(", ");
+        sb.append(quoteIdentifierString(toTable));
+        sb.append(", 'OBJECT'");
+        return sb.toString();
+    }
+
+    @Override
     protected String buildColumnTypeName(JdbcColumn c)
     {
         switch(c.getSimpleTypeName()) {

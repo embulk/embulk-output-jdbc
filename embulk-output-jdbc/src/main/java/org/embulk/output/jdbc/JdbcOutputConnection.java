@@ -153,6 +153,16 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
+    protected String buildRenameTableSql(String fromTable, String toTable)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE ");
+        quoteIdentifierString(sb, fromTable);
+        sb.append(" RENAME TO ");
+        quoteIdentifierString(sb, toTable);
+        return sb.toString();
+    }
+
     public static enum ColumnDeclareType
     {
         SIMPLE,
@@ -347,13 +357,7 @@ public class JdbcOutputConnection
         try {
             dropTableIfExists(stmt, toTable);
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("ALTER TABLE ");
-            quoteIdentifierString(sb, fromTable);
-            sb.append(" RENAME TO ");
-            quoteIdentifierString(sb, toTable);
-            String sql = sb.toString();
-            executeUpdate(stmt, sql);
+            executeUpdate(stmt, buildRenameTableSql(fromTable, toTable));
 
             commitIfNecessary(connection);
         } catch (SQLException ex) {

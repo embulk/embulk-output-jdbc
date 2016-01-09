@@ -95,7 +95,6 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         assertTable(0, table);
     }
 
-    /*
     @Test
     public void testReplace() throws Exception
     {
@@ -107,7 +106,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 
         tester.run(convertYml("/sqlserver/yml/test-replace.yml"));
 
-        assertTable(1, table);
+        assertGeneratedTable(table);
     }
 
     @Test
@@ -121,7 +120,6 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 
         assertGeneratedTable(table);
     }
-    */
 
     @Test
     public void testStringToTimestamp() throws Exception
