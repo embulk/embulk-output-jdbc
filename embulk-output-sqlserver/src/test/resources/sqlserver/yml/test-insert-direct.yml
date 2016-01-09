@@ -16,6 +16,8 @@ in:
     - {name: BIT_ITEM, type: boolean}
     - {name: DECIMAL_ITEM, type: string}
     - {name: NUMERIC_ITEM, type: string}
+    - {name: SMALLMONEY_ITEM, type: string}
+    - {name: MONEY_ITEM, type: string}
 out:
     type: sqlserver
     host: localhost
