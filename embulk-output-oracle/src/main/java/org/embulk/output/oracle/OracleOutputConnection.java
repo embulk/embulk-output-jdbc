@@ -137,7 +137,7 @@ public class OracleOutputConnection
     public synchronized OracleCharset getOracleCharset() throws SQLException
     {
         if (charset == null) {
-        	charset = getOracleCharset("NLS_CHARACTERSET", "UTF8");
+            charset = getOracleCharset("NLS_CHARACTERSET", "UTF8");
         }
         return charset;
     }
@@ -145,7 +145,7 @@ public class OracleOutputConnection
     public synchronized OracleCharset getOracleNationalCharset() throws SQLException
     {
         if (nationalCharset == null) {
-        	nationalCharset = getOracleCharset("NLS_NCHAR_CHARACTERSET", "AL16UTF16");
+            nationalCharset = getOracleCharset("NLS_NCHAR_CHARACTERSET", "AL16UTF16");
         }
         return nationalCharset;
     }
@@ -154,7 +154,7 @@ public class OracleOutputConnection
     {
         String charsetName = defaultCharsetName;
         try (PreparedStatement statement = connection.prepareStatement("SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER=?")) {
-        	statement.setString(1, parameterName);
+            statement.setString(1, parameterName);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     String nlsCharacterSet = resultSet.getString(1);
@@ -180,14 +180,14 @@ public class OracleOutputConnection
     }
 
 
-    private static final String[] STANDARD_SIZE_TYPE_NAMES = {
+    private static final String[] SIZE_TYPE_NAMES = {
         "VARCHAR2", "NVARCHAR2",
     };
 
     @Override
     protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
     {
-        if (Arrays.asList(STANDARD_SIZE_TYPE_NAMES).contains(convertedTypeName)) {
+        if (Arrays.asList(SIZE_TYPE_NAMES).contains(convertedTypeName)) {
             return ColumnDeclareType.SIZE;
         }
         return super.getColumnDeclareType(convertedTypeName, col);
