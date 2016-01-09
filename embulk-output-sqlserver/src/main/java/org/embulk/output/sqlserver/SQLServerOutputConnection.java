@@ -26,6 +26,8 @@ public class SQLServerOutputConnection
             return "BIT";
         case "CLOB":
             return "TEXT";
+        case "TIMESTAMP":
+            return "DATETIME2";
         default:
             return super.buildColumnTypeName(c);
         }

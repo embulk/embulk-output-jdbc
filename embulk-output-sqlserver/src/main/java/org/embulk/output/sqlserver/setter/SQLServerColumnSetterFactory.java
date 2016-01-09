@@ -20,19 +20,31 @@ public class SQLServerColumnSetterFactory
     @Override
     public ColumnSetter newCoalesceColumnSetter(JdbcColumn column, JdbcColumnOption option)
     {
-        if (column.getSqlType() == Types.TINYINT) {
+        switch (column.getSqlType()) {
+        case Types.TINYINT:
             return new SQLServerByteColumnSetter(batch, column, newDefaultValueSetter(column, option));
+
+        case Types.TIME:
+            return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+
+        default:
+            return super.newCoalesceColumnSetter(column, option);
         }
-        return super.newCoalesceColumnSetter(column, option);
     }
 
     @Override
     public ColumnSetter newColumnSetter(JdbcColumn column, JdbcColumnOption option)
     {
-        if (option.getValueType().equals("byte")) {
+        switch (option.getValueType()) {
+        case "byte":
             return new SQLServerByteColumnSetter(batch, column, newDefaultValueSetter(column, option));
+
+        case "time":
+            return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+
+        default:
+            return super.newColumnSetter(column, option);
         }
-        return super.newColumnSetter(column, option);
     }
 
 }

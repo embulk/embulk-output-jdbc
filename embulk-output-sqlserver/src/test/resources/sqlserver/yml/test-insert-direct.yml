@@ -26,6 +26,13 @@ in:
     - {name: NCHAR_ITEM, type: string}
     - {name: NVARCHAR_ITEM, type: string}
     - {name: NTEXT_ITEM, type: string}
+    - {name: DATE_ITEM, type: timestamp, format: '%Y/%m/%d'}
+    - {name: DATETIME_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S.%N'}
+    - {name: DATETIME2_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S.%N'}
+    - {name: DATETIME2_2_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S.%N'}
+    - {name: SMALLDATETIME_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
+    - {name: TIME_ITEM, type: timestamp, format: '%H:%M:%S.%N'}
+    - {name: TIME_2_ITEM, type: timestamp, format: '%H:%M:%S.%N'}
 out:
     type: sqlserver
     host: localhost
