@@ -20,6 +20,12 @@ in:
     - {name: MONEY_ITEM, type: string}
     - {name: REAL_ITEM, type: double}
     - {name: FLOAT_ITEM, type: double}
+    - {name: CHAR_ITEM, type: string}
+    - {name: VARCHAR_ITEM, type: string}
+    - {name: TEXT_ITEM, type: string}
+    - {name: NCHAR_ITEM, type: string}
+    - {name: NVARCHAR_ITEM, type: string}
+    - {name: NTEXT_ITEM, type: string}
 out:
     type: sqlserver
     host: localhost
