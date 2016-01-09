@@ -30,7 +30,7 @@ public class SQLServerOutputPluginTest {
         dropTable("TEST1");
         createTable("TEST1");
 
-        tester.run(convertYml("/yml/test-insert-direct.yml"));
+        tester.run(convertYml("/sqlserver/yml/test-insert-direct.yml"));
     }
 
     private void dropTable(String table) throws SQLException
