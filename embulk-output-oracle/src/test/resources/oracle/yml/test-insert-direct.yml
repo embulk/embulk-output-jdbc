@@ -1,6 +1,6 @@
 in:
   type: file
-  path_prefix: '/data/test1/test1.csv'
+  path_prefix: '/oracle/data/test1/test1.csv'
   parser:
     charset: UTF-8
     newline: CRLF
@@ -21,13 +21,6 @@ out:
     database: TESTDB
     user: TEST_USER
     password: test_pw
-    table: ＴＥＳＴ123456789012345678
-    mode: replace
-    column_options:
-      VARCHAR2_ITEM: {type: 'VARCHAR2(6)'}
-      NVARCHAR2_ITEM: {type: 'NVARCHAR2(6)'}
-      INTEGER_ITEM: {type: 'NUMBER(4,0)'}
-      NUMBER_ITEM: {type: 'NUMBER(10,2)'}
-      DATE_ITEM: {type: 'DATE'}
-      TIMESTAMP_ITEM: {type: 'TIMESTAMP'}
+    table: TEST1
+    mode: insert_direct
     #driver_path: driver/ojdbc7.jar

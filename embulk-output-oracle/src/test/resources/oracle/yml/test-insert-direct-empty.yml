@@ -1,6 +1,6 @@
 in:
-  type: filesplit
-  path: '/data/test1/test1.csv'
+  type: file
+  path_prefix: '/oracle/data/test2/'
   parser:
     charset: UTF-8
     newline: CRLF
@@ -23,7 +23,4 @@ out:
     password: test_pw
     table: TEST1
     mode: insert_direct
-    insert_method: oci
-    column_options:
-      INTEGER_ITEM: {value_type: pass}
     #driver_path: driver/ojdbc7.jar

@@ -67,7 +67,7 @@ public class OracleOutputPluginTest
 
         List<URL> urls = new ArrayList<URL>();
 
-        File testRoot = new File(OracleOutputPluginTest.class.getResource("/dummy.txt").toURI()).getParentFile();
+        File testRoot = new File(OracleOutputPluginTest.class.getResource("/oracle/").toURI()).getParentFile();
         String pluginClassName = "org.embulk.output.OracleOutputPlugin";
         URL pluginClassUrl = OracleOutputPluginTest.class.getResource("/"  +pluginClassName.replace('.', '/') + ".class");
         File root = new File(pluginClassUrl.toURI()).getParentFile().getParentFile().getParentFile().getParentFile();
@@ -135,7 +135,7 @@ public class OracleOutputPluginTest
         // because the driver returns sqlType=1111 for NCHAR/NVARCHAR2,
         // and ColumnSetterFactory#newCoalesceColumnSetter throws Exception.
         // even if setting {value_type: string} for NCHAR/NVARCHAR2,
-    	// PreparedStatement#setNull(parameterIndex, sqlType=1111) throws Exception.
+        // PreparedStatement#setNull(parameterIndex, sqlType=1111) throws Exception.
         invoke(test12c, "testInsert");
     }
 

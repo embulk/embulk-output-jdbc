@@ -1,6 +1,6 @@
 in:
   type: file
-  path_prefix: '/data/test1/test1.csv'
+  path_prefix: '/oracle/data/test1/test1.csv'
   parser:
     charset: UTF-8
     newline: CRLF
@@ -13,8 +13,8 @@ in:
     - {name: NVARCHAR2_ITEM, type: string}
     - {name: INTEGER_ITEM, type: long}
     - {name: NUMBER_ITEM, type: string}
-    - {name: DATE_ITEM, type: string}
-    - {name: TIMESTAMP_ITEM, type: string}
+    - {name: DATE_ITEM, type: timestamp, format: '%Y/%m/%d'}
+    - {name: TIMESTAMP_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
 out:
     type: oracle
     host: localhost
@@ -23,7 +23,7 @@ out:
     password: test_pw
     table: TEST1
     mode: insert_direct
+    insert_method: oci
     column_options:
-      DATE_ITEM: {value_type: pass}
-      TIMESTAMP_ITEM: {value_type: pass}
+      INTEGER_ITEM: {value_type: pass}
     #driver_path: driver/ojdbc7.jar

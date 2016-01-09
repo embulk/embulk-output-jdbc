@@ -1,6 +1,6 @@
 in:
   type: file
-  path_prefix: '/data/test1/test1.csv'
+  path_prefix: '/oracle/data/test1/test1.csv'
   parser:
     charset: UTF-8
     newline: CRLF
@@ -21,7 +21,7 @@ out:
     database: TESTDB
     user: TEST_USER
     password: test_pw
-    table: TEST12345678901234567890123456
+    table: ＴＥＳＴ123456789012345678
     mode: replace
     column_options:
       VARCHAR2_ITEM: {type: 'VARCHAR2(6)'}

@@ -80,7 +80,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert.yml");
+        run("/oracle/yml/test-insert.yml");
 
         assertTable(table);
     }
@@ -91,7 +91,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-insert.yml");
+        run("/oracle/yml/test-insert.yml");
 
         assertGeneratedTable1(table);
     }
@@ -103,8 +103,8 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        new File(convertPath("/data/"), "test2").mkdir();
-        run("/yml/test-insert-empty.yml");
+        new File(convertPath("/oracle/data/"), "test2").mkdir();
+        run("/oracle/yml/test-insert-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -117,7 +117,7 @@ public class OracleOutputPluginTestImpl
         createTable(table);
         insertRecord(table);
 
-        run("/yml/test-truncate-insert.yml");
+        run("/oracle/yml/test-truncate-insert.yml");
 
         assertTable(table);
     }
@@ -130,7 +130,7 @@ public class OracleOutputPluginTestImpl
         createTable(table);
         insertRecord(table);
 
-        run("/yml/test-truncate-insert-oci-method.yml");
+        run("/oracle/yml/test-truncate-insert-oci-method.yml");
 
         assertTable(table);
     }
@@ -141,7 +141,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-truncate-insert.yml");
+        run("/oracle/yml/test-truncate-insert.yml");
 
         assertGeneratedTable1(table);
     }
@@ -153,7 +153,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct.yml");
+        run("/oracle/yml/test-insert-direct.yml");
 
         assertTable(table);
     }
@@ -165,8 +165,8 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        new File(convertPath("/data/"), "test2").mkdir();
-        run("/yml/test-insert-direct-empty.yml");
+        new File(convertPath("/oracle/data/"), "test2").mkdir();
+        run("/oracle/yml/test-insert-direct-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -177,7 +177,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-insert-direct.yml");
+        run("/oracle/yml/test-insert-direct.yml");
 
         assertGeneratedTable1(table);
     }
@@ -189,7 +189,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-direct-method.yml");
+        run("/oracle/yml/test-insert-direct-direct-method.yml");
 
         assertTable(table);
     }
@@ -201,7 +201,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-oci-method.yml");
+        run("/oracle/yml/test-insert-direct-oci-method.yml");
 
         assertTable(table);
     }
@@ -215,7 +215,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-oci-method-split.yml");
+        run("/oracle/yml/test-insert-direct-oci-method-split.yml");
 
         assertTable(table);
     }
@@ -227,7 +227,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-url.yml");
+        run("/oracle/yml/test-url.yml");
 
         assertTable(table);
     }
@@ -239,7 +239,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace.yml");
+        run("/oracle/yml/test-replace.yml");
 
         assertGeneratedTable2(table);
     }
@@ -251,7 +251,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace-oci-method.yml");
+        run("/oracle/yml/test-replace-oci-method.yml");
 
         assertGeneratedTable2(table);
     }
@@ -263,7 +263,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace-empty.yml");
+        run("/oracle/yml/test-replace-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -274,7 +274,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-replace.yml");
+        run("/oracle/yml/test-replace.yml");
 
         assertGeneratedTable2(table);
     }
@@ -287,7 +287,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace-long-name.yml");
+        run("/oracle/yml/test-replace-long-name.yml");
 
         assertGeneratedTable2(table);
     }
@@ -296,7 +296,7 @@ public class OracleOutputPluginTestImpl
     {
         String table = "ＴＥＳＴ123456789012345678";
 
-        run("/yml/test-replace-long-name-multibyte.yml");
+        run("/oracle/yml/test-replace-long-name-multibyte.yml");
 
         assertGeneratedTable2(table);
     }
@@ -308,7 +308,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-string-timestamp.yml");
+        run("/oracle/yml/test-string-timestamp.yml");
 
         assertTable(table);
     }
