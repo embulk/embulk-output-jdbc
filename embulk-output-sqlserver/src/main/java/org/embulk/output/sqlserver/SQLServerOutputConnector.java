@@ -36,7 +36,7 @@ public class SQLServerOutputConnector
         }
 
         try {
-        	SQLServerOutputConnection con = new SQLServerOutputConnection(c, schemaName, autoCommit);
+            SQLServerOutputConnection con = new SQLServerOutputConnection(c, schemaName, autoCommit);
             c = null;
             return con;
 

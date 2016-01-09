@@ -10,7 +10,10 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.StandardBatchInsert;
+import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.sqlserver.SQLServerOutputConnector;
+import org.embulk.output.sqlserver.setter.SQLServerColumnSetterFactory;
+import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -138,5 +141,11 @@ public class SQLServerOutputPlugin
     protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
         return new StandardBatchInsert(getConnector(task, true), mergeKeys);
+    }
+
+    @Override
+    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    {
+        return new SQLServerColumnSetterFactory(batch, defaultTimeZone);
     }
 }

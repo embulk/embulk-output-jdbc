@@ -13,8 +13,10 @@ import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
 import org.slf4j.Logger;
 import org.joda.time.DateTimeZone;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +27,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -47,6 +50,7 @@ import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
 import org.embulk.spi.util.RetryExecutor.Retryable;
+
 import static org.embulk.spi.util.RetryExecutor.retryExecutor;
 import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 
@@ -452,7 +456,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         // validate column_options
         newColumnSetters(
-                new ColumnSetterFactory(null, task.getDefaultTimeZone()),  // TODO create a dummy BatchInsert
+                newColumnSetterFactory(null, task.getDefaultTimeZone()),  // TODO create a dummy BatchInsert
                 task.getTargetTableSchema(), schema,
                 task.getColumnOptions());
 
@@ -489,6 +493,11 @@ public abstract class AbstractJdbcOutputPlugin
         } else {
             task.setMergeKeys(Optional.<List<String>>absent());
         }
+    }
+
+    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    {
+        return new ColumnSetterFactory(batch, defaultTimeZone);
     }
 
     protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con, int suffixLength, int maxLength) throws SQLException
@@ -769,7 +778,7 @@ public abstract class AbstractJdbcOutputPlugin
             PageReader reader = new PageReader(schema);
 
             List<ColumnSetter> columnSetters = newColumnSetters(
-                    new ColumnSetterFactory(batch, task.getDefaultTimeZone()),
+                    newColumnSetterFactory(batch, task.getDefaultTimeZone()),
                     task.getTargetTableSchema(), schema,
                     task.getColumnOptions());
             JdbcSchema insertIntoSchema = filterSkipColumns(task.getTargetTableSchema());
