@@ -35,11 +35,7 @@ public abstract class AbstractJdbcOutputPluginTest
                     while (resultSet.next()) {
                         List<Object> row = new ArrayList<Object>();
                         for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-                            Object value = resultSet.getObject(i);
-                            if (value != null && value.getClass().getName().equals("oracle.sql.CLOB")) {
-                                value = resultSet.getString(i);
-                            }
-                            row.add(value);
+                            row.add(getValue(resultSet, i));
                         }
                         rows.add(row);
                     }
@@ -55,6 +51,11 @@ public abstract class AbstractJdbcOutputPluginTest
             }
         }
 
+    }
+
+    protected Object getValue(ResultSet resultSet, int index) throws SQLException
+    {
+        return resultSet.getObject(index);
     }
 
     protected void executeSQL(String sql) throws SQLException

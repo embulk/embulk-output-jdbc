@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -467,6 +468,15 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
             assertEquals(null, i2.next());
             assertEquals(null, i2.next());
         }
+    }
+
+    @Override
+    protected Object getValue(ResultSet resultSet, int index) throws SQLException
+    {
+        if (resultSet.getMetaData().getColumnTypeName(index).equals("CLOB")) {
+            return resultSet.getString(index);
+        }
+        return super.getValue(resultSet, index);
     }
 
 
