@@ -3,10 +3,8 @@ package org.embulk.output.oracle;
 import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
@@ -578,30 +576,28 @@ public class OracleOutputPluginTestImpl
         tester.run(convertYml(ymlName));
     }
 
-    private File convertYml(String ymlName) throws Exception
+    private String convertYml(String ymlName) throws Exception
     {
         File ymlPath = convertPath(ymlName);
-        File tempYmlPath = new File(ymlPath.getParentFile(), "temp-" + ymlPath.getName());
         Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
         try (BufferedReader reader = new BufferedReader(new FileReader(ymlPath))) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempYmlPath))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line = line.replaceAll("type: oracle", "type: " + pluginName);
-                    Matcher matcher = pathPrefixPattern.matcher(line);
-                    if (matcher.matches()) {
-                        int group = 2;
-                        writer.write(line.substring(0, matcher.start(group)));
-                        writer.write(convertPath(matcher.group(group)).getAbsolutePath());
-                        writer.write(line.substring(matcher.end(group)));
-                    } else {
-                        writer.write(line);
-                    }
-                    writer.newLine();
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.replaceAll("type: oracle", "type: " + pluginName);
+                Matcher matcher = pathPrefixPattern.matcher(line);
+                if (matcher.matches()) {
+                    int group = 2;
+                    builder.append(line.substring(0, matcher.start(group)));
+                    builder.append(convertPath(matcher.group(group)).getAbsolutePath());
+                    builder.append(line.substring(matcher.end(group)));
+                } else {
+                    builder.append(line);
                 }
+                builder.append(System.lineSeparator());
             }
+            return builder.toString();
         }
-        return tempYmlPath;
     }
 
     private File convertPath(String name) throws URISyntaxException

@@ -1,6 +1,5 @@
 package org.embulk.output.tester;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +47,7 @@ public class EmbulkPluginTester
         plugins.add(new PluginDefinition(iface, name, impl));
     }
 
-    public void run(File ymlPath) throws Exception
+    public void run(String yml) throws Exception
     {
         if (embulk == null) {
             Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
@@ -64,7 +63,7 @@ public class EmbulkPluginTester
             });
             embulk = bootstrap.initializeCloseable();
         }
-        ConfigSource config = embulk.newConfigLoader().fromYamlFile(ymlPath);
+        ConfigSource config = embulk.newConfigLoader().fromYamlString(yml);
         embulk.run(config);
     }
 
