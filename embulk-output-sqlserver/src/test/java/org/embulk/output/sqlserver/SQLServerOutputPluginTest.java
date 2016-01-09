@@ -25,14 +25,27 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirect() throws Exception
     {
-        String tableName = "TEST1";
-        dropTable(tableName);
-        createTable(tableName);
-        insertRecord(tableName);
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
 
         tester.run(convertYml("/sqlserver/yml/test-insert-direct.yml"));
 
-        assertTable(1, tableName);
+        assertTable(1, table);
+    }
+
+    @Test
+    public void testInsertDirectCreate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-insert-direct.yml"));
+
+        assertGeneratedTable(table);
     }
 
     private void assertTable(int skip, String table) throws Exception
@@ -43,12 +56,6 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         List<List<Object>> rows = select(table);
         assertEquals(skip + 3, rows.size());
         rows = rows.subList(skip, skip + 3);
-
-        /*
-        A001,ABCDE,abcde,,0,123.45,2015/03/05,2015/03/05 12:34:56
-        A002,ＡＢ,ａｂｃｄｅｆ,-9999,-99999999.99,2015/03/06,2015/03/06 23:59:59
-        A003,,,,,,
-        */
 
         Iterator<List<Object>> i1 = rows.iterator();
         {
@@ -65,6 +72,41 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(Short.valueOf((short)255), i2.next());
             assertEquals(Short.valueOf((short)-32768), i2.next());
             assertEquals(Integer.valueOf(-2147483648), i2.next());
+            assertEquals(Long.valueOf(-9223372036854775808L), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+    }
+
+    private void assertGeneratedTable(String table) throws Exception
+    {
+        // datetime of UTC will be inserted by embulk.
+        // datetime of default timezone will be selected by JDBC.
+        TimeZone timeZone = TimeZone.getDefault();
+        List<List<Object>> rows = select(table);
+        assertEquals(3, rows.size());
+
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(Long.valueOf(0), i2.next());
+            assertEquals(Long.valueOf(1234), i2.next());
+            assertEquals(Long.valueOf(123456), i2.next());
+            assertEquals(Long.valueOf(12345678901L), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(Long.valueOf((short)255), i2.next());
+            assertEquals(Long.valueOf((short)-32768), i2.next());
+            assertEquals(Long.valueOf(-2147483648), i2.next());
             assertEquals(Long.valueOf(-9223372036854775808L), i2.next());
         }
         {

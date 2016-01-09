@@ -1,17 +1,11 @@
 package org.embulk.output.sqlserver;
 
-import java.nio.charset.Charset;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
 
 public class SQLServerOutputConnection
@@ -24,18 +18,16 @@ public class SQLServerOutputConnection
         connection.setAutoCommit(autoCommit);
     }
 
-    /*
     @Override
     protected String buildColumnTypeName(JdbcColumn c)
     {
         switch(c.getSimpleTypeName()) {
-        case "BIGINT":
-            return "NUMBER(19,0)";
+        case "CLOB":
+            return "TEXT";
         default:
             return super.buildColumnTypeName(c);
         }
     }
-    */
 
     @Override
     protected void setSearchPath(String schema) throws SQLException
