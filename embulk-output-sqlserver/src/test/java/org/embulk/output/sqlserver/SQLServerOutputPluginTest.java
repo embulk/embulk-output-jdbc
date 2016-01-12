@@ -17,14 +17,10 @@ import java.util.List;
 
 import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.SQLServerOutputPlugin;
-import org.embulk.output.jdbc.AbstractJdbcOutputPlugin.Features;
-import org.embulk.output.jdbc.AbstractJdbcOutputPlugin.LengthSemantics;
 import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.amazonaws.util.json.Jackson;
 
 
 public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
@@ -36,23 +32,19 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @BeforeClass
-    public static void beforeClass() throws SQLException
+    public static void beforeClass()
     {
         try {
             new SQLServerOutputPluginTest().connect();
             canTest = true;
+        } catch (Throwable t) {
+            System.out.println(t);
         } finally {
             if (!canTest) {
                 System.out.println("Warning: you should put sqljdbc41.jar on classpath and prepare database.");
                 System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
             }
         }
-
-        Features f = new Features().setTableNameLengthSemantics(LengthSemantics.CHARACTERS);
-        String s = Jackson.toJsonString(f);
-        System.out.println(s);
-        Object o = Jackson.fromJsonString(s, Features.class);
-        System.out.println(o);
     }
 
     @Test
