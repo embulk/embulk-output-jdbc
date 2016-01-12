@@ -106,9 +106,30 @@ public abstract class AbstractJdbcOutputPlugin
         public void setIntermediateTables(Optional<List<String>> names);
     }
 
+    public static enum LengthSemantics
+    {
+        BYTES {
+            @Override
+            public int countLength(Charset charset, String s)
+            {
+                return charset.encode(s).remaining();
+            }
+        },
+        CHARACTERS {
+            @Override
+            public int countLength(Charset charset, String s)
+            {
+                return s.length();
+            }
+        };
+
+        public abstract int countLength(Charset charset, String s);
+    }
+
     public static class Features
     {
         private int maxTableNameLength = 64;
+        private LengthSemantics tableNameLengthSemantics = LengthSemantics.BYTES;
         private Set<Mode> supportedModes = ImmutableSet.copyOf(Mode.values());
         private boolean ignoreMergeKeys = false;
 
@@ -125,6 +146,18 @@ public abstract class AbstractJdbcOutputPlugin
         public Features setMaxTableNameLength(int bytes)
         {
             this.maxTableNameLength = bytes;
+            return this;
+        }
+
+        public LengthSemantics getTableNameLengthSemantics()
+        {
+            return tableNameLengthSemantics;
+        }
+
+        @JsonProperty
+        public Features setTableNameLengthSemantics(LengthSemantics tableNameLengthSemantics)
+        {
+            this.tableNameLengthSemantics = tableNameLengthSemantics;
             return this;
         }
 
@@ -416,12 +449,14 @@ public abstract class AbstractJdbcOutputPlugin
             // direct modify mode doesn't need intermediate tables.
             ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
             if (mode.tempTablePerTask()) {
-                String namePrefix = generateIntermediateTableNamePrefix(task.getTable(), con, 3, task.getFeatures().getMaxTableNameLength());
+                String namePrefix = generateIntermediateTableNamePrefix(task.getTable(), con, 3,
+                        task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                 for (int i=0; i < taskCount; i++) {
                     intermTableNames.add(namePrefix + String.format("%03d", i));
                 }
             } else {
-                String name = generateIntermediateTableNamePrefix(task.getTable(), con, 0, task.getFeatures().getMaxTableNameLength());
+                String name = generateIntermediateTableNamePrefix(task.getTable(), con, 0,
+                        task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                 intermTableNames.add(name);
             }
             // create the intermediate tables here
@@ -500,7 +535,8 @@ public abstract class AbstractJdbcOutputPlugin
         return new ColumnSetterFactory(batch, defaultTimeZone);
     }
 
-    protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con, int suffixLength, int maxLength) throws SQLException
+    protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
+            int suffixLength, int maxLength, LengthSemantics lengthSemantics) throws SQLException
     {
         Charset tableNameCharset = con.getTableNameCharset();
         String tableName = baseTableName;
@@ -509,7 +545,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         // way to count length of table name varies by DBMSs (bytes or characters),
         // so truncate swap table name by one character.
-        while (!checkTableNameLength(tableName + "_" + uniqueSuffix, tableNameCharset, suffixLength, maxLength)) {
+        while (!checkTableNameLength(tableName + "_" + uniqueSuffix, tableNameCharset, suffixLength, maxLength, lengthSemantics)) {
             if (uniqueSuffix.length() > 8 + suffix.length()) {
                 // truncate transaction unique name
                 // (include 8 characters of the transaction name at least)
@@ -581,9 +617,10 @@ public abstract class AbstractJdbcOutputPlugin
                     });
     }
 
-    private boolean checkTableNameLength(String tableName, Charset tableNameCharset, int suffixLength, int maxLength)
+    private boolean checkTableNameLength(String tableName, Charset tableNameCharset,
+            int suffixLength, int maxLength, LengthSemantics lengthSemantics)
     {
-        return tableNameCharset.encode(tableName).remaining() + suffixLength <= maxLength;
+        return lengthSemantics.countLength(tableNameCharset, tableName) + suffixLength <= maxLength;
     }
 
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)

@@ -17,21 +17,51 @@ import java.util.List;
 
 import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.SQLServerOutputPlugin;
+import org.embulk.output.jdbc.AbstractJdbcOutputPlugin.Features;
+import org.embulk.output.jdbc.AbstractJdbcOutputPlugin.LengthSemantics;
 import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.spi.OutputPlugin;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.amazonaws.util.json.Jackson;
 
 
 public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
+    private static boolean canTest;
     private static EmbulkPluginTester tester = new EmbulkPluginTester();
     static {
         tester.addPlugin(OutputPlugin.class, "sqlserver", SQLServerOutputPlugin.class);
     }
 
+    @BeforeClass
+    public static void beforeClass() throws SQLException
+    {
+        try {
+            new SQLServerOutputPluginTest().connect();
+            canTest = true;
+        } finally {
+            if (!canTest) {
+                System.out.println("Warning: you should put sqljdbc41.jar on classpath and prepare database.");
+                System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+            }
+        }
+
+        Features f = new Features().setTableNameLengthSemantics(LengthSemantics.CHARACTERS);
+        String s = Jackson.toJsonString(f);
+        System.out.println(s);
+        Object o = Jackson.fromJsonString(s, Features.class);
+        System.out.println(o);
+    }
+
     @Test
     public void testInsertDirect() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -46,6 +76,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectCreate() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -58,6 +92,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsert() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -72,6 +110,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertCreate() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -84,6 +126,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testTruncateInsert() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -98,6 +144,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplace() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -110,8 +160,31 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Test
+    public void testReplaceLongName() throws Exception
+    {
+        if (!canTest) {
+            return;
+        }
+
+        String table = "TEST___Ａ１２３４５６７８９Ｂ１２３４５６７８９Ｃ１２３４５６７８９Ｄ１２３４５６７８９Ｅ１２３４５６７８９Ｆ１２３４５６７８９Ｇ１２３４５６７８９Ｈ１２３４５６７８９Ｉ１２３４５６７８９Ｊ１２３４５６７８９Ｋ１２３４５６７８９Ｌ１２３４５６７８９";
+        assertEquals(127, table.length());
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-replace-long-name.yml"));
+
+        assertGeneratedTable(table);
+    }
+
+    @Test
     public void testReplaceCreate() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);
@@ -124,6 +197,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testStringToTimestamp() throws Exception
     {
+        if (!canTest) {
+            return;
+        }
+
         String table = "TEST1";
 
         dropTable(table);

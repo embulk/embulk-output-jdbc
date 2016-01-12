@@ -72,7 +72,7 @@ public class SQLServerOutputPlugin
     protected Features getFeatures(PluginTask task)
     {
         return new Features()
-            .setMaxTableNameLength(30)
+            .setMaxTableNameLength(128)
             .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
             .setIgnoreMergeKeys(false);
     }
