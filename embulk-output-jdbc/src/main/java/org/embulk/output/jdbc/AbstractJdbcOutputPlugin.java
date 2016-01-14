@@ -668,6 +668,10 @@ public abstract class AbstractJdbcOutputPlugin
                             4000, 0, false, false));  // TODO size type param
                 }
 
+                public void jsonColumn(Column column) {
+                    throw new UnsupportedOperationException("This plugin doesn't support json type. Please try to upgrade version of the plugin using 'embulk gem update' command. If the latest version still doesn't support json type, please contact plugin developers, or change configuration of input plugin not to use json type.");
+                }
+
                 public void timestampColumn(Column column)
                 {
                     columns.add(JdbcColumn.newGenericTypeColumn(
