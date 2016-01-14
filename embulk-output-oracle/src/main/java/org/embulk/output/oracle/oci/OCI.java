@@ -1,139 +1,131 @@
 package org.embulk.output.oracle.oci;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-
-import org.embulk.spi.Exec;
-import org.slf4j.Logger;
-
-import com.google.common.io.Files;
+import jnr.ffi.Pointer;
+import jnr.ffi.types.size_t;
+import jnr.ffi.types.u_int16_t;
+import jnr.ffi.types.u_int32_t;
+import jnr.ffi.types.u_int8_t;
 
 
-public class OCI
+public interface OCI
 {
-    private static final Logger logger = Exec.getLogger(OCI.class);
+    static short OCI_SUCCESS = 0;
+    static short OCI_ERROR = -1;
+    static short OCI_INVALID_HANDLE = -2;
+    static short OCI_NO_DATA = 100;
+    static short OCI_CONTINUE = -24200;
 
-    private static final String PLUGIN_NAME = "embulk-output-oracle";
 
-    static {
-        try {
-            loadLibrary();
-        } catch (URISyntaxException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    static int OCI_THREADED = 1;
+    static int OCI_OBJECT = 2;
 
-    public native byte[] createContext();
+    static int OCI_HTYPE_ENV = 1;
+    static int OCI_HTYPE_ERROR = 2;
+    static int OCI_HTYPE_SVCCTX = 3;
+    static int OCI_HTYPE_DIRPATH_CTX = 14;
+    static int OCI_HTYPE_DIRPATH_COLUMN_ARRAY = 15;
+    static int OCI_HTYPE_DIRPATH_STREAM = 16;
 
-    public native byte[] getLasetMessage(byte[] context);
+    static int OCI_ATTR_DATA_SIZE = 1;
+    static int OCI_ATTR_DATA_TYPE = 2;
+    static int OCI_ATTR_NAME = 4;
+    static int OCI_ATTR_ROW_COUNT = 9;
+    static int OCI_ATTR_CHARSET_ID = 31;
+    static int OCI_ATTR_DATEFORMAT = 75;
+    static int OCI_ATTR_NUM_ROWS = 81;
+    static int OCI_ATTR_NUM_COLS = 102;
+    static int OCI_ATTR_LIST_COLUMNS = 103;
 
-    public native boolean open(byte[] context, String dbName, String userName, String password);
+    static int OCI_DTYPE_PARAM = 53;
 
-    public native boolean prepareLoad(byte[] context, TableDefinition tableDefinition);
+    static byte OCI_DIRPATH_COL_COMPLETE = 0;
 
-    public native boolean loadBuffer(byte[] context, byte[] buffer, int rowCount);
+    static int SQLT_CHR = 1;
+    static int SQLT_INT = 3;
 
-    public native boolean commit(byte[] context);
+    short OCIErrorGet(Pointer hndlp,
+            @u_int32_t int  recordno,
+            String sqlstate,
+            Pointer errcodep,
+            Pointer bufp,
+            @u_int32_t int bufsiz,
+            @u_int32_t int type);
 
-    public native boolean rollback(byte[] context);
+    short OCIEnvCreate(Pointer envp,
+            @u_int32_t int mode,
+            Pointer ctxp,
+            Pointer malocfp,
+            Pointer ralocfp,
+            Pointer mfreefp,
+            @size_t long xtramemSz,
+            Pointer usrmempp);
 
-    public native void close(byte[] context);
+    short OCIHandleAlloc(Pointer parenth,
+            Pointer hndlpp,
+            @u_int32_t int type,
+            @size_t long xtramemSz,
+            Pointer usrmempp);
 
-    private static void loadLibrary() throws URISyntaxException, IOException
-    {
-        loadLibrary(getPluginRoot());
-    }
+    short OCIHandleFree(Pointer hndlpp,
+            @u_int32_t int type);
 
-    private static File getPluginRoot() throws MalformedURLException, URISyntaxException
-    {
-        URL url = OCI.class.getResource("/" + OCI.class.getName().replace('.', '/') + ".class");
-        if (url.toString().startsWith("jar:")) {
-            url = new URL(url.toString().replaceAll("^jar:", "").replaceAll("![^!]*$", ""));
-        }
+    short OCILogon(Pointer envhp,
+            Pointer errhp,
+            Pointer svchp,
+            String username,
+            @u_int32_t int usernameLen,
+            String password,
+            @u_int32_t int passwordLen,
+            String dbname,
+            @u_int32_t int dbnameLen);
 
-        File folder = new File(url.toURI()).getParentFile();
-        for (;; folder = folder.getParentFile()) {
-            if (folder == null) {
-                String message = String.format("OCI : %s folder not found.", PLUGIN_NAME);
-                throw new RuntimeException(message);
-            }
+    short OCILogoff(Pointer svchp,
+            Pointer errhp);
 
-            if (folder.getName().startsWith(PLUGIN_NAME)) {
-                return folder;
-            }
-        }
-    }
+    short OCIAttrSet(Pointer trgthndlp,
+            @u_int32_t int trghndltyp,
+            Pointer attributep,
+            @u_int32_t int size,
+            @u_int32_t int attrtype,
+            Pointer errhp);
 
-    private static void loadLibrary(File folder) throws IOException
-    {
-        File lib = new File(new File(folder, "lib"), "embulk");
+    short OCIAttrGet(Pointer trgthndlp,
+            @u_int32_t int trghndltyp,
+            Pointer attributep,
+            Pointer sizep,
+            @u_int32_t int attrtype,
+            Pointer errhp);
 
-        String osName = System.getProperty("os.name");
-        String osArch = System.getProperty("os.arch");
+    short OCIParamGet(Pointer hndlp,
+            @u_int32_t int htype,
+            Pointer errhp,
+            Pointer parmdpp,
+            @u_int32_t int pos);
 
-        String libraryName = System.mapLibraryName(PLUGIN_NAME);
-        File libFolder = null;
+    short OCIDescriptorFree(Pointer descp, @u_int32_t int type);
 
-        if (osName.startsWith("Windows")) {
-            if (osArch.endsWith("64")) {
-                libFolder = new File(lib, "win_x64");
-            } else if (osArch.equals("x86")) {
-                libFolder = new File(lib, "win_x86");
-            }
-        } else if (osName.equals("Linux")) {
-            if (osArch.endsWith("64")) {
-                libFolder = new File(lib, "linux_x64");
-            } else if (osArch.equals("x86")) {
-                libFolder = new File(lib, "linux_x86");
-            }
-        }
+    short OCIDirPathPrepare(Pointer dpctx, Pointer svchp, Pointer errhp);
 
-        if (libFolder == null) {
-            logger.error(String.format("OCI : library \"%s\" for %s %s doesn't exist in lib folder.", libraryName, osName, osArch));
-            return;
-        }
+    short OCIDirPathColArrayEntrySet(Pointer dpca,
+            Pointer errhp,
+            @u_int32_t int rownum,
+            @u_int16_t short colIdx,
+            Pointer cvalp,
+            @u_int32_t int size,
+            @u_int8_t byte cflg);
 
-        File libFile = new File(libFolder, libraryName);
-        if (!libFile.exists()) {
-            logger.error(String.format("OCI : library \"%s\" doesn't exist.", libFile.getAbsolutePath()));
-            return;
-        }
+    short OCIDirPathStreamReset(Pointer dpstr, Pointer errhp);
 
-        logger.info(String.format("OCI : load library \"%s\".", libFile.getAbsolutePath()));
+    short OCIDirPathColArrayToStream(Pointer dpca,
+            Pointer dpctx,
+            Pointer dpstr,
+            Pointer errhp,
+            @u_int32_t int rowcnt,
+            @u_int32_t int rowoff);
 
-        File tempFolder = new File(lib, "temp");
-        tempFolder.mkdirs();
+    short OCIDirPathLoadStream(Pointer dpctx, Pointer dpstr, Pointer errhp);
 
-        long currentTime = System.currentTimeMillis();
-        File[] files = tempFolder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                // delete old temporary files.
-                // if another plugin is using a file, it cannot be deleted.
-                // don't delete a recent file because another plugin may intend to use it.
-                if (file.isFile() && file.getName().startsWith(PLUGIN_NAME) && file.lastModified() < currentTime - 60000) {
-                    file.delete();
-                }
-            }
-        }
+    short OCIDirPathFinish(Pointer dpctx, Pointer errhp);
 
-        String extension = libraryName.replaceAll("^[^\\.]*", "");
-        for (int i = 0; i < 10; i++) {
-            File tempLibFile = new File(tempFolder, PLUGIN_NAME + "-" + currentTime + "-" + i + extension);
-            if (tempLibFile.createNewFile()) {
-                // copy and load the library because different plugins cannot load the same library.
-                logger.info(String.format("OCI : create temporary library \"%s\".", tempLibFile.getAbsolutePath()));
-                Files.copy(libFile, tempLibFile);
-                System.load(tempLibFile.getAbsolutePath());
-                tempLibFile.deleteOnExit();
-                // but may not be deleted because loaded as a library.
-                return;
-            }
-        }
-
-        logger.error("OCI : cannot create temporary library.");
-    }
+    short OCIDirPathAbort(Pointer dpctx, Pointer errhp);
 }

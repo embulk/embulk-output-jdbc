@@ -1,28 +1,52 @@
 package org.embulk.output.oracle.oci;
 
+import org.embulk.output.oracle.OracleCharset;
+
 public class ColumnDefinition
 {
-    public static int SQLT_CHR = 1;
-    public static int SQLT_INT = 3;
-
-    public final String columnName;
-    public final int columnType;
-    public final int columnSize;
-    public final short charsetId;
-    public final String columnDateFormat;
+    private final String columnName;
+    private final int dataType;
+    private final int dataSize;
+    private final OracleCharset charset;
+    private final String dateFormat;
 
 
-    public ColumnDefinition(String columnName, int columnType, int columnSize, short charsetId, String columnDateFormat)
+    public ColumnDefinition(String columnName, int dataType, int dataSize, OracleCharset charset, String dateFormat)
     {
         this.columnName = columnName;
-        this.columnType = columnType;
-        this.columnSize = columnSize;
-        this.charsetId = charsetId;
-        this.columnDateFormat = columnDateFormat;
+        this.dataType = dataType;
+        this.dataSize = dataSize;
+        this.charset = charset;
+        this.dateFormat = dateFormat;
     }
 
-    public ColumnDefinition(String columnName, int columnType, int columnSize, short charsetId)
+    public ColumnDefinition(String columnName, int columnType, int columnSize, OracleCharset charset)
     {
-        this(columnName, columnType, columnSize, charsetId, null);
+        this(columnName, columnType, columnSize, charset, null);
+    }
+
+    public String getColumnName()
+    {
+        return columnName;
+    }
+
+    public int getDataType()
+    {
+        return dataType;
+    }
+
+    public int getDataSize()
+    {
+        return dataSize;
+    }
+
+    public OracleCharset getCharset()
+    {
+        return charset;
+    }
+
+    public String getDateFormat()
+    {
+        return dateFormat;
     }
 }

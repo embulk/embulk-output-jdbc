@@ -4,9 +4,8 @@ import java.util.List;
 
 public class TableDefinition
 {
-
-    public final String tableName;
-    public final ColumnDefinition[] columns;
+    private final String tableName;
+    private final ColumnDefinition[] columns;
 
 
     public TableDefinition(String tableName, ColumnDefinition... columns)
@@ -18,5 +17,20 @@ public class TableDefinition
     public TableDefinition(String tableName, List<ColumnDefinition> columns)
     {
         this(tableName, columns.toArray(new ColumnDefinition[columns.size()]));
+    }
+
+    public String getTableName()
+    {
+    	return tableName;
+    }
+
+    public int getColumnCount()
+    {
+    	return columns.length;
+    }
+
+    public ColumnDefinition getColumn(int index)
+    {
+    	return columns[index];
     }
 }
