@@ -2,6 +2,5 @@
 
 dependencies {
     compile project(':embulk-output-jdbc')
-    testCompile 'org.embulk:embulk-standards:0.8.0'
     testCompile files('../embulk-output-jdbc/build/classes/test/')
 }

@@ -94,4 +94,5 @@ task gempush << {
     "gem push pkg/embulk-output-postgresql-${project.version}.gem".execute().waitFor()
     "gem push pkg/embulk-output-redshift-${project.version}.gem".execute().waitFor()
     "gem push pkg/embulk-output-oracle-${project.version}.gem".execute().waitFor()
+    "gem push pkg/embulk-sqlserver-oracle-${project.version}.gem".execute().waitFor()
 }

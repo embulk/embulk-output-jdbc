@@ -2,38 +2,27 @@ package org.embulk.output.oracle;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.tester.EmbulkPluginTester;
 
 
-public class OracleOutputPluginTestImpl
+public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
 {
     private EmbulkPluginTester tester;
     private String pluginName;
@@ -70,8 +59,6 @@ public class OracleOutputPluginTestImpl
             //   GRANT DBA TO EMBULK_USER;
         }
 
-        convertPath("/data/test2/").mkdirs();
-
         return null;
     }
 
@@ -82,7 +69,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert.yml");
+        run("/oracle/yml/test-insert.yml");
 
         assertTable(table);
     }
@@ -93,7 +80,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-insert.yml");
+        run("/oracle/yml/test-insert.yml");
 
         assertGeneratedTable1(table);
     }
@@ -105,7 +92,8 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-empty.yml");
+        new File(convertPath("/oracle/data/"), "test2").mkdir();
+        run("/oracle/yml/test-insert-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -118,7 +106,7 @@ public class OracleOutputPluginTestImpl
         createTable(table);
         insertRecord(table);
 
-        run("/yml/test-truncate-insert.yml");
+        run("/oracle/yml/test-truncate-insert.yml");
 
         assertTable(table);
     }
@@ -131,7 +119,7 @@ public class OracleOutputPluginTestImpl
         createTable(table);
         insertRecord(table);
 
-        run("/yml/test-truncate-insert-oci-method.yml");
+        run("/oracle/yml/test-truncate-insert-oci-method.yml");
 
         assertTable(table);
     }
@@ -142,7 +130,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-truncate-insert.yml");
+        run("/oracle/yml/test-truncate-insert.yml");
 
         assertGeneratedTable1(table);
     }
@@ -154,7 +142,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct.yml");
+        run("/oracle/yml/test-insert-direct.yml");
 
         assertTable(table);
     }
@@ -166,7 +154,8 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-empty.yml");
+        new File(convertPath("/oracle/data/"), "test2").mkdir();
+        run("/oracle/yml/test-insert-direct-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -177,7 +166,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-insert-direct.yml");
+        run("/oracle/yml/test-insert-direct.yml");
 
         assertGeneratedTable1(table);
     }
@@ -189,7 +178,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-direct-method.yml");
+        run("/oracle/yml/test-insert-direct-direct-method.yml");
 
         assertTable(table);
     }
@@ -201,7 +190,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-oci-method.yml");
+        run("/oracle/yml/test-insert-direct-oci-method.yml");
 
         assertTable(table);
     }
@@ -213,7 +202,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-insert-direct-oci-method-split.yml");
+        run("/oracle/yml/test-insert-direct-oci-method-split.yml");
 
         assertTable(table);
     }
@@ -225,7 +214,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-url.yml");
+        run("/oracle/yml/test-url.yml");
 
         assertTable(table);
     }
@@ -237,7 +226,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace.yml");
+        run("/oracle/yml/test-replace.yml");
 
         assertGeneratedTable2(table);
     }
@@ -249,7 +238,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace-oci-method.yml");
+        run("/oracle/yml/test-replace-oci-method.yml");
 
         assertGeneratedTable2(table);
     }
@@ -261,7 +250,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace-empty.yml");
+        run("/oracle/yml/test-replace-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -272,7 +261,7 @@ public class OracleOutputPluginTestImpl
 
         dropTable(table);
 
-        run("/yml/test-replace.yml");
+        run("/oracle/yml/test-replace.yml");
 
         assertGeneratedTable2(table);
     }
@@ -285,7 +274,7 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-replace-long-name.yml");
+        run("/oracle/yml/test-replace-long-name.yml");
 
         assertGeneratedTable2(table);
     }
@@ -294,7 +283,7 @@ public class OracleOutputPluginTestImpl
     {
         String table = "ＴＥＳＴ123456789012345678";
 
-        run("/yml/test-replace-long-name-multibyte.yml");
+        run("/oracle/yml/test-replace-long-name-multibyte.yml");
 
         assertGeneratedTable2(table);
     }
@@ -306,15 +295,9 @@ public class OracleOutputPluginTestImpl
         dropTable(table);
         createTable(table);
 
-        run("/yml/test-string-timestamp.yml");
+        run("/oracle/yml/test-string-timestamp.yml");
 
         assertTable(table);
-    }
-
-    private void dropTable(String table) throws SQLException
-    {
-        String sql = String.format("DROP TABLE %s", table);
-        executeSQL(sql, true);
     }
 
     private void createTable(String table) throws SQLException
@@ -483,6 +466,15 @@ public class OracleOutputPluginTestImpl
         }
     }
 
+    @Override
+    protected Object getValue(ResultSet resultSet, int index) throws SQLException
+    {
+        if (resultSet.getMetaData().getColumnTypeName(index).equals("CLOB")) {
+            return resultSet.getString(index);
+        }
+        return super.getValue(resultSet, index);
+    }
+
 
     private Timestamp toTimestamp(String s, TimeZone timeZone)
     {
@@ -506,66 +498,8 @@ public class OracleOutputPluginTestImpl
         return constructor.newInstance(toTimestamp(s, timeZone));
     }
 
-
-    private List<List<Object>> select(String table) throws SQLException
-    {
-        try (Connection connection = connect()) {
-            try (Statement statement = connection.createStatement()) {
-                List<List<Object>> rows = new ArrayList<List<Object>>();
-                String sql = "SELECT * FROM " + table;
-                System.out.println(sql);
-                try (ResultSet resultSet = statement.executeQuery(sql)) {
-                    while (resultSet.next()) {
-                        List<Object> row = new ArrayList<Object>();
-                        for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-                            Object value = resultSet.getObject(i);
-                            if (value != null && value.getClass().getName().equals("oracle.sql.CLOB")) {
-                                value = resultSet.getString(i);
-                            }
-                            row.add(value);
-                        }
-                        rows.add(row);
-                    }
-                }
-                // cannot sort by CLOB, so sort by Java
-                Collections.sort(rows, new Comparator<List<Object>>() {
-                    @Override
-                    public int compare(List<Object> o1, List<Object> o2) {
-                        return o1.toString().compareTo(o2.toString());
-                    }
-                });
-                return rows;
-            }
-        }
-
-    }
-
-
-    private void executeSQL(String sql) throws SQLException
-    {
-        executeSQL(sql, false);
-    }
-
-    private void executeSQL(String sql, boolean ignoreError) throws SQLException
-    {
-        try (Connection connection = connect()) {
-            try {
-                connection.setAutoCommit(true);
-
-                try (Statement statement = connection.createStatement()) {
-                    System.out.println(String.format("Execute SQL : \"%s\".", sql));
-                    statement.execute(sql);
-                }
-
-            } catch (SQLException e) {
-                if (!ignoreError) {
-                    throw e;
-                }
-            }
-        }
-    }
-
-    private static Connection connect() throws SQLException
+    @Override
+    protected Connection connect() throws SQLException
     {
         return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
     }
@@ -575,45 +509,10 @@ public class OracleOutputPluginTestImpl
         tester.run(convertYml(ymlName));
     }
 
-    private String convertYml(String ymlName)
+    @Override
+    protected String convertYmlLine(String line)
     {
-        try {
-            File ymlPath = convertPath(ymlName);
-            File tempYmlPath = new File(ymlPath.getParentFile(), "temp-" + ymlPath.getName());
-            Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-            try (BufferedReader reader = new BufferedReader(new FileReader(ymlPath))) {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempYmlPath))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        line = line.replaceAll("type: oracle", "type: " + pluginName);
-                        Matcher matcher = pathPrefixPattern.matcher(line);
-                        if (matcher.matches()) {
-                            int group = 2;
-                            writer.write(line.substring(0, matcher.start(group)));
-                            writer.write(convertPath(matcher.group(group)).getAbsolutePath());
-                            writer.write(line.substring(matcher.end(group)));
-                        } else {
-                            writer.write(line);
-                        }
-                        writer.newLine();
-                    }
-                }
-            }
-            return tempYmlPath.getAbsolutePath();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private File convertPath(String name)
-    {
-        try {
-            File root = new File(getClass().getResource("/dummy.txt").toURI()).getParentFile();
-            return new File(root, name);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        return line.replaceAll("type: oracle", "type: " + pluginName);
     }
 
 }

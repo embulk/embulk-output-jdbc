@@ -10,7 +10,7 @@ import org.embulk.output.jdbc.BatchInsert;
 public class SqlDateColumnSetter
         extends ColumnSetter
 {
-    private final Calendar calendar;
+    protected final Calendar calendar;
 
     public SqlDateColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue,
