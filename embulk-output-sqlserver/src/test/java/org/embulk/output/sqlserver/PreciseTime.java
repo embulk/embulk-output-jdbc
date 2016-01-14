@@ -3,24 +3,29 @@ package org.embulk.output.sqlserver;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-public class PreciseTime extends Time {
+public class PreciseTime extends Time
+{
     private final int nanos;
 
-    public PreciseTime(long time, int nanos) {
+    public PreciseTime(long time, int nanos)
+    {
         super(time);
 
         this.nanos = nanos;
     }
 
-    public PreciseTime(Time time, int nanos) {
+    public PreciseTime(Time time, int nanos)
+    {
         this(time.getTime(), nanos);
     }
 
-    public PreciseTime(Timestamp timestamp) {
+    public PreciseTime(Timestamp timestamp)
+    {
         this(timestamp.getTime(), timestamp.getNanos());
     }
 
-    public int getNanos() {
+    public int getNanos()
+    {
         return nanos;
     }
 
@@ -35,7 +40,8 @@ public class PreciseTime extends Time {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return String.format("%s.%09d", super.toString(), nanos);
     }
 
