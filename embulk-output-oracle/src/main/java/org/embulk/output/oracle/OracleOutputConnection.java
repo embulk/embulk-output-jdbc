@@ -35,7 +35,7 @@ public class OracleOutputConnection
     public OracleOutputConnection(Connection connection, String schemaName, boolean autoCommit, boolean direct)
             throws SQLException
     {
-        super(connection, schemaName);
+        super(connection, schemaName == null ? getSchema(connection) : schemaName);
         connection.setAutoCommit(autoCommit);
 
         this.direct = direct;
@@ -54,7 +54,10 @@ public class OracleOutputConnection
 
     @Override
     protected void setSearchPath(String schema) throws SQLException {
-        connection.setSchema(schema);
+        if (!getSchema(connection).equals(schema)) {
+            // Because old Oracle JDBC drivers don't support Connection#setSchema method.
+            connection.setSchema(schema);
+        }
     }
 
     @Override
@@ -102,6 +105,20 @@ public class OracleOutputConnection
         quoteIdentifierString(sb, name);
         sb.append(buildCreateTableSchemaSql(schema));
         return sb.toString();
+    }
+
+    private static String getSchema(Connection connection) throws SQLException
+    {
+        // Because old Oracle JDBC drivers don't support Connection#getSchema method.
+        String sql = "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet resultSet = statement.executeQuery(sql)) {
+                if (resultSet.next()) {
+                    return resultSet.getString(1);
+                }
+                throw new SQLException(String.format("Cannot get schema becase \"%s\" didn't return any value.", sql));
+            }
+        }
     }
 
     @Override

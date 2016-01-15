@@ -123,7 +123,7 @@ public class OracleOutputPlugin
         logger.info("Connecting to {} options {}", url, props);
         props.setProperty("password", oracleTask.getPassword());
 
-        return new OracleOutputConnector(url, props, oracleTask.getSchema().get(), oracleTask.getInsertMethod() == InsertMethod.direct);
+        return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct);
     }
 
     @Override
@@ -148,7 +148,7 @@ public class OracleOutputPlugin
                     String.format("%s:%d/%s", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
                     oracleTask.getUser(),
                     oracleTask.getPassword(),
-                    oracleTask.getSchema().get(),
+                    oracleTask.getSchema().orNull(),
                     charset,
                     nationalCharset,
                     oracleTask.getBatchSize());
