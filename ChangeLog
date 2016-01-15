@@ -1,3 +1,9 @@
+Release 0.5.0 - 2016-01-15
+
+* C library used in embulk-output-oracle OCI mode is replaced with Java classes using jnr-ffi.
+  It is more portable and maintainable than ever.
+* Add embulk-output-sqlserver.
+
 Release 0.4.5 - 2016-01-13
 
 * Upgraded embulk version to 0.8.0.
