@@ -398,8 +398,7 @@ public class OCIWrapper
 
     private Pointer createPointer(String s)
     {
-        // not database charset, but system charset of client
-        return Pointer.wrap(Runtime.getSystemRuntime(), ByteBuffer.wrap(s.getBytes(systemCharset)));
+        return Pointer.wrap(Runtime.getSystemRuntime(), ByteBuffer.wrap(s.getBytes()));
     }
 
     private Pointer createPointer(short n)
