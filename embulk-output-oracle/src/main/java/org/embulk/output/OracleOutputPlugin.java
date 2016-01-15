@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -39,6 +41,10 @@ public class OracleOutputPlugin
         @Config("database")
         @ConfigDefault("null")
         public Optional<String> getDatabase();
+
+        @Config("schema")
+        @ConfigDefault("null")
+        public Optional<String> getSchema();
 
         @Config("url")
         @ConfigDefault("null")
@@ -117,7 +123,7 @@ public class OracleOutputPlugin
         logger.info("Connecting to {} options {}", url, props);
         props.setProperty("password", oracleTask.getPassword());
 
-        return new OracleOutputConnector(url, props, oracleTask.getInsertMethod() == InsertMethod.direct);
+        return new OracleOutputConnector(url, props, oracleTask.getSchema().get(), oracleTask.getInsertMethod() == InsertMethod.direct);
     }
 
     @Override
@@ -131,8 +137,8 @@ public class OracleOutputPlugin
         JdbcOutputConnector connector = getConnector(task, true);
 
         if (oracleTask.getInsertMethod() == InsertMethod.oci) {
-        	OracleCharset charset;
-        	OracleCharset nationalCharset;
+            OracleCharset charset;
+            OracleCharset nationalCharset;
             try (OracleOutputConnection connection = (OracleOutputConnection)connector.connect(true)) {
                 charset = connection.getOracleCharset();
                 nationalCharset = connection.getOracleNationalCharset();

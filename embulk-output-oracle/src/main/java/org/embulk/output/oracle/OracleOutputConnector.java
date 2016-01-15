@@ -12,9 +12,10 @@ public class OracleOutputConnector
 {
     private final String url;
     private final Properties properties;
+    private final String schemaName;
     private final boolean direct;
 
-    public OracleOutputConnector(String url, Properties properties, boolean direct)
+    public OracleOutputConnector(String url, Properties properties, String schemaName, boolean direct)
     {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
@@ -23,6 +24,7 @@ public class OracleOutputConnector
         }
         this.url = url;
         this.properties = properties;
+        this.schemaName = schemaName;
         this.direct = direct;
     }
 
@@ -36,7 +38,7 @@ public class OracleOutputConnector
         }
 
         try {
-            OracleOutputConnection con = new OracleOutputConnection(c, autoCommit, direct);
+            OracleOutputConnection con = new OracleOutputConnection(c, schemaName, autoCommit, direct);
             c = null;
             return con;
 
