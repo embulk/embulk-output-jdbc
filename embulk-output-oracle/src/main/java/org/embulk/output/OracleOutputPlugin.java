@@ -148,7 +148,7 @@ public class OracleOutputPlugin
                     String.format("%s:%d/%s", oracleTask.getHost().get(), oracleTask.getPort(), oracleTask.getDatabase().get()),
                     oracleTask.getUser(),
                     oracleTask.getPassword(),
-                    oracleTask.getTable(),
+                    oracleTask.getSchema().get(),
                     charset,
                     nationalCharset,
                     oracleTask.getBatchSize());

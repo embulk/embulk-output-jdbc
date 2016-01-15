@@ -34,6 +34,7 @@ public class DirectBatchInsert implements BatchInsert
     private final String database;
     private final String user;
     private final String password;
+    private final String schema;
     private final OracleCharset charset;
     private final OracleCharset nationalCharset;
     private final int batchSize;
@@ -45,12 +46,13 @@ public class DirectBatchInsert implements BatchInsert
     private DateFormat[] formats;
 
 
-    public DirectBatchInsert(String database, String user, String password, String table,
+    public DirectBatchInsert(String database, String user, String password, String schema,
             OracleCharset charset, OracleCharset nationalCharset, int batchSize)
     {
         this.database = database;
         this.user = user;
         this.password = password;
+        this.schema = schema;
         this.charset = charset;
         this.nationalCharset = nationalCharset;
         this.batchSize = batchSize;
@@ -149,7 +151,7 @@ public class DirectBatchInsert implements BatchInsert
             rowSize += column.getDataSize();
         }
 
-        TableDefinition tableDefinition = new TableDefinition("\"" + loadTable + "\"", columns);
+        TableDefinition tableDefinition = new TableDefinition("\"" + schema + "\"", "\"" + loadTable + "\"", columns);
         ociKey = Arrays.asList(database, user, loadTable);
         ociManager.open(ociKey, database, user, password, tableDefinition);
 

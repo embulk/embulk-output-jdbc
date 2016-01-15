@@ -4,33 +4,40 @@ import java.util.List;
 
 public class TableDefinition
 {
+    private final String schemaName;
     private final String tableName;
     private final ColumnDefinition[] columns;
 
 
-    public TableDefinition(String tableName, ColumnDefinition... columns)
+    public TableDefinition(String schemaName, String tableName, ColumnDefinition... columns)
     {
+        this.schemaName = schemaName;
         this.tableName = tableName;
         this.columns = columns;
     }
 
-    public TableDefinition(String tableName, List<ColumnDefinition> columns)
+    public TableDefinition(String schemaName, String tableName, List<ColumnDefinition> columns)
     {
-        this(tableName, columns.toArray(new ColumnDefinition[columns.size()]));
+        this(schemaName, tableName, columns.toArray(new ColumnDefinition[columns.size()]));
+    }
+
+    public String getSchemaName()
+    {
+        return schemaName;
     }
 
     public String getTableName()
     {
-    	return tableName;
+        return tableName;
     }
 
     public int getColumnCount()
     {
-    	return columns.length;
+        return columns.length;
     }
 
     public ColumnDefinition getColumn(int index)
     {
-    	return columns[index];
+        return columns[index];
     }
 }

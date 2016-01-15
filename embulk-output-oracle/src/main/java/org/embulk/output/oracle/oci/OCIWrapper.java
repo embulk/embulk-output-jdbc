@@ -131,6 +131,17 @@ public class OCIWrapper
     {
         this.tableDefinition = tableDefinition;
 
+        if (tableDefinition.getSchemaName() != null) {
+            Pointer schemaName = createPointer(tableDefinition.getSchemaName());
+            check("OCIAttrSet(OCI_ATTR_NAME)", oci.OCIAttrSet(
+                    dpHandle,
+                    OCI.OCI_HTYPE_DIRPATH_CTX,
+                    schemaName,
+                    (int)schemaName.size()
+                    , OCI.OCI_ATTR_SCHEMA_NAME,
+                    errHandle));
+        }
+
         // load table name
         Pointer tableName = createPointer(tableDefinition.getTableName());
         check("OCIAttrSet(OCI_ATTR_NAME)", oci.OCIAttrSet(
