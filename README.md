@@ -18,6 +18,10 @@ See [embulk-output-oracle](embulk-output-oracle/).
 
 See [embulk-output-redshift](embulk-output-redshift/).
 
+## SQL Server
+
+See [embulk-output-sqlserver](embulk-output-sqlserver/).
+
 ## Generic
 
 ### Overview
