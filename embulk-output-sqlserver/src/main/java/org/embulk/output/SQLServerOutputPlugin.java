@@ -130,9 +130,13 @@ public class SQLServerOutputPlugin
         Properties props = new Properties();
         props.putAll(sqlServerTask.getOptions());
 
-        props.setProperty("user", sqlServerTask.getUser().get());
+        if (sqlServerTask.getUser().isPresent()) {
+            props.setProperty("user", sqlServerTask.getUser().get());
+        }
         logger.info("Connecting to {} options {}", url, props);
-        props.setProperty("password", sqlServerTask.getPassword().get());
+        if (sqlServerTask.getPassword().isPresent()) {
+            props.setProperty("password", sqlServerTask.getPassword().get());
+        }
 
         return new SQLServerOutputConnector(url, props, null);
     }
