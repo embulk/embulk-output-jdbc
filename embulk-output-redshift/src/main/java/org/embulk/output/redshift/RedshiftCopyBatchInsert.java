@@ -209,7 +209,6 @@ public class RedshiftCopyBatchInsert
             }
             sb.append("' ");
             sb.append(COPY_AFTER_FROM);
-//            System.err.println("Copy: " + sb.toString());
             return sb.toString();
         }
     }
