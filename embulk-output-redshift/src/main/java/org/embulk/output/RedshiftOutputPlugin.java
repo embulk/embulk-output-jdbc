@@ -53,6 +53,7 @@ public class RedshiftOutputPlugin
         public String getSecretAccessKey();
 
         @Config("iam_user_name")
+        @ConfigDefault("\"\"")
         public String getIamUserName();
 
         @Config("s3_bucket")

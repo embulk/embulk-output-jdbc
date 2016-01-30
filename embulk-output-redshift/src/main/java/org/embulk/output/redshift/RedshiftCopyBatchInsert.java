@@ -37,6 +37,7 @@ public class RedshiftCopyBatchInsert
     private final String iamReaderUserName;
     private final AmazonS3Client s3;
     private final AWSSecurityTokenServiceClient sts;
+    private final BasicSessionCredentials simple_creds;
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
@@ -60,6 +61,7 @@ public class RedshiftCopyBatchInsert
         this.iamReaderUserName = iamReaderUserName;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
+        this.simple_creds = generateSimpleSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(), credentialsProvider.getCredentials().getAWSSecretKey());
     }
 
     @Override
@@ -115,6 +117,10 @@ public class RedshiftCopyBatchInsert
             connection = null;
         }
     }
+    
+    private BasicSessionCredentials generateSimpleSessionCredentials(String awsAccessKey, String awsSecretKey) {
+    	return new BasicSessionCredentials(awsAccessKey, awsSecretKey, null);
+    }
 
     private BasicSessionCredentials generateReaderSessionCredentials(String s3KeyName)
     {
@@ -165,8 +171,11 @@ public class RedshiftCopyBatchInsert
 
                 // create temporary credential right before COPY operation because
                 // it has timeout.
-                // TODO skip this step if iamReaderUserName is not set
-                BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
+                BasicSessionCredentials creds = null;
+                if (iamReaderUserName != null && iamReaderUserName.length() > 0)
+                	creds = generateReaderSessionCredentials(s3KeyName);
+                else
+                	creds = simple_creds;
 
                 long startTime = System.currentTimeMillis();
                 con.runCopy(buildCopySQL(creds));
@@ -194,10 +203,13 @@ public class RedshiftCopyBatchInsert
             sb.append(creds.getAWSAccessKeyId());
             sb.append(";aws_secret_access_key=");
             sb.append(creds.getAWSSecretKey());
-            sb.append(";token=");
-            sb.append(creds.getSessionToken());
+            if (creds.getSessionToken() != null) {
+                sb.append(";token=");
+                sb.append(creds.getSessionToken());
+            }
             sb.append("' ");
             sb.append(COPY_AFTER_FROM);
+//            System.err.println("Copy: " + sb.toString());
             return sb.toString();
         }
     }
