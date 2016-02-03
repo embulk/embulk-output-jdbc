@@ -10,7 +10,6 @@ import java.io.OutputStreamWriter;
 import java.io.Closeable;
 import java.io.BufferedWriter;
 import java.sql.SQLException;
-
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
@@ -23,14 +22,13 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
 import com.amazonaws.services.securitytoken.model.Credentials;
-
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 
 public class RedshiftCopyBatchInsert
-extends AbstractPostgreSQLCopyBatchInsert
+        extends AbstractPostgreSQLCopyBatchInsert
 {
     private final Logger logger = Exec.getLogger(RedshiftCopyBatchInsert.class);
     private final RedshiftOutputConnector connector;
