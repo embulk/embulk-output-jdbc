@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.Closeable;
 import java.io.BufferedWriter;
 import java.sql.SQLException;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
@@ -22,22 +23,24 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
 import com.amazonaws.services.securitytoken.model.Credentials;
+
 import org.slf4j.Logger;
+import org.apache.http.client.CredentialsProvider;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 
 public class RedshiftCopyBatchInsert
-        extends AbstractPostgreSQLCopyBatchInsert
+extends AbstractPostgreSQLCopyBatchInsert
 {
     private final Logger logger = Exec.getLogger(RedshiftCopyBatchInsert.class);
     private final RedshiftOutputConnector connector;
     private final String s3BucketName;
     private final String s3KeyPrefix;
     private final String iamReaderUserName;
+    private final AWSCredentialsProvider credentialsProvider;
     private final AmazonS3Client s3;
     private final AWSSecurityTokenServiceClient sts;
-    private final BasicSessionCredentials simple_creds;
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
@@ -59,9 +62,9 @@ public class RedshiftCopyBatchInsert
             this.s3KeyPrefix = s3KeyPrefix + "/";
         }
         this.iamReaderUserName = iamReaderUserName;
+        this.credentialsProvider = credentialsProvider;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
-        this.simple_creds = generateSimpleSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(), credentialsProvider.getCredentials().getAWSSecretKey());
     }
 
     @Override
@@ -78,8 +81,8 @@ public class RedshiftCopyBatchInsert
         // Redshift supports gzip
         return new BufferedWriter(
                 new OutputStreamWriter(
-                    new GZIPOutputStream(new FileOutputStream(newFile)),
-                    FILE_CHARSET)
+                        new GZIPOutputStream(new FileOutputStream(newFile)),
+                        FILE_CHARSET)
                 );
     }
 
@@ -117,34 +120,39 @@ public class RedshiftCopyBatchInsert
             connection = null;
         }
     }
-    
+
     private BasicSessionCredentials generateSimpleSessionCredentials(String awsAccessKey, String awsSecretKey) {
-    	return new BasicSessionCredentials(awsAccessKey, awsSecretKey, null);
+        return new BasicSessionCredentials(awsAccessKey, awsSecretKey, null);
     }
 
     private BasicSessionCredentials generateReaderSessionCredentials(String s3KeyName)
     {
         Policy policy = new Policy()
-            .withStatements(
-                    new Statement(Effect.Allow)
-                        .withActions(S3Actions.ListObjects)
-                        .withResources(new Resource("arn:aws:s3:::"+s3BucketName)),
-                    new Statement(Effect.Allow)
-                        .withActions(S3Actions.GetObject)
-                        .withResources(new Resource("arn:aws:s3:::"+s3BucketName+"/"+s3KeyName))  // TODO encode file name using percent encoding
-                    );
-        GetFederationTokenRequest req = new GetFederationTokenRequest();
-        req.setDurationSeconds(86400);  // 3600 - 129600
-        req.setName(iamReaderUserName);
-        req.setPolicy(policy.toJson());
+        .withStatements(
+                new Statement(Effect.Allow)
+                .withActions(S3Actions.ListObjects)
+                .withResources(new Resource("arn:aws:s3:::"+s3BucketName)),
+                new Statement(Effect.Allow)
+                .withActions(S3Actions.GetObject)
+                .withResources(new Resource("arn:aws:s3:::"+s3BucketName+"/"+s3KeyName))  // TODO encode file name using percent encoding
+                );
+        if (iamReaderUserName != null && iamReaderUserName.length() > 0) {
+            GetFederationTokenRequest req = new GetFederationTokenRequest();
+            req.setDurationSeconds(86400);  // 3600 - 129600
+            req.setName(iamReaderUserName);
+            req.setPolicy(policy.toJson());
 
-        GetFederationTokenResult res = sts.getFederationToken(req);
-        Credentials c = res.getCredentials();
+            GetFederationTokenResult res = sts.getFederationToken(req);
+            Credentials c = res.getCredentials();
 
-        return new BasicSessionCredentials(
-                c.getAccessKeyId(),
-                c.getSecretAccessKey(),
-                c.getSessionToken());
+            return new BasicSessionCredentials(
+                    c.getAccessKeyId(),
+                    c.getSecretAccessKey(),
+                    c.getSessionToken());
+        } else {
+            return new BasicSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(), 
+                    credentialsProvider.getCredentials().getAWSSecretKey(), null);
+        }
     }
 
     private class UploadAndCopyTask implements Callable<Void>
@@ -162,7 +170,7 @@ public class RedshiftCopyBatchInsert
 
         public Void call() throws SQLException {
             logger.info(String.format("Uploading file id %s to S3 (%,d bytes %,d rows)",
-                        s3KeyName, file.length(), batchRows));
+                    s3KeyName, file.length(), batchRows));
             s3.putObject(s3BucketName, s3KeyName, file);
 
             RedshiftOutputConnection con = connector.connect(true);
@@ -171,11 +179,7 @@ public class RedshiftCopyBatchInsert
 
                 // create temporary credential right before COPY operation because
                 // it has timeout.
-                BasicSessionCredentials creds = null;
-                if (iamReaderUserName != null && iamReaderUserName.length() > 0)
-                	creds = generateReaderSessionCredentials(s3KeyName);
-                else
-                	creds = simple_creds;
+                BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
 
                 long startTime = System.currentTimeMillis();
                 con.runCopy(buildCopySQL(creds));
