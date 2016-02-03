@@ -25,7 +25,6 @@ import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
 import com.amazonaws.services.securitytoken.model.Credentials;
 
 import org.slf4j.Logger;
-import org.apache.http.client.CredentialsProvider;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
@@ -81,8 +80,8 @@ extends AbstractPostgreSQLCopyBatchInsert
         // Redshift supports gzip
         return new BufferedWriter(
                 new OutputStreamWriter(
-                        new GZIPOutputStream(new FileOutputStream(newFile)),
-                        FILE_CHARSET)
+                    new GZIPOutputStream(new FileOutputStream(newFile)),
+                    FILE_CHARSET)
                 );
     }
 
@@ -121,21 +120,17 @@ extends AbstractPostgreSQLCopyBatchInsert
         }
     }
 
-    private BasicSessionCredentials generateSimpleSessionCredentials(String awsAccessKey, String awsSecretKey) {
-        return new BasicSessionCredentials(awsAccessKey, awsSecretKey, null);
-    }
-
     private BasicSessionCredentials generateReaderSessionCredentials(String s3KeyName)
     {
         Policy policy = new Policy()
-        .withStatements(
-                new Statement(Effect.Allow)
-                .withActions(S3Actions.ListObjects)
-                .withResources(new Resource("arn:aws:s3:::"+s3BucketName)),
-                new Statement(Effect.Allow)
-                .withActions(S3Actions.GetObject)
-                .withResources(new Resource("arn:aws:s3:::"+s3BucketName+"/"+s3KeyName))  // TODO encode file name using percent encoding
-                );
+            .withStatements(
+                    new Statement(Effect.Allow)
+                        .withActions(S3Actions.ListObjects)
+                        .withResources(new Resource("arn:aws:s3:::"+s3BucketName)),
+                    new Statement(Effect.Allow)
+                        .withActions(S3Actions.GetObject)
+                        .withResources(new Resource("arn:aws:s3:::"+s3BucketName+"/"+s3KeyName))  // TODO encode file name using percent encoding
+                    );
         if (iamReaderUserName != null && iamReaderUserName.length() > 0) {
             GetFederationTokenRequest req = new GetFederationTokenRequest();
             req.setDurationSeconds(86400);  // 3600 - 129600
@@ -170,7 +165,7 @@ extends AbstractPostgreSQLCopyBatchInsert
 
         public Void call() throws SQLException {
             logger.info(String.format("Uploading file id %s to S3 (%,d bytes %,d rows)",
-                    s3KeyName, file.length(), batchRows));
+                        s3KeyName, file.length(), batchRows));
             s3.putObject(s3BucketName, s3KeyName, file);
 
             RedshiftOutputConnection con = connector.connect(true);
