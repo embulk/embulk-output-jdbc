@@ -30,6 +30,7 @@ public interface OCI
     static int OCI_ATTR_DATA_TYPE = 2;
     static int OCI_ATTR_NAME = 4;
     static int OCI_ATTR_ROW_COUNT = 9;
+    static int OCI_ATTR_SCHEMA_NAME = 9;
     static int OCI_ATTR_CHARSET_ID = 31;
     static int OCI_ATTR_DATEFORMAT = 75;
     static int OCI_ATTR_NUM_ROWS = 81;

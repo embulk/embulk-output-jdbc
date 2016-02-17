@@ -32,10 +32,10 @@ public class OracleOutputConnection
     private OracleCharset charset;
     private OracleCharset nationalCharset;
 
-    public OracleOutputConnection(Connection connection, boolean autoCommit, boolean direct)
+    public OracleOutputConnection(Connection connection, String schemaName, boolean autoCommit, boolean direct)
             throws SQLException
     {
-        super(connection, getSchema(connection));
+        super(connection, schemaName == null ? getSchema(connection) : schemaName);
         connection.setAutoCommit(autoCommit);
 
         this.direct = direct;
@@ -54,7 +54,10 @@ public class OracleOutputConnection
 
     @Override
     protected void setSearchPath(String schema) throws SQLException {
-        // NOP
+        if (!getSchema(connection).equals(schema)) {
+            // Because old Oracle JDBC drivers don't support Connection#setSchema method.
+            connection.setSchema(schema);
+        }
     }
 
     @Override
