@@ -89,7 +89,6 @@ public class SQLServerOutputPlugin
         String url;
         if (sqlServerTask.getUrl().isPresent()) {
             if (sqlServerTask.getHost().isPresent()
-                    || sqlServerTask.getInstance().isPresent()
                     || sqlServerTask.getDatabase().isPresent()
                     || sqlServerTask.getIntegratedSecurity().isPresent()) {
                 throw new IllegalArgumentException("'host', 'port', 'instance', 'database' and 'integratedSecurity' parameters are invalid if 'url' parameter is set.");
@@ -104,8 +103,8 @@ public class SQLServerOutputPlugin
             }
             StringBuilder urlBuilder = new StringBuilder();
             if (sqlServerTask.getInstance().isPresent()) {
-                urlBuilder.append(String.format("jdbc:sqlserver://%s\\%s:%d",
-                        sqlServerTask.getHost().get(), sqlServerTask.getInstance().get(), sqlServerTask.getPort()));
+                urlBuilder.append(String.format("jdbc:sqlserver://%s\\%s",
+                        sqlServerTask.getHost().get(), sqlServerTask.getInstance().get()));
             } else {
                 urlBuilder.append(String.format("jdbc:sqlserver://%s:%d",
                         sqlServerTask.getHost().get(), sqlServerTask.getPort()));
