@@ -89,6 +89,7 @@ public class SQLServerOutputPlugin
         String url;
         if (sqlServerTask.getUrl().isPresent()) {
             if (sqlServerTask.getHost().isPresent()
+                    || sqlServerTask.getInstance().isPresent()
                     || sqlServerTask.getDatabase().isPresent()
                     || sqlServerTask.getIntegratedSecurity().isPresent()) {
                 throw new IllegalArgumentException("'host', 'port', 'instance', 'database' and 'integratedSecurity' parameters are invalid if 'url' parameter is set.");
