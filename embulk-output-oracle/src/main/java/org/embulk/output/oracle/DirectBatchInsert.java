@@ -42,6 +42,7 @@ public class DirectBatchInsert implements BatchInsert
     private long totalRows;
     private int rowSize;
     private int batchWeight;
+    private boolean closed;
 
     private DateFormat[] formats;
 
@@ -184,7 +185,10 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void close() throws IOException, SQLException
     {
-        ociManager.close(ociKey);
+        if (!closed) {
+            ociManager.close(ociKey);
+            closed = true;
+        }
     }
 
     @Override
