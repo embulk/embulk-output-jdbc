@@ -5,8 +5,8 @@ MySQL output plugins for Embulk loads records to MySQL.
 ## Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depnds on the mode. see bellow.
-* **Resume supported**: depnds on the mode. see bellow.
+* **Load all or nothing**: depnds on the mode. see below.
+* **Resume supported**: depnds on the mode. see below.
 
 ## Configuration
 
@@ -17,7 +17,7 @@ MySQL output plugins for Embulk loads records to MySQL.
 - **database**: destination database name (string, required)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
-- **mode**: "insert", "insert_direct", "truncate_insert", "merge", "merge_direct", or "replace". See bellow. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert", "merge", "merge_direct", or "replace". See below. (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
