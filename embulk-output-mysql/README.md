@@ -5,8 +5,8 @@ MySQL output plugins for Embulk loads records to MySQL.
 ## Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depnds on the mode. see bellow.
-* **Resume supported**: depnds on the mode. see bellow.
+* **Load all or nothing**: depnds on the mode. see below.
+* **Resume supported**: depnds on the mode. see below.
 
 ## Configuration
 
@@ -17,7 +17,7 @@ MySQL output plugins for Embulk loads records to MySQL.
 - **database**: destination database name (string, required)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
-- **mode**: "insert", "insert_direct", "truncate_insert", "merge", "merge_direct", or "replace". See bellow. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert", "merge", "merge_direct", or "replace". See below. (string, required)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
@@ -45,7 +45,7 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Transactional: No. If fails, the target table could be dropped (because MySQL can't rollback DDL).
   * Resumable: No.
 * **merge**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query. If the target table doesn't exist, it is created automatically.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ... ON DUPLICATE KEY UPDATE ...` query. Namely, if primary keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
   * Resumable: Yes.
 * **merge_direct**:

@@ -5,8 +5,8 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 ## Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depnds on the mode. see bellow.
-* **Resume supported**: depnds on the mode. see bellow.
+* **Load all or nothing**: depnds on the mode. see below.
+* **Resume supported**: depnds on the mode. see below.
 
 ## Configuration
 
@@ -18,7 +18,8 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **schema**: destination schema name (string, default: "public")
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
-- **mode**: "replace", "merge" or "insert" (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
+- **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode)
 - **ssl**: enables SSL. data will be encrypted but CA or certification will not be verified (boolean, default: false)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
@@ -47,7 +48,7 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
   * Transactional: Yes.
   * Resumable: No.
 * **merge**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `with updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. If the target table doesn't exist, it is created automatically.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `with updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
   * Resumable: Yes.
 
