@@ -1,0 +1,25 @@
+in:
+  type: file
+  path_prefix: '/sqlserver/data/test4/test4.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: ITEM1, type: double}
+    - {name: ITEM2, type: string}
+    - {name: ITEM3, type: string}
+    - {name: ITEM4, type: string}
+    - {name: ITEM5, type: double}
+    - {name: ITEM6, type: double}
+out:
+    type: sqlserver
+    host: localhost
+    database: TESTDB
+    user: TEST_USER
+    password: test_pw
+    table: TEST4
+    mode: insert_direct
+    insert_method: native

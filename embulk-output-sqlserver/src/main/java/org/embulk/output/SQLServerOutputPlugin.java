@@ -11,6 +11,8 @@ import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
+import org.embulk.output.sqlserver.InsertMethod;
+import org.embulk.output.sqlserver.NativeBatchInsert;
 import org.embulk.output.sqlserver.SQLServerOutputConnector;
 import org.embulk.output.sqlserver.setter.SQLServerColumnSetterFactory;
 import org.joda.time.DateTimeZone;
@@ -60,6 +62,9 @@ public class SQLServerOutputPlugin
         @ConfigDefault("\"\"")
         public Optional<String> getPassword();
 
+        @Config("insert_method")
+        @ConfigDefault("\"normal\"")
+        public InsertMethod getInsertMethod();
     }
 
     @Override
@@ -88,6 +93,10 @@ public class SQLServerOutputPlugin
 
         String url;
         if (sqlServerTask.getUrl().isPresent()) {
+            if (sqlServerTask.getInsertMethod() == InsertMethod.NATIVE) {
+                throw new IllegalArgumentException("Cannot set 'url' when 'insert_method' is 'native'.");
+            }
+
             if (sqlServerTask.getHost().isPresent()
                     || sqlServerTask.getInstance().isPresent()
                     || sqlServerTask.getDatabase().isPresent()
@@ -144,6 +153,11 @@ public class SQLServerOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
+        SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
+        if (sqlServerTask.getInsertMethod() == InsertMethod.NATIVE) {
+            return new NativeBatchInsert(sqlServerTask.getHost().get(), sqlServerTask.getPort(), sqlServerTask.getInstance(),
+                    sqlServerTask.getDatabase().get(), sqlServerTask.getUser(), sqlServerTask.getPassword());
+        }
         return new StandardBatchInsert(getConnector(task, true), mergeKeys);
     }
 
