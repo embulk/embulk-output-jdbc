@@ -32,6 +32,7 @@ Redshift output plugins for Embulk loads records to Redshift.
   - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 
+
 ### Modes
 
 * **insert**:
@@ -97,3 +98,8 @@ out:
 ```
 $ ./gradlew gem
 ```
+
+### Security
+This plugin requires AWS access credentials so that it may write temporary files to S3. There are two security options, Standard and Federated. 
+To use Standard security, give **aws_key_id** and **secret_access_key**. To use Federated mode, also give the **iam_user_name** field.
+Federated mode really means temporary credentials, so that a man-in-the-middle attack will see AWS credentials that are only valid for 1 calendar day after the transaction.
