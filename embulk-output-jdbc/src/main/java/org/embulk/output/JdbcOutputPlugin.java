@@ -6,9 +6,11 @@ import java.sql.Driver;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -70,7 +72,9 @@ public class JdbcOutputPlugin
         GenericPluginTask t = (GenericPluginTask) task;
 
         if (t.getDriverPath().isPresent()) {
-            loadDriverJar(t.getDriverPath().get());
+            String[] paths = t.getDriverPath().get().split(",");
+            for(String path: paths)
+                loadDriverJar(path);
         }
 
         Properties props = new Properties();

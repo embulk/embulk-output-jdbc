@@ -35,6 +35,7 @@ public class RedshiftCopyBatchInsert
     private final String s3BucketName;
     private final String s3KeyPrefix;
     private final String iamReaderUserName;
+    private final AWSCredentialsProvider credentialsProvider;
     private final AmazonS3Client s3;
     private final AWSSecurityTokenServiceClient sts;
 
@@ -58,6 +59,7 @@ public class RedshiftCopyBatchInsert
             this.s3KeyPrefix = s3KeyPrefix + "/";
         }
         this.iamReaderUserName = iamReaderUserName;
+        this.credentialsProvider = credentialsProvider;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
     }
@@ -127,18 +129,23 @@ public class RedshiftCopyBatchInsert
                         .withActions(S3Actions.GetObject)
                         .withResources(new Resource("arn:aws:s3:::"+s3BucketName+"/"+s3KeyName))  // TODO encode file name using percent encoding
                     );
-        GetFederationTokenRequest req = new GetFederationTokenRequest();
-        req.setDurationSeconds(86400);  // 3600 - 129600
-        req.setName(iamReaderUserName);
-        req.setPolicy(policy.toJson());
+        if (iamReaderUserName != null && iamReaderUserName.length() > 0) {
+            GetFederationTokenRequest req = new GetFederationTokenRequest();
+            req.setDurationSeconds(86400);  // 3600 - 129600
+            req.setName(iamReaderUserName);
+            req.setPolicy(policy.toJson());
 
-        GetFederationTokenResult res = sts.getFederationToken(req);
-        Credentials c = res.getCredentials();
+            GetFederationTokenResult res = sts.getFederationToken(req);
+            Credentials c = res.getCredentials();
 
-        return new BasicSessionCredentials(
-                c.getAccessKeyId(),
-                c.getSecretAccessKey(),
-                c.getSessionToken());
+            return new BasicSessionCredentials(
+                    c.getAccessKeyId(),
+                    c.getSecretAccessKey(),
+                    c.getSessionToken());
+        } else {
+            return new BasicSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(), 
+                    credentialsProvider.getCredentials().getAWSSecretKey(), null);
+        }
     }
 
     private class UploadAndCopyTask implements Callable<Void>
@@ -165,7 +172,6 @@ public class RedshiftCopyBatchInsert
 
                 // create temporary credential right before COPY operation because
                 // it has timeout.
-                // TODO skip this step if iamReaderUserName is not set
                 BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
 
                 long startTime = System.currentTimeMillis();
@@ -194,8 +200,10 @@ public class RedshiftCopyBatchInsert
             sb.append(creds.getAWSAccessKeyId());
             sb.append(";aws_secret_access_key=");
             sb.append(creds.getAWSSecretKey());
-            sb.append(";token=");
-            sb.append(creds.getSessionToken());
+            if (creds.getSessionToken() != null) {
+                sb.append(";token=");
+                sb.append(creds.getSessionToken());
+            }
             sb.append("' ");
             sb.append(COPY_AFTER_FROM);
             return sb.toString();
