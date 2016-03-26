@@ -19,7 +19,7 @@ Redshift output plugins for Embulk loads records to Redshift.
 - **table**: destination table name (string, required)
 - **access_key_id**: access key id for AWS
 - **secret_access_key**: secret access key for AWS
-- **iam_user_name**: IAM user name for uploading temporary files to S3. The user should have permissions of `s3:GetObject`, `s3:PutObject`, `s3:ListBucket` and `sts:GetFederationToken`. (string, default: "")
+- **iam_user_name**: IAM user name for uploading temporary files to S3. The user should have permissions of `s3:GetObject`, `s3:PutObject`, `s3:ListBucket` and `sts:GetFederationToken`. (string, default: "", but we strongly recommend that you use IAM user for security reasons. see below.)
 - **s3_bucket**: S3 bucket name for temporary files
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default:"")
 - **options**: extra connection properties (hash, default: {})
@@ -64,6 +64,7 @@ out:
   table: my_table
   access_key_id: ABCXYZ123ABCXYZ123
   secret_access_key: AbCxYz123aBcXyZ123
+  iam_user_name: my-s3-read-only
   s3_bucket: my-redshift-transfer-bucket
   s3_key_prefix: temp/redshift
   mode: insert
@@ -100,6 +101,6 @@ $ ./gradlew gem
 ```
 
 ### Security
-This plugin requires AWS access credentials so that it may write temporary files to S3. There are two security options, Standard and Federated. 
+This plugin requires AWS access credentials so that it may write temporary files to S3. There are two security options, Standard and Federated.
 To use Standard security, give **aws_key_id** and **secret_access_key**. To use Federated mode, also give the **iam_user_name** field.
 Federated mode really means temporary credentials, so that a man-in-the-middle attack will see AWS credentials that are only valid for 1 calendar day after the transaction.
