@@ -72,9 +72,7 @@ public class JdbcOutputPlugin
         GenericPluginTask t = (GenericPluginTask) task;
 
         if (t.getDriverPath().isPresent()) {
-            String[] paths = t.getDriverPath().get().split(",");
-            for(String path: paths)
-                loadDriverJar(path);
+            loadDriverJar(t.getDriverPath().get());
         }
 
         Properties props = new Properties();
