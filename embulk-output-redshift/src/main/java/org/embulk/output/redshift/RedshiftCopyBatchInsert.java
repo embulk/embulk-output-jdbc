@@ -1,15 +1,27 @@
 package org.embulk.output.redshift;
 
-import java.util.zip.GZIPOutputStream;
-import java.util.concurrent.Callable;
-import java.util.UUID;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Closeable;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
+
+import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
+import org.embulk.spi.Exec;
+import org.slf4j.Logger;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
@@ -19,13 +31,9 @@ import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
-import com.amazonaws.services.securitytoken.model.Credentials;
-import org.slf4j.Logger;
-import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.JdbcSchema;
-import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 
 public class RedshiftCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
@@ -38,11 +46,13 @@ public class RedshiftCopyBatchInsert
     private final AWSCredentialsProvider credentialsProvider;
     private final AmazonS3Client s3;
     private final AWSSecurityTokenServiceClient sts;
+    private final ExecutorService executorService;
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
     private long totalRows;
     private int fileCount;
+    private List<Future<Void>> uploadAndCopyFutures;
 
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS STATUPDATE OFF COMPUPDATE OFF";
 
@@ -62,6 +72,9 @@ public class RedshiftCopyBatchInsert
         this.credentialsProvider = credentialsProvider;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
+
+        this.executorService = Executors.newCachedThreadPool();
+        this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
     }
 
     @Override
@@ -88,28 +101,51 @@ public class RedshiftCopyBatchInsert
     {
         File file = closeCurrentFile();  // flush buffered data in writer
 
-        // TODO multi-threading
-        new UploadAndCopyTask(file, batchRows, s3KeyPrefix + UUID.randomUUID().toString()).call();
-        new DeleteFileFinalizer(file).close();
+        String s3KeyName = s3KeyPrefix + UUID.randomUUID().toString();
+        UploadTask uploadTask = new UploadTask(file, batchRows, s3KeyName);
+        Future<Void> uploadFuture = executorService.submit(uploadTask);
+        uploadAndCopyFutures.add(uploadFuture);
+
+        CopyTask copyTask = new CopyTask(uploadFuture, s3KeyName);
+        uploadAndCopyFutures.add(executorService.submit(copyTask));
 
         fileCount++;
         totalRows += batchRows;
         batchRows = 0;
 
         openNewFile();
-        file.delete();
     }
 
     @Override
     public void finish() throws IOException, SQLException
     {
         super.finish();
+
+        for (Future<Void> uploadAndCopyFuture : uploadAndCopyFutures) {
+            try {
+                uploadAndCopyFuture.get();
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof SQLException) {
+                    throw (SQLException)e.getCause();
+                }
+                throw new RuntimeException(e);
+            }
+        }
+
         logger.info("Loaded {} files.", fileCount);
     }
 
     @Override
     public void close() throws IOException, SQLException
     {
+        executorService.shutdownNow();
+        try {
+            executorService.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {}
+
         s3.shutdown();
         closeCurrentFile().delete();
         if (connection != null) {
@@ -143,49 +179,82 @@ public class RedshiftCopyBatchInsert
                     c.getSecretAccessKey(),
                     c.getSessionToken());
         } else {
-            return new BasicSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(), 
+            return new BasicSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(),
                     credentialsProvider.getCredentials().getAWSSecretKey(), null);
         }
     }
 
-    private class UploadAndCopyTask implements Callable<Void>
+    private class UploadTask implements Callable<Void>
     {
         private final File file;
         private final int batchRows;
         private final String s3KeyName;
 
-        public UploadAndCopyTask(File file, int batchRows, String s3KeyName)
+        public UploadTask(File file, int batchRows, String s3KeyName)
         {
             this.file = file;
             this.batchRows = batchRows;
             this.s3KeyName = s3KeyName;
         }
 
-        public Void call() throws SQLException {
+        public Void call() {
             logger.info(String.format("Uploading file id %s to S3 (%,d bytes %,d rows)",
                         s3KeyName, file.length(), batchRows));
-            s3.putObject(s3BucketName, s3KeyName, file);
 
-            RedshiftOutputConnection con = connector.connect(true);
             try {
-                logger.info("Running COPY from file {}", s3KeyName);
-
-                // create temporary credential right before COPY operation because
-                // it has timeout.
-                BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
-
                 long startTime = System.currentTimeMillis();
-                con.runCopy(buildCopySQL(creds));
+                s3.putObject(s3BucketName, s3KeyName, file);
                 double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
 
-                logger.info(String.format("Loaded file %s (%.2f seconds for COPY)", s3KeyName, seconds));
-
+                logger.info(String.format("Uploaded file %s (%.2f seconds)", s3KeyName, seconds));
             } finally {
-                con.close();
+                file.delete();
             }
 
             return null;
         }
+    }
+
+    private class CopyTask implements Callable<Void>
+    {
+        private final Future<Void> uploadFuture;
+        private final String s3KeyName;
+
+        public CopyTask(Future<Void> uploadFuture, String s3KeyName)
+        {
+            this.uploadFuture = uploadFuture;
+            this.s3KeyName = s3KeyName;
+        }
+
+        public Void call() throws SQLException, InterruptedException, ExecutionException {
+            try {
+                uploadFuture.get();
+
+                RedshiftOutputConnection con = connector.connect(true);
+                try {
+                    logger.info("Running COPY from file {}", s3KeyName);
+
+                    // create temporary credential right before COPY operation because
+                    // it has timeout.
+                    BasicSessionCredentials creds = generateReaderSessionCredentials(s3KeyName);
+
+                    long startTime = System.currentTimeMillis();
+                    con.runCopy(buildCopySQL(creds));
+                    double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
+
+                    logger.info(String.format("Loaded file %s (%.2f seconds for COPY)", s3KeyName, seconds));
+
+                } finally {
+                    con.close();
+                }
+            } finally {
+                s3.deleteObject(s3BucketName, s3KeyName);
+            }
+
+            return null;
+        }
+
+
 
         private String buildCopySQL(BasicSessionCredentials creds)
         {
@@ -207,20 +276,6 @@ public class RedshiftCopyBatchInsert
             sb.append("' ");
             sb.append(COPY_AFTER_FROM);
             return sb.toString();
-        }
-    }
-
-    private static class DeleteFileFinalizer implements Closeable
-    {
-        private File file;
-
-        public DeleteFileFinalizer(File file) {
-            this.file = file;
-        }
-
-        @Override
-        public void close() throws IOException {
-            file.delete();
         }
     }
 }
