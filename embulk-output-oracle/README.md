@@ -48,13 +48,13 @@ Oracle output plugins for Embulk loads records to Oracle.
   * Transactional: Yes.
   * Resumable: No.
 
-### Insert modes
+### Insert methods
 
 insert_method supports three options.
 
 "normal" means normal insert (default). It requires Oracle JDBC driver.
 
-"direct" means direct path insert. It is faster than 'normal.
+"direct" means direct path insert. It is faster than "normal".
 It requires Oracle JDBC driver too, but the version 12 driver doesn't work (the version 11 driver works).
 
 "oci" means direct path insert using OCI(Oracle Call Interface). It is fastest.

@@ -204,6 +204,170 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         assertTable(1, table, true);
     }
 
+    @Test
+    public void testNativeString() throws Exception
+    {
+        if (!canTest) {
+            return;
+        }
+
+        String table = "TEST2";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 CHAR(4), ITEM2 VARCHAR(8), ITEM3 TEXT, ITEM4 NCHAR(4), ITEM5 NVARCHAR(8), ITEM6 NTEXT)", table));
+
+        tester.run(convertYml("/sqlserver/yml/test-native-string.yml"));
+
+        List<List<Object>> rows = select(table);
+        assertEquals(2, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals("A001", row.get(0));
+            assertEquals("TEST", row.get(1));
+            assertEquals("Ａ", row.get(2));
+            assertEquals("あいうえ", row.get(3));
+            assertEquals("あいうえおかきく", row.get(4));
+            assertEquals("あいうえお", row.get(5));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals("A002", row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+        }
+    }
+
+    @Test
+    public void testNativeInteger() throws Exception
+    {
+        if (!canTest) {
+            return;
+        }
+
+        String table = "TEST3";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 TINYINT, ITEM2 SMALLINT, ITEM3 INT, ITEM4 BIGINT, ITEM5 BIT)", table));
+
+        tester.run(convertYml("/sqlserver/yml/test-native-integer.yml"));
+
+        List<List<Object>> rows = select(table);
+        assertEquals(2, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals((short)1, row.get(0));
+            assertEquals((short)1111, row.get(1));
+            assertEquals(11111111, row.get(2));
+            assertEquals(111111111111L, row.get(3));
+            assertEquals(true, row.get(4));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals((short)2, row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+        }
+    }
+
+    @Test
+    public void testNativeDecimal() throws Exception
+    {
+        if (!canTest) {
+            return;
+        }
+
+        String table = "TEST4";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 DECIMAL(20,2), ITEM2 NUMERIC(20,2), ITEM3 SMALLMONEY, ITEM4 MONEY, ITEM5 REAL, ITEM6 FLOAT)", table));
+
+        tester.run(convertYml("/sqlserver/yml/test-native-decimal.yml"));
+
+        List<List<Object>> rows = select(table);
+        assertEquals(2, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals(new BigDecimal("1.20"), row.get(0));
+            assertEquals(new BigDecimal("12345678901234567.89"), row.get(1));
+            assertEquals(new BigDecimal("123.4500"), row.get(2));
+            assertEquals(new BigDecimal("678.9000"), row.get(3));
+            assertEquals(0.01234F, row.get(4));
+            assertEquals(0.05678D, row.get(5));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals(new BigDecimal("2.30"), row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+        }
+    }
+
+    @Test
+    public void testNativeDate() throws Exception
+    {
+        if (!canTest) {
+            return;
+        }
+
+        String table = "TEST5";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 DATE, ITEM2 SMALLDATETIME, ITEM3 DATETIME, ITEM4 DATETIME2, ITEM5 DATETIME2(2), ITEM6 TIME, ITEM7 TIME(2))", table));
+
+        tester.run(convertYml("/sqlserver/yml/test-native-date.yml"));
+
+        List<List<Object>> rows = select(table);
+        assertEquals(2, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals(createDate("2016/01/23"), row.get(0));
+            assertEquals(createTimestamp("2016/01/24 11:23:00", 0), row.get(1));
+            assertEquals(createTimestamp("2016/01/25 11:22:33", 457000000), row.get(2));
+            // Embulk timestamp doesn't support values under microseconds.
+            assertEquals(createTimestamp("2016/01/26 11:22:33", 123456000), row.get(3));
+            assertEquals(createTimestamp("2016/01/27 11:22:33", 890000000), row.get(4));
+            // Embulk timestamp doesn't support values under microseconds.
+            assertEquals(createTime("11:22:33", 123456000), row.get(5));
+            assertEquals(createTime("11:22:33", 890000000), row.get(6));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals(null, row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+            assertEquals(null, row.get(6));
+        }
+    }
+
+    @Test
+    public void testNative() throws Exception
+    {
+        if (!canTest) {
+            return;
+        }
+
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table);
+
+        tester.run(convertYml("/sqlserver/yml/test-native.yml"));
+
+        assertTable(1, table);
+    }
+
     private void assertTable(int skip, String table) throws Exception
     {
         assertTable(skip, table, false);
@@ -219,11 +383,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A001", i2.next());
-            assertEquals(Short.valueOf((short)0), i2.next());
-            assertEquals(Short.valueOf((short)1234), i2.next());
-            assertEquals(Integer.valueOf(123456), i2.next());
-            assertEquals(Long.valueOf(12345678901L), i2.next());
-            assertEquals(Boolean.FALSE, i2.next());
+            assertEquals((short)0, i2.next());
+            assertEquals((short)1234, i2.next());
+            assertEquals(123456, i2.next());
+            assertEquals(12345678901L, i2.next());
+            assertEquals(false, i2.next());
             assertEquals(new BigDecimal("1.23"), i2.next());
             assertEquals(new BigDecimal("3.456"), i2.next());
             assertEquals(new BigDecimal("12.3400"), i2.next());
@@ -249,11 +413,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         {
             Iterator<Object> i2 = i1.next().iterator();
             assertEquals("A002", i2.next());
-            assertEquals(Short.valueOf((short)255), i2.next());
-            assertEquals(Short.valueOf((short)-32768), i2.next());
-            assertEquals(Integer.valueOf(-2147483648), i2.next());
-            assertEquals(Long.valueOf(-9223372036854775808L), i2.next());
-            assertEquals(Boolean.TRUE, i2.next());
+            assertEquals((short)255, i2.next());
+            assertEquals((short)-32768, i2.next());
+            assertEquals(-2147483648, i2.next());
+            assertEquals(-9223372036854775808L, i2.next());
+            assertEquals(true, i2.next());
             assertEquals(new BigDecimal("-9999999999.99"), i2.next());
             assertEquals(new BigDecimal("-99.999"), i2.next());
             assertEquals(new BigDecimal("-214748.3648"), i2.next());

@@ -1,11 +1,13 @@
-package org.embulk.output.oracle;
+package org.embulk.output;
 
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.embulk.output.jdbc.TimestampFormat;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 public class TimestampFormatTest {

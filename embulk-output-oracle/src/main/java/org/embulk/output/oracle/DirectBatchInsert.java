@@ -14,6 +14,7 @@ import java.util.List;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.TimestampFormat;
 import org.embulk.output.oracle.oci.ColumnDefinition;
 import org.embulk.output.oracle.oci.OCI;
 import org.embulk.output.oracle.oci.OCIManager;

@@ -26,6 +26,7 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
 - **mode**: "insert", "insert_direct", "truncate_insert" or "replace". See below. (string, required)
+- **insert_method**: see below
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
@@ -52,6 +53,15 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
   * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: No. If fails, the target table could be dropped (because SQL Server can't rollback DDL).
   * Resumable: No.
+
+### Insert methods
+
+insert_method supports three options.
+
+"normal" means normal insert (default). It requires SQL Server JDBC driver.
+
+"native" means bulk insert using native client. It is faster than "normal".
+It requires both SQL Server JDBC driver and SQL Server Native Client (11.0).
 
 ### Example
 
@@ -81,6 +91,7 @@ out:
   database: my_database
   table: my_table
   mode: insert_direct
+  insert_method: native
   column_options:
     my_col_1: {type: 'TEXT'}
     my_col_3: {type: 'INT NOT NULL'}
