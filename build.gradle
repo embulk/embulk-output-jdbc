@@ -32,8 +32,8 @@ subprojects {
     targetCompatibility = 1.7
 
     dependencies {
-        compile  'org.embulk:embulk-core:0.8.0'
-        provided 'org.embulk:embulk-core:0.8.0'
+        compile  'org.embulk:embulk-core:0.8.8'
+        provided 'org.embulk:embulk-core:0.8.8'
         testCompile 'junit:junit:4.+'
     }
 

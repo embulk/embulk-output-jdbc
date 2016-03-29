@@ -1,3 +1,12 @@
+Release 0.5.1 - 2016-03-29
+
+* Support schema in embulk-output-oracle.
+* Support multibyte object name in embulk-output-oracle OCI mode.
+* Support AWS root account in embulk-output-redshift (++@lance-edmodo).
+* Improve performance of embulk-output-redshift by uploading and copying in background.
+* Ignore port if instance is specified in embulk-output-sqlserver (@emanon-was++).
+* Improve performance of embulk-output-sqlserver by supporting native library.
+
 Release 0.5.0 - 2016-01-15
 
 * C library used in embulk-output-oracle OCI mode is replaced with Java classes using jnr-ffi.
