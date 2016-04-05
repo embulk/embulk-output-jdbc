@@ -1,25 +1,29 @@
 package org.embulk.output;
 
-import java.util.List;
-import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
+import java.sql.Types;
+import java.util.List;
+import java.util.Properties;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.postgresql.PostgreSQLOutputConnector;
-import org.embulk.output.postgresql.PostgreSQLCopyBatchInsert;
-
-import com.google.common.collect.ImmutableList;
-import java.sql.Types;
-import org.embulk.spi.Schema;
-import org.embulk.spi.ColumnVisitor;
-import org.embulk.spi.Column;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.setter.ColumnSetterFactory;
+import org.embulk.output.postgresql.PostgreSQLCopyBatchInsert;
+import org.embulk.output.postgresql.PostgreSQLOutputConnector;
+import org.embulk.output.postgresql.setter.PostgreSQLColumnSetterFactory;
+import org.embulk.spi.Column;
+import org.embulk.spi.ColumnVisitor;
+import org.embulk.spi.Schema;
+import org.joda.time.DateTimeZone;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class PostgreSQLOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -167,5 +171,11 @@ public class PostgreSQLOutputPlugin
             });
         }
         return new JdbcSchema(columns.build());
+    }
+
+    @Override
+    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    {
+        return new PostgreSQLColumnSetterFactory(batch, defaultTimeZone);
     }
 }
