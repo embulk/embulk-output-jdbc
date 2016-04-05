@@ -78,18 +78,18 @@ It requires both SQL Server JDBC driver and SQL Server Native Client (11.0).
 |money|decimal||
 |real|float||
 |float|double||
+|char|string||
+|varchar|string||
+|text|string||
+|nchar|nstring||
+|nvarchar|nstring||
+|ntext|nstring||
+|xml|nstring||
 |date|date||
 |time|time|support 7 digits for the fractional part of the seconds|
 |datetime|timestamp||
 |datetime2|timestamp||
 |smalldatetime|timestamp||
-|char|string||
-|nchar|nstring||
-|varchar|string||
-|nvarchar|nstring||
-|text|string||
-|ntext|nstring||
-|xml|nstring||
 
 ### Example
 
