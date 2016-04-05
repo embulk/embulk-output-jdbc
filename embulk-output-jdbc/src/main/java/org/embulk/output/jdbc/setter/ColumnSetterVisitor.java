@@ -79,8 +79,18 @@ public class ColumnSetterVisitor
     }
 
     @Override
-    public void jsonColumn(Column column) {
-        throw new UnsupportedOperationException("This plugin doesn't support json type. Please try to upgrade version of the plugin using 'embulk gem update' command. If the latest version still doesn't support json type, please contact plugin developers, or change configuration of input plugin not to use json type.");
+    public void jsonColumn(Column column)
+    {
+        try {
+            if (pageReader.isNull(column)) {
+                setter.nullValue();
+            } else {
+                setter.jsonValue(pageReader.getJson(column));
+            }
+        } catch (IOException | SQLException ex) {
+            // TODO exception class
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

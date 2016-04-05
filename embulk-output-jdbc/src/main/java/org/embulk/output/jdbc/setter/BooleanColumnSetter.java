@@ -2,9 +2,11 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
+
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
+import org.msgpack.value.Value;
 
 public class BooleanColumnSetter
         extends ColumnSetter
@@ -47,6 +49,12 @@ public class BooleanColumnSetter
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
+    {
+        defaultValue.setBoolean();
+    }
+
+    @Override
+    public void jsonValue(Value v) throws IOException, SQLException
     {
         defaultValue.setBoolean();
     }

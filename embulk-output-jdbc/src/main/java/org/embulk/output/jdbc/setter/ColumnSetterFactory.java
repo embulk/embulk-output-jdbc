@@ -62,6 +62,8 @@ public class ColumnSetterFactory
             return new SqlTimestampColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
         case "decimal":
             return new BigDecimalColumnSetter(batch, column, newDefaultValueSetter(column, option));
+        case "json":
+            return new JsonColumnSetter(batch, column, newDefaultValueSetter(column, option));
         case "null":
             return new NullColumnSetter(batch, column, newDefaultValueSetter(column, option));
         case "pass":

@@ -2,9 +2,11 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.output.jdbc.JdbcColumn;
+
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
 public abstract class ColumnSetter
 {
@@ -41,4 +43,6 @@ public abstract class ColumnSetter
     public abstract void stringValue(String v) throws IOException, SQLException;
 
     public abstract void timestampValue(Timestamp v) throws IOException, SQLException;
+
+    public abstract void jsonValue(Value v) throws IOException, SQLException;
 }

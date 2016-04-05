@@ -45,4 +45,6 @@ public abstract class DefaultValueSetter
     public abstract void setSqlTime() throws IOException, SQLException;
 
     public abstract void setSqlTimestamp() throws IOException, SQLException;
+
+    public abstract void setJson() throws IOException, SQLException;
 }
