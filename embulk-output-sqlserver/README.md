@@ -63,6 +63,34 @@ insert_method supports three options.
 "native" means bulk insert using native client. It is faster than "normal".
 It requires both SQL Server JDBC driver and SQL Server Native Client (11.0).
 
+### Supported types
+
+|database type|default value_type|note|
+|:--|:--|:--|
+|bit|boolean||
+|tinyint|byte|unsigned|
+|smallint|short||
+|int|int||
+|bigint|long||
+|decimal|decimal||
+|numeric|decimal||
+|smallmoney|decimal||
+|money|decimal||
+|real|float||
+|float|double||
+|date|date||
+|time|time|support 7 digits for the fractional part of the seconds|
+|datetime|timestamp||
+|datetime2|timestamp||
+|smalldatetime|timestamp||
+|char|string||
+|nchar|nstring||
+|varchar|string||
+|nvarchar|nstring||
+|text|string||
+|ntext|nstring||
+|xml|nstring||
+
 ### Example
 
 ```yaml
