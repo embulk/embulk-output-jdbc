@@ -133,6 +133,7 @@ public class ColumnSetterFactory
         case Types.NCHAR:
         case Types.NVARCHAR:
         case Types.LONGNVARCHAR:
+        case Types.NCLOB:
             return new NStringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
 
         // TODO
