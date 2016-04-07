@@ -91,6 +91,8 @@ It requires both SQL Server JDBC driver and SQL Server Native Client (11.0).
 |datetime2|timestamp||
 |smalldatetime|timestamp||
 
+You can use other types by specifying `value_type` in `column_options`.
+
 ### Example
 
 ```yaml
