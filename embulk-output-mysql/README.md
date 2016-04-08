@@ -53,6 +53,28 @@ MySQL output plugins for Embulk loads records to MySQL.
   * Transactional: No.
   * Resumable: No.
 
+### Supported types
+
+|database type|default value_type|note|
+|:--|:--|:--|
+|BIT|boolean||
+|TINYINT|byte||
+|SMALLINT|short||
+|INT|int||
+|BIGINT|long||
+|FLOAT|float||
+|DOUBLE|double||
+|DECIMAL|decimal||
+|CHAR|string||
+|VARCHAR|string||
+|TEXT|string||
+|DATE|date||
+|DATETIME|timestamp||
+|TIMESTAMP|timestamp||
+|TIME|time||
+
+You can use other types by specifying `value_type` in `column_options`.
+
 ### Example
 
 ```yaml
