@@ -70,7 +70,6 @@ You must set the library loading path to the OCI library.
 |CHAR|string||
 |VARCHAR2|string||
 |CLOB|string||
-|LONG|string||
 |NCHAR|nstring||
 |NVARCHAR2|nstring||
 |NCLOB|nstring||
