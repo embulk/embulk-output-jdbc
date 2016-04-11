@@ -61,6 +61,23 @@ It requires Oracle JDBC driver too, but the version 12 driver doesn't work (the 
 It requires both Oracle JDBC driver and Oracle Instant Client (version 12.1.0.2.0).
 You must set the library loading path to the OCI library.
 
+### Supported types
+
+|database type|default value_type|note|
+|:--|:--|:--|
+|NUMBER|decimal||
+|FLOAT|double||
+|CHAR|string||
+|VARCHAR2|string||
+|CLOB|string||
+|NCHAR|nstring||
+|NVARCHAR2|nstring||
+|NCLOB|nstring||
+|DATE|timestamp|Oracle DATE type stores date and time information.|
+|TIMESTAMP|timestamp||
+
+You can use other types by specifying `value_type` in `column_options`.
+
 ### Example
 
 ```yaml
