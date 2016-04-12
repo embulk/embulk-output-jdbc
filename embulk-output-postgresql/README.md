@@ -58,7 +58,7 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 |:--|:--|:--|
 |bool|boolean||
 |smallint|short||
-iint|int||
+|int|int||
 |bigint|long||
 |real|float||
 |double precision|double||
