@@ -4,63 +4,58 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 import org.msgpack.value.Value;
 
-public class StringColumnSetter
+public class JsonColumnSetter
         extends ColumnSetter
 {
-    private final TimestampFormatter timestampFormatter;
-
-    public StringColumnSetter(BatchInsert batch, JdbcColumn column,
-            DefaultValueSetter defaultValue,
-            TimestampFormatter timestampFormatter)
+    public JsonColumnSetter(BatchInsert batch, JdbcColumn column,
+            DefaultValueSetter defaultValue)
     {
         super(batch, column, defaultValue);
-        this.timestampFormatter = timestampFormatter;
     }
 
     @Override
     public void nullValue() throws IOException, SQLException
     {
-        defaultValue.setString();
+        defaultValue.setJson();
     }
 
     @Override
     public void booleanValue(boolean v) throws IOException, SQLException
     {
-        batch.setString(Boolean.toString(v));
+        defaultValue.setJson();
     }
 
     @Override
     public void longValue(long v) throws IOException, SQLException
     {
-        batch.setString(Long.toString(v));
+        defaultValue.setJson();
     }
 
     @Override
     public void doubleValue(double v) throws IOException, SQLException
     {
-        batch.setString(Double.toString(v));
+        defaultValue.setJson();
     }
 
     @Override
     public void stringValue(String v) throws IOException, SQLException
     {
-        batch.setString(v);
+        defaultValue.setJson();
     }
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        batch.setString(timestampFormatter.format(v));
+        defaultValue.setJson();
     }
 
     @Override
-    public void jsonValue(Value v) throws IOException, SQLException
-    {
+    public void jsonValue(Value v) throws IOException, SQLException {
         batch.setString(v.toJson());
     }
 }
+

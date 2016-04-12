@@ -2,6 +2,7 @@ package org.embulk.output.jdbc.setter;
 
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.BatchInsert;
+import org.msgpack.value.Value;
 
 public class SkipColumnSetter
         extends ColumnSetter
@@ -38,6 +39,11 @@ public class SkipColumnSetter
 
     @Override
     public void nullValue()
+    {
+    }
+
+    @Override
+    public void jsonValue(Value v)
     {
     }
 }

@@ -3,10 +3,13 @@ package org.embulk.output.jdbc.setter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.math.RoundingMode;
+
 import com.google.common.math.DoubleMath;
+
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
+import org.msgpack.value.Value;
 
 public class LongColumnSetter
         extends ColumnSetter
@@ -65,6 +68,12 @@ public class LongColumnSetter
 
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
+    {
+        defaultValue.setLong();
+    }
+
+    @Override
+    public void jsonValue(Value v) throws IOException, SQLException
     {
         defaultValue.setLong();
     }

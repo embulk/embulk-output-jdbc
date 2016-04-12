@@ -102,4 +102,10 @@ public class NullDefaultValueSetter
     {
         batch.setNull(column.getSqlType());
     }
+
+    @Override
+    public void setJson() throws IOException, SQLException
+    {
+        batch.setNull(column.getSqlType());
+    }
 }
