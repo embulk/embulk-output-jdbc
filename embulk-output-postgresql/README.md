@@ -52,6 +52,29 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
   * Transactional: Yes.
   * Resumable: Yes.
 
+### Supported types
+
+|database type|default value_type|note|
+|:--|:--|:--|
+|bool|boolean||
+|smallint|short||
+|int|int||
+|bigint|long||
+|real|float||
+|double precision|double||
+|money|double||
+|numeric|decimal||
+|char|string||
+|varchar|string||
+|text|string||
+|json|json||
+|jsonb|json||
+|date|date||
+|time|time||
+|timestamp|timestamp||
+
+You can use other types by specifying `value_type` in `column_options`.
+
 ### Example
 
 ```yaml
