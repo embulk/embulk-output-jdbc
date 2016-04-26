@@ -823,6 +823,9 @@ public abstract class AbstractJdbcOutputPlugin
                     task.getTargetTableSchema(), schema,
                     task.getColumnOptions());
             JdbcSchema insertIntoSchema = filterSkipColumns(task.getTargetTableSchema());
+            if (insertIntoSchema.getCount() == 0) {
+                throw new SQLException("No column to insert.");
+            }
 
             // configure BatchInsert -> an intermediate table (!isDirectModify) or the target table (isDirectModify)
             String destTable;
