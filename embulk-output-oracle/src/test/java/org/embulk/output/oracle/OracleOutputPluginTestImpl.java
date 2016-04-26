@@ -231,6 +231,30 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    public void testLowerColumn() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/oracle/yml/test-lower-column.yml");
+
+        assertTable(table);
+    }
+
+    public void testLowerColumnOptions() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/oracle/yml/test-lower-column-options.yml");
+
+        assertTable(table);
+    }
+
     public void testReplace() throws Exception
     {
         String table = "TEST1";

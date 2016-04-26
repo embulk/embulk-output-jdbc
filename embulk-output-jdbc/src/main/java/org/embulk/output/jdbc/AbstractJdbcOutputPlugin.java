@@ -598,7 +598,7 @@ public abstract class AbstractJdbcOutputPlugin
         return new JdbcSchema(Lists.transform(schema.getColumns(), new Function<JdbcColumn, JdbcColumn>() {
             public JdbcColumn apply(JdbcColumn c)
             {
-                JdbcColumnOption option = columnOptionOf(columnOptions, c);
+                JdbcColumnOption option = columnOptionOf(columnOptions, c.getName());
                 if (option.getType().isPresent()) {
                     return JdbcColumn.newTypeDeclaredColumn(
                             c.getName(), Types.OTHER,  // sqlType, isNotNull, and isUniqueKey are ignored
@@ -614,23 +614,22 @@ public abstract class AbstractJdbcOutputPlugin
             Map<String, JdbcColumnOption> columnOptions)
     {
         ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
-        int schemaColumnIndex = 0;
-        for (JdbcColumn targetColumn : targetTableSchema.getColumns()) {
+        for (int schemaColumnIndex = 0; schemaColumnIndex < targetTableSchema.getCount(); schemaColumnIndex++) {
+            JdbcColumn targetColumn = targetTableSchema.getColumn(schemaColumnIndex);
+            Column inputColumn = inputValueSchema.getColumn(schemaColumnIndex);
             if (targetColumn.isSkipColumn()) {
                 builder.add(factory.newSkipColumnSetter());
             } else {
-                //String columnOptionKey = inputValueSchema.getColumn(schemaColumnIndex).getName();
-                JdbcColumnOption option = columnOptionOf(columnOptions, targetColumn);
+                JdbcColumnOption option = columnOptionOf(columnOptions, inputColumn.getName());
                 builder.add(factory.newColumnSetter(targetColumn, option));
-                schemaColumnIndex++;
             }
         }
         return builder.build();
     }
 
-    private static JdbcColumnOption columnOptionOf(Map<String, JdbcColumnOption> columnOptions, JdbcColumn targetColumn)
+    private static JdbcColumnOption columnOptionOf(Map<String, JdbcColumnOption> columnOptions, String columnName)
     {
-        return Optional.fromNullable(columnOptions.get(targetColumn.getName())).or(
+        return Optional.fromNullable(columnOptions.get(columnName)).or(
                     // default column option
                     new Supplier<JdbcColumnOption>()
                     {
