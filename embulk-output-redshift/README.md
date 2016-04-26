@@ -52,6 +52,24 @@ Redshift output plugins for Embulk loads records to Redshift.
   * Transactional: Yes.
   * Resumable: No.
 
+### Supported types
+
+|database type|default value_type|note|
+|:--|:--|:--|
+|bool|boolean||
+|smallint|short||
+|int|int||
+|bigint|long||
+|real|float||
+|double precision|double||
+|numeric|decimal||
+|char|string||
+|varchar|string||
+|date|date||
+|timestamp|timestamp||
+
+You can use other types by specifying `value_type` in `column_options`.
+
 ### Example
 
 ```yaml
