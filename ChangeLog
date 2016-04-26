@@ -1,3 +1,8 @@
+Release 0.6.0 - 2016-04-26
+
+* Support NCLOB (JDBC SQL type).
+* Support json (embulk type and embulk-output-jdbc value_type).
+
 Release 0.5.1 - 2016-03-29
 
 * Support schema in embulk-output-oracle.
