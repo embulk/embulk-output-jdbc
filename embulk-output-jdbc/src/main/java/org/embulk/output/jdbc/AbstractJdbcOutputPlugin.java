@@ -91,6 +91,9 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("\"UTC\"")
         public DateTimeZone getDefaultTimeZone();
 
+        public void setActualTable(String actualTable);
+        public String getActualTable();
+
         public void setMergeKeys(Optional<List<String>> keys);
 
         public void setFeatures(Features features);
@@ -423,16 +426,37 @@ public abstract class AbstractJdbcOutputPlugin
             PluginTask task, final Schema schema, int taskCount) throws SQLException
     {
         if (schema.getColumnCount() == 0) {
-            throw new ConfigException("task count == 0 is not supported");
+            throw new ConfigException("No column.");
         }
 
         Mode mode = task.getMode();
         logger.info("Using {} mode", mode);
 
+        if (con.tableExists(task.getTable())) {
+            task.setActualTable(task.getTable());
+        } else {
+            String upperTable = task.getTable().toUpperCase();
+            String lowerTable = task.getTable().toLowerCase();
+            if (con.tableExists(upperTable)) {
+                if (con.tableExists(lowerTable)) {
+                    throw new ConfigException(String.format("Cannot specify table '%s' because both '%s' and '%s' exist.",
+                            task.getTable(), upperTable, lowerTable));
+                } else {
+                    task.setActualTable(upperTable);
+                }
+            } else {
+                if (con.tableExists(lowerTable)) {
+                    task.setActualTable(lowerTable);
+                } else {
+                    task.setActualTable(task.getTable());
+                }
+            }
+        }
+
         Optional<JdbcSchema> initialTargetTableSchema =
             mode.ignoreTargetTableSchema() ?
                 Optional.<JdbcSchema>absent() :
-                newJdbcSchemaFromTableIfExists(con, task.getTable());
+                newJdbcSchemaFromTableIfExists(con, task.getActualTable());
 
         // TODO get CREATE TABLE statement from task if set
         JdbcSchema newTableSchema = applyColumnOptionsToNewTableSchema(
@@ -449,13 +473,13 @@ public abstract class AbstractJdbcOutputPlugin
             // direct modify mode doesn't need intermediate tables.
             ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
             if (mode.tempTablePerTask()) {
-                String namePrefix = generateIntermediateTableNamePrefix(task.getTable(), con, 3,
+                String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable(), con, 3,
                         task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                 for (int i=0; i < taskCount; i++) {
                     intermTableNames.add(namePrefix + String.format("%03d", i));
                 }
             } else {
-                String name = generateIntermediateTableNamePrefix(task.getTable(), con, 0,
+                String name = generateIntermediateTableNamePrefix(task.getActualTable(), con, 0,
                         task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                 intermTableNames.add(name);
             }
@@ -483,8 +507,8 @@ public abstract class AbstractJdbcOutputPlugin
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
-            con.createTableIfNotExists(task.getTable(), newTableSchema);
-            targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getTable()).get();
+            con.createTableIfNotExists(task.getActualTable(), newTableSchema);
+            targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getActualTable()).get();
             task.setNewTableSchema(Optional.<JdbcSchema>absent());
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
@@ -641,30 +665,30 @@ public abstract class AbstractJdbcOutputPlugin
         case INSERT:
             // aggregate insert into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), false);
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false);
             break;
 
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectInsert(task.getIntermediateTables().get(), schema, task.getTable(), true);
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true);
             break;
 
         case MERGE:
             // aggregate merge into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectMerge(task.getIntermediateTables().get(), schema, task.getTable(), task.getMergeKeys().get());
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get());
             break;
 
         case REPLACE:
             // swap table
-            con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getTable());
+            con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getActualTable());
             break;
         }
     }
@@ -832,7 +856,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (mode.tempTablePerTask()) {
                 destTable = task.getIntermediateTables().get().get(taskIndex);
             } else if (mode.isDirectModify()) {
-                destTable = task.getTable();
+                destTable = task.getActualTable();
             } else {
                 destTable = task.getIntermediateTables().get().get(0);
             }
