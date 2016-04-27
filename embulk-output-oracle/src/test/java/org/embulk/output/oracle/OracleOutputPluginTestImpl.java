@@ -218,6 +218,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
 
         dropTable(table);
         createTable(table);
+        insertRecord(table, "A002");
 
         try {
             run("/oracle/yml/test-insert-direct-oci-method.yml");
