@@ -15,6 +15,8 @@ public interface OCI
     static short OCI_NO_DATA = 100;
     static short OCI_CONTINUE = -24200;
 
+    static short OCI_DEFAULT = 0;
+    static int OCI_NTV_SYNTAX = 1;
 
     static int OCI_THREADED = 1;
     static int OCI_OBJECT = 2;
@@ -22,6 +24,8 @@ public interface OCI
     static int OCI_HTYPE_ENV = 1;
     static int OCI_HTYPE_ERROR = 2;
     static int OCI_HTYPE_SVCCTX = 3;
+    static int OCI_HTYPE_STMT = 4;
+    static int OCI_HTYPE_DEFINE = 6;
     static int OCI_HTYPE_DIRPATH_CTX = 14;
     static int OCI_HTYPE_DIRPATH_COLUMN_ARRAY = 15;
     static int OCI_HTYPE_DIRPATH_STREAM = 16;
@@ -41,8 +45,8 @@ public interface OCI
 
     static byte OCI_DIRPATH_COL_COMPLETE = 0;
 
-    static int SQLT_CHR = 1;
-    static int SQLT_INT = 3;
+    static short SQLT_CHR = 1;
+    static short SQLT_INT = 3;
 
     short OCIErrorGet(Pointer hndlp,
             @u_int32_t int  recordno,
@@ -129,4 +133,39 @@ public interface OCI
     short OCIDirPathFinish(Pointer dpctx, Pointer errhp);
 
     short OCIDirPathAbort(Pointer dpctx, Pointer errhp);
-}
+
+    short OCIStmtPrepare(Pointer stmtp,
+            Pointer errhp,
+            String stmt,
+            @u_int32_t int stmtLen,
+            @u_int32_t int languate,
+            @u_int32_t int mode);
+
+    short OCIStmtExecute(Pointer svchp,
+            Pointer stmtp,
+            Pointer errhp,
+            @u_int32_t int iters,
+            @u_int32_t int rowoff,
+            Pointer snapIn,
+            Pointer snapOut,
+            @u_int32_t int mode);
+
+    short OCIDefineByPos(Pointer stmtp,
+            Pointer defnpp,
+            Pointer errhp,
+            @u_int32_t int position,
+            Pointer valuep,
+            int valueSz,
+            @u_int16_t short dty,
+            Pointer indp,
+            Pointer rlenp,
+            Pointer rcodep,
+            @u_int32_t int mode);
+
+    short OCIStmtFetch2(Pointer stmthp,
+            Pointer errhp,
+            @u_int32_t int nrows,
+            @u_int16_t short orientation,
+            int fetchOffset,
+            @u_int32_t int mode);
+ }

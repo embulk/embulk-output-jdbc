@@ -3,6 +3,8 @@ package org.embulk.output.oracle.oci;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import jnr.ffi.LibraryLoader;
 import jnr.ffi.Pointer;
@@ -29,6 +31,8 @@ public class OCIWrapper
     private Pointer dpHandle;
     private Pointer dpcaHandle;
     private Pointer dpstrHandle;
+    private Pointer stmtHandle;
+    private List<Pointer> defineHandles = new ArrayList<Pointer>();
 
     private TableDefinition tableDefinition;
     private int maxRowCount;
@@ -142,8 +146,8 @@ public class OCIWrapper
                     errHandle));
         }
 
-        // load table name
-        Pointer tableName = createPointer(tableDefinition.getTableName());
+        // load table name (case sensitive)
+        Pointer tableName = createPointer("\"" + tableDefinition.getTableName() + "\"");
         check("OCIAttrSet(OCI_ATTR_NAME)", oci.OCIAttrSet(
                 dpHandle,
                 OCI.OCI_HTYPE_DIRPATH_CTX,
@@ -354,8 +358,114 @@ public class OCIWrapper
 
         check("OCIDirPathFinish", oci.OCIDirPathFinish(dpHandle, errHandle));
 
-        check("OCILogoff", oci.OCILogoff(svcHandle, errHandle));
-        svcHandle = null;
+        try {
+            checkIndexes();
+
+        } finally {
+            check("OCILogoff", oci.OCILogoff(svcHandle, errHandle));
+            svcHandle = null;
+        }
+    }
+
+    private void checkIndexes() throws SQLException {
+        Pointer stmtHandlePointer = createPointerPointer();
+        check("OCIHandleAlloc(OCI_HTYPE_STMT)", oci.OCIHandleAlloc(
+                envHandle,
+                stmtHandlePointer,
+                OCI.OCI_HTYPE_STMT,
+                0,
+                null));
+        stmtHandle = stmtHandlePointer.getPointer(0);
+
+        String sql = "SELECT INDEX_NAME, STATUS FROM USER_INDEXES WHERE TABLE_NAME='" + tableDefinition.getTableName() + "'";
+        check("OCIStmtPrepare(" + sql + ")", oci.OCIStmtPrepare(
+                stmtHandle,
+                errHandle,
+                sql,
+                sql.length(),
+                OCI.OCI_NTV_SYNTAX,
+                OCI.OCI_DEFAULT));
+
+        check("OCIStmtExecute", oci.OCIStmtExecute(
+                svcHandle,
+                stmtHandle,
+                errHandle,
+                0,
+                0,
+                null,
+                null,
+                OCI.OCI_DEFAULT));
+
+        List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+        // INDEX_NAME, STATUS
+        for (int i = 0; i < 2; i++) {
+            Pointer columnPointer = createPointerPointer();
+            check("OCIParamGet(OCI_HTYPE_STMT)", oci.OCIParamGet(
+                    stmtHandle,
+                    OCI.OCI_HTYPE_STMT,
+                    errHandle,
+                    columnPointer,
+                    i + 1));
+            Pointer column = columnPointer.getPointer(0);
+
+            Pointer sizePointer = createPointer(0);
+            check("OCIAttrGet", oci.OCIAttrGet(
+                    column,
+                    OCI.OCI_DTYPE_PARAM,
+                    sizePointer,
+                    null,
+                    OCI.OCI_ATTR_DATA_SIZE,
+                    errHandle));
+
+            check("OCIDescriptorFree(OCI_DTYPE_PARAM)", oci.OCIDescriptorFree(
+                    column,
+                    OCI.OCI_DTYPE_PARAM));
+
+            int columnSize = sizePointer.getInt(0);
+            ByteBuffer buffer = ByteBuffer.allocateDirect(columnSize*4);
+            buffers.add(buffer);
+
+            Pointer defineHandlePointer = createPointerPointer();
+            check("", oci.OCIDefineByPos(
+                    stmtHandle,
+                    defineHandlePointer,
+                    errHandle,
+                    i + 1,
+                    Pointer.wrap(Runtime.getSystemRuntime(), buffer),
+                    columnSize*4,
+                    OCI.SQLT_CHR,
+                    null,
+                    null,
+                    null,
+                    OCI.OCI_DEFAULT));
+            defineHandles.add(defineHandlePointer.getPointer(0));
+        }
+
+        while (true) {
+            short result = oci.OCIStmtFetch2(stmtHandle, errHandle, 1, OCI.OCI_DEFAULT, 0, OCI.OCI_DEFAULT);
+            if (result == OCI.OCI_NO_DATA) {
+                break;
+            }
+            check("OCIStmtFetch2", result);
+
+            String indexName = getString(buffers.get(0));
+            String status = getString(buffers.get(1));
+
+            logger.info(String.format("Index '%s' of table '%s' is %s.",
+                    indexName, tableDefinition.getTableName(), status));
+
+            if (status.equals("UNUSABLE")) {
+                throw new SQLException(String.format("Index '%s' of table '%s' is unusable. There may be duplicate keys in a unique index.",
+                        indexName, tableDefinition.getTableName()));
+            }
+        }
+    }
+
+    private String getString(ByteBuffer buffer) {
+        byte[] bytes = new byte[buffer.limit()];
+        // duplicate to enable to reuse ByteBuffer
+        buffer.duplicate().get(bytes);
+        return new String(bytes, systemCharset).trim();
     }
 
     public void rollback() throws SQLException
@@ -381,6 +491,14 @@ public class OCIWrapper
                     }
                 }
             } finally {
+                for (Pointer defineHandle : defineHandles) {
+                    freeHandle(OCI.OCI_HTYPE_DEFINE, defineHandle);
+                }
+                defineHandles.clear();
+
+                freeHandle(OCI.OCI_HTYPE_STMT, stmtHandle);
+                dpcaHandle = null;
+
                 freeHandle(OCI.OCI_HTYPE_DIRPATH_STREAM, dpstrHandle);
                 dpcaHandle = null;
 
