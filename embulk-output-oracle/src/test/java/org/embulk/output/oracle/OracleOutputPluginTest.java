@@ -212,6 +212,18 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testInsertDirectOCIMethodMultibyte() throws Exception
+    {
+        invoke(test12c, "testInsertDirectOCIMethodMultibyte");
+    }
+
+    @Test
+    public void testInsertDirectOCIMethodMultibyteDuplicate() throws Exception
+    {
+        invoke(test12c, "testInsertDirectOCIMethodMultibyteDuplicate");
+    }
+
+    @Test
     public void testInsertDirectOCIMethodSplit() throws Exception
     {
         invoke(test12c, "testInsertDirectOCIMethodSplit");

@@ -228,6 +228,34 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         }
     }
 
+    public void testInsertDirectOCIMethodMultibyte() throws Exception
+    {
+        String table = "ＴＥＳＴ１";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/oracle/yml/test-insert-direct-oci-method-multibyte.yml");
+
+        assertTable(table);
+    }
+
+    public void testInsertDirectOCIMethodMultibyteDuplicate() throws Exception
+    {
+        String table = "ＴＥＳＴ１";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table, "A002");
+
+        try {
+            run("/oracle/yml/test-insert-direct-oci-method-multibyte.yml");
+            fail("Exception expected.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
     public void testInsertDirectOCIMethodSplit() throws Exception
     {
         String table = "TEST1";
