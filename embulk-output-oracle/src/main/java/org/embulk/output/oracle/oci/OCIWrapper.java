@@ -32,7 +32,6 @@ public class OCIWrapper
     private Pointer dpcaHandle;
     private Pointer dpstrHandle;
     private Pointer stmtHandle;
-    private List<Pointer> defineHandles = new ArrayList<Pointer>();
 
     private TableDefinition tableDefinition;
     private int maxRowCount;
@@ -377,13 +376,31 @@ public class OCIWrapper
                 null));
         stmtHandle = stmtHandlePointer.getPointer(0);
 
-        String sql = "SELECT INDEX_NAME, STATUS FROM USER_INDEXES WHERE TABLE_NAME='" + tableDefinition.getTableName() + "'";
+        String placeHolder = "tableName";
+        String sql = "SELECT INDEX_NAME, STATUS FROM USER_INDEXES WHERE TABLE_NAME=:" + placeHolder;
         check("OCIStmtPrepare(" + sql + ")", oci.OCIStmtPrepare(
                 stmtHandle,
                 errHandle,
                 sql,
                 sql.length(),
                 OCI.OCI_NTV_SYNTAX,
+                OCI.OCI_DEFAULT));
+
+        Pointer bindHandlePointer = createPointerPointer();
+        Pointer tableName = createPointer(tableDefinition.getTableName());
+        check("OCIBindByName", oci.OCIBindByName(stmtHandle,
+                bindHandlePointer,
+                errHandle,
+                placeHolder,
+                placeHolder.length(),
+                tableName,
+                (int)tableName.size(),
+                OCI.SQLT_CHR,
+                null,
+                null,
+                null,
+                0,
+                null,
                 OCI.OCI_DEFAULT));
 
         check("OCIStmtExecute", oci.OCIStmtExecute(
@@ -426,7 +443,7 @@ public class OCIWrapper
             buffers.add(buffer);
 
             Pointer defineHandlePointer = createPointerPointer();
-            check("", oci.OCIDefineByPos(
+            check("OCIDefineByPos", oci.OCIDefineByPos(
                     stmtHandle,
                     defineHandlePointer,
                     errHandle,
@@ -438,7 +455,6 @@ public class OCIWrapper
                     null,
                     null,
                     OCI.OCI_DEFAULT));
-            defineHandles.add(defineHandlePointer.getPointer(0));
         }
 
         while (true) {
@@ -491,11 +507,6 @@ public class OCIWrapper
                     }
                 }
             } finally {
-                for (Pointer defineHandle : defineHandles) {
-                    freeHandle(OCI.OCI_HTYPE_DEFINE, defineHandle);
-                }
-                defineHandles.clear();
-
                 freeHandle(OCI.OCI_HTYPE_STMT, stmtHandle);
                 dpcaHandle = null;
 

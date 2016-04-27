@@ -25,6 +25,7 @@ public interface OCI
     static int OCI_HTYPE_ERROR = 2;
     static int OCI_HTYPE_SVCCTX = 3;
     static int OCI_HTYPE_STMT = 4;
+    static int OCI_HTYPE_BIND = 5;
     static int OCI_HTYPE_DEFINE = 6;
     static int OCI_HTYPE_DIRPATH_CTX = 14;
     static int OCI_HTYPE_DIRPATH_COLUMN_ARRAY = 15;
@@ -139,6 +140,21 @@ public interface OCI
             String stmt,
             @u_int32_t int stmtLen,
             @u_int32_t int languate,
+            @u_int32_t int mode);
+
+    short OCIBindByName(Pointer stmtp,
+            Pointer bindpp,
+            Pointer errhp,
+            String placeholder,
+            int placehLen,
+            Pointer valuep,
+            int valueSz,
+            @u_int16_t short dty,
+            Pointer indp,
+            Pointer alenp,
+            Pointer rcodep,
+            @u_int32_t int maxarrLen,
+            Pointer curelep,
             @u_int32_t int mode);
 
     short OCIStmtExecute(Pointer svchp,
