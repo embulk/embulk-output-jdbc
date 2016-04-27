@@ -1,6 +1,7 @@
 package org.embulk.output.oracle;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -147,6 +148,22 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    public void testInsertDirectDuplicate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+        insertRecord(table, "A002");
+
+        try {
+            run("/oracle/yml/test-insert-direct.yml");
+            fail("Exception expected.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
     public void testInsertDirectEmpty() throws Exception
     {
         String table = "TEST1";
@@ -193,6 +210,21 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         run("/oracle/yml/test-insert-direct-oci-method.yml");
 
         assertTable(table);
+    }
+
+    public void testInsertDirectOCIMethodDuplicate() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        try {
+            run("/oracle/yml/test-insert-direct-oci-method.yml");
+            fail("Exception expected.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     public void testInsertDirectOCIMethodSplit() throws Exception
@@ -316,7 +348,12 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
 
     private void insertRecord(String table) throws SQLException
     {
-        executeSQL(String.format("INSERT INTO %s VALUES('9999', NULL, NULL, NULL, NULL, NULL, NULL)", table));
+        insertRecord(table, "9999");
+    }
+
+    private void insertRecord(String table, String id) throws SQLException
+    {
+        executeSQL(String.format("INSERT INTO %s VALUES('%s', NULL, NULL, NULL, NULL, NULL, NULL)", table, id));
     }
 
     private void assertTable(String table) throws Exception
