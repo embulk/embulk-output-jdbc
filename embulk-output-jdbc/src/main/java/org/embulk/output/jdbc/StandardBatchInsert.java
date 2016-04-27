@@ -64,7 +64,7 @@ public class StandardBatchInsert
 
     public void close() throws IOException, SQLException
     {
-        // caller should close the connection
+        connection.close();
     }
 
     public void flush() throws IOException, SQLException
