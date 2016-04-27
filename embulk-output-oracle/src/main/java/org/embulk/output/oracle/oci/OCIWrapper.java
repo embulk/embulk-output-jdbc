@@ -376,6 +376,7 @@ public class OCIWrapper
                 null));
         stmtHandle = stmtHandlePointer.getPointer(0);
 
+        // doesn't work for multibyte table name...
         String placeHolder = "tableName";
         String sql = "SELECT INDEX_NAME, STATUS FROM USER_INDEXES WHERE TABLE_NAME=:" + placeHolder;
         check("OCIStmtPrepare(" + sql + ")", oci.OCIStmtPrepare(
