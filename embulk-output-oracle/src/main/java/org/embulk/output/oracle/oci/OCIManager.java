@@ -54,8 +54,8 @@ public class OCIManager
                 ociAndCounter.counter--;
                 if (ociAndCounter.counter == 0) {
                     logger.info(String.format("OCI : close for %s.", key));
-                    ociAndCounter.oci.close();
                     ociAndCounters.remove(key);
+                    ociAndCounter.oci.close();
                 }
             }
         }
