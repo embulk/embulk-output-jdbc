@@ -4,6 +4,8 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.google.common.base.Optional;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -43,7 +45,7 @@ public class PostgreSQLOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys) throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<String> onDuplicateKeyUpdateSql) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 

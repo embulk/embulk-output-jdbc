@@ -91,6 +91,10 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("\"UTC\"")
         public DateTimeZone getDefaultTimeZone();
 
+        @Config("on_duplicate_key_update")
+        @ConfigDefault("null")
+        public Optional<String> getOnDuplicateKeyUpdate();
+
         public void setMergeKeys(Optional<List<String>> keys);
 
         public void setFeatures(Features features);
@@ -659,7 +663,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getTable(), task.getNewTableSchema().get());
             }
-            con.collectMerge(task.getIntermediateTables().get(), schema, task.getTable(), task.getMergeKeys().get());
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getTable(), task.getMergeKeys().get(), task.getOnDuplicateKeyUpdate());
             break;
 
         case REPLACE:
