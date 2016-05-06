@@ -70,8 +70,8 @@ public class RowBuffer
 
         ByteBuffer bytes = charset.encode(value);
         int length = bytes.remaining();
-        if (length > 65535) {
-            throw new SQLException(String.format("byte count of string is too large (max : 65535, actual : %d).", length));
+        if (length > Short.MAX_VALUE) {
+            throw new SQLException(String.format("byte count of string is too large (max : %d, actual : %d).", Short.MAX_VALUE, length));
         }
         if (length > column.getDataSize()) {
             throw new SQLException(String.format("byte count of string is too large for column \"%s\" (max : %d, actual : %d).",
