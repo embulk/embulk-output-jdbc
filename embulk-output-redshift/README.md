@@ -23,7 +23,8 @@ Redshift output plugins for Embulk loads records to Redshift.
 - **s3_bucket**: S3 bucket name for temporary files
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default:"")
 - **options**: extra connection properties (hash, default: {})
-- **mode**: "insert", "insert_direct", "truncate_insert", or "replace". See below. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
+- **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
@@ -51,6 +52,10 @@ Redshift output plugins for Embulk loads records to Redshift.
   * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: Yes.
   * Resumable: No.
+* **merge**:
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, inserts records from intermediate tables after deleting records whose keys exist in intermediate tables. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
+  * Transactional: Yes.
+  * Resumable: Yes.
 
 ### Supported types
 
