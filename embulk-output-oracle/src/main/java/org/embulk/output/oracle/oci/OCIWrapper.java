@@ -26,7 +26,6 @@ public class OCIWrapper
     private final Charset systemCharset;
     private Pointer envHandle;
     private Pointer errHandle;
-    private Pointer svcHandlePointer;
     private Pointer svcHandle;
     private Pointer dpHandle;
     private Pointer dpcaHandle;
@@ -98,7 +97,7 @@ public class OCIWrapper
         errHandle = errHandlePointer.getPointer(0);
 
         // service context
-        svcHandlePointer = createPointerPointer();
+        Pointer svcHandlePointer = createPointerPointer();
         check("OCIHandleAlloc(OCI_HTYPE_SVCCTX)", oci.OCIHandleAlloc(
                 envHandle,
                 svcHandlePointer,
