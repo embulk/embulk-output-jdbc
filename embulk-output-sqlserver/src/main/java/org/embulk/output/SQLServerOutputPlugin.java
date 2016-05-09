@@ -158,7 +158,7 @@ public class SQLServerOutputPlugin
             return new NativeBatchInsert(sqlServerTask.getHost().get(), sqlServerTask.getPort(), sqlServerTask.getInstance(),
                     sqlServerTask.getDatabase().get(), sqlServerTask.getUser(), sqlServerTask.getPassword());
         }
-        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys, task.getOnDuplicateKeyUpdate());
     }
 
     @Override

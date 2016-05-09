@@ -20,6 +20,7 @@ public class StandardBatchInsert
 
     private final JdbcOutputConnector connector;
     private final Optional<List<String>> mergeKeys;
+    private final Optional<String> onDuplicateKeyUpdateSql;
 
     private JdbcOutputConnection connection;
     private PreparedStatement batch;
@@ -28,10 +29,11 @@ public class StandardBatchInsert
     private int batchRows;
     private long totalRows;
 
-    public StandardBatchInsert(JdbcOutputConnector connector, Optional<List<String>> mergeKeys) throws IOException, SQLException
+    public StandardBatchInsert(JdbcOutputConnector connector, Optional<List<String>> mergeKeys, Optional<String> onDuplicateKeyUpdateSql) throws IOException, SQLException
     {
         this.connector = connector;
         this.mergeKeys = mergeKeys;
+        this.onDuplicateKeyUpdateSql = onDuplicateKeyUpdateSql;
     }
 
     public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
@@ -46,7 +48,7 @@ public class StandardBatchInsert
 
     protected PreparedStatement prepareStatement(String loadTable, JdbcSchema insertSchema) throws SQLException
     {
-        return connection.prepareBatchInsertStatement(loadTable, insertSchema, mergeKeys);
+        return connection.prepareBatchInsertStatement(loadTable, insertSchema, mergeKeys, onDuplicateKeyUpdateSql);
     }
 
     public int getBatchWeight()

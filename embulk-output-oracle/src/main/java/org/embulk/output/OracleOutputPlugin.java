@@ -154,6 +154,6 @@ public class OracleOutputPlugin
                     oracleTask.getBatchSize());
         }
 
-        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys, task.getOnDuplicateKeyUpdate());
     }
 }

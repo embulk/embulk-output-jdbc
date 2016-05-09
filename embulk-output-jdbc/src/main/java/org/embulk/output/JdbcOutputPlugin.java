@@ -134,6 +134,6 @@ public class JdbcOutputPlugin
     @Override
     protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
     {
-        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys, task.getOnDuplicateKeyUpdate());
     }
 }
