@@ -37,7 +37,9 @@ public class JdbcOutputConnection
     @Override
     public void close() throws SQLException
     {
-        connection.close();
+        if (!connection.isClosed()) {
+            connection.close();
+        }
     }
 
     public String getSchemaName()
