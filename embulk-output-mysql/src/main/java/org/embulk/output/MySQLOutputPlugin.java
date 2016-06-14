@@ -108,4 +108,14 @@ public class MySQLOutputPlugin
     {
         return new MySQLBatchInsert(getConnector(task, true), mergeKeys);
     }
+
+    @Override
+    protected String[] retryableErrorStates() {
+        return new String[]{"40001"};
+    }
+
+    @Override
+    protected Integer[] retryableErrorCodes() {
+        return new Integer[]{1213, 1205};
+    }
 }

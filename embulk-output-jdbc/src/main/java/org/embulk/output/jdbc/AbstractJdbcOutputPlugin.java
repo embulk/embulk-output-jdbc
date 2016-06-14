@@ -1,5 +1,6 @@
 package org.embulk.output.jdbc;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +91,14 @@ public abstract class AbstractJdbcOutputPlugin
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
         public DateTimeZone getDefaultTimeZone();
+
+        @Config("retry_limit")
+        @ConfigDefault("0")
+        public int getRetryLimit();
+
+        @Config("retry_wait")
+        @ConfigDefault("5")
+        public int getRetryWait();
 
         public void setActualTable(String actualTable);
         public String getActualTable();
@@ -646,14 +655,16 @@ public abstract class AbstractJdbcOutputPlugin
         return lengthSemantics.countLength(tableNameCharset, tableName) + suffixLength <= maxLength;
     }
 
-    protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
+    protected void doCommit(final JdbcOutputConnection con, final PluginTask task, int taskCount)
         throws SQLException
     {
         if (task.getIntermediateTables().get().isEmpty()) {
             return;
         }
 
-        JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
+        RetryableSQLExecutor executor = new RetryableSQLExecutor(retryableErrorStates(), retryableErrorCodes(), task.getRetryLimit(), task.getRetryWait());
+
+        final JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
 
         switch (task.getMode()) {
         case INSERT_DIRECT:
@@ -682,7 +693,12 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get());
+            executor.retryableStmtExecute(new RetryableSQLExecution() {
+                @Override
+                public void run() throws SQLException {
+                  con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get());
+                }
+            });
             break;
 
         case REPLACE:
@@ -861,7 +877,7 @@ public abstract class AbstractJdbcOutputPlugin
             }
             batch.prepare(destTable, insertIntoSchema);
 
-            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize());
+            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize(), retryableErrorStates(), retryableErrorCodes(), task.getRetryLimit(), task.getRetryWait());
             batch = null;
             return output;
 
@@ -888,10 +904,11 @@ public abstract class AbstractJdbcOutputPlugin
         private final BatchInsert batch;
         private final int batchSize;
         private final int forceBatchFlushSize;
+        private final RetryableSQLExecutor executor;
 
         public PluginPageOutput(final PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
-                int batchSize)
+                int batchSize, String[] retryableErrorStates, Integer[] retryableErrorCodes, int retryLimit, int retryWait)
         {
             this.pageReader = pageReader;
             this.batch = batch;
@@ -904,6 +921,7 @@ public abstract class AbstractJdbcOutputPlugin
                             }
                         }));
             this.batchSize = batchSize;
+            this.executor = new RetryableSQLExecutor(retryableErrorStates, retryableErrorCodes, retryLimit, retryWait);
             this.forceBatchFlushSize = batchSize * 2;
         }
 
@@ -914,13 +932,31 @@ public abstract class AbstractJdbcOutputPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     if (batch.getBatchWeight() > forceBatchFlushSize) {
-                        batch.flush();
+                        executor.retryableStmtExecute(new RetryableSQLExecution() {
+                            @Override
+                            public void run() throws SQLException {
+                                try {
+                                    batch.flush();
+                                } catch (IOException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }
+                        });
                     }
                     handleColumnsSetters();
                     batch.add();
                 }
                 if (batch.getBatchWeight() > batchSize) {
-                    batch.flush();
+                    executor.retryableStmtExecute(new RetryableSQLExecution() {
+                        @Override
+                        public void run() throws SQLException {
+                            try {
+                                batch.flush();
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    });
                 }
             } catch (IOException | SQLException ex) {
                 throw new RuntimeException(ex);
@@ -1061,4 +1097,59 @@ public abstract class AbstractJdbcOutputPlugin
         }
         buildExceptionMessageCont(sb, ex.getCause(), ex.getMessage());
     }
+
+    protected String[] retryableErrorStates() {
+        return new String[]{};
+    }
+
+    protected Integer[] retryableErrorCodes() {
+        return new Integer[]{};
+    }
+
+    interface RetryableSQLExecution {
+        void run() throws SQLException;
+    }
+
+    static class RetryableSQLExecutor {
+        private final String[] retryableErrorStates;
+        private final Integer[] retryableErrorCodes;
+        private final int retryLimit;
+        private final int retryWait;
+
+        RetryableSQLExecutor(String[] retryableErrorStates, Integer[] retryableErrorCodes, int retryLimit, int retryWait) {
+            this.retryableErrorStates = retryableErrorStates;
+            this.retryableErrorCodes = retryableErrorCodes;
+            this.retryLimit = retryLimit;
+            this.retryWait = retryWait;
+        }
+
+        public void retryableStmtExecute(RetryableSQLExecution process)
+                throws SQLException
+        {
+            int retryCount = 0;
+            while (true) {
+                try {
+                    process.run();
+                    break;
+                } catch (SQLException ex) {
+                    List<String> states = Arrays.asList(retryableErrorStates);
+                    List<Integer> codes = Arrays.asList(retryableErrorCodes);
+
+                    if (states.contains(ex.getSQLState()) || codes.contains(ex.getErrorCode())) {
+                        retryCount++;
+                        if (retryCount > retryLimit)
+                            throw ex;
+
+                        try {
+                            Thread.sleep(retryWait * 1000);
+                        } catch (InterruptedException ignored) {
+                        }
+                    } else {
+                        throw ex;
+                    }
+                }
+            }
+        }
+    }
+
 }
