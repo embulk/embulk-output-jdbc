@@ -1,3 +1,12 @@
+Release 0.6.1 - 2016-06-23
+
+* Support merge mode in embulk-output-redishift (++@rolandhawk ).
+* Case insensitive for table names and column names.
+* embulk-output-oracle OCI mode throws an exception for duplicate keys instead of disabling the index.
+* Fixed unclosed connection.
+
+Throws exception
+
 Release 0.6.0 - 2016-04-26
 
 * Support NCLOB (JDBC SQL type).
