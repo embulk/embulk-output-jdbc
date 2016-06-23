@@ -24,7 +24,6 @@ public class OCIWrapper
     private final Charset systemCharset;
     private Pointer envHandle;
     private Pointer errHandle;
-    private Pointer svcHandlePointer;
     private Pointer svcHandle;
     private Pointer dpHandle;
     private Pointer dpcaHandle;
@@ -95,7 +94,7 @@ public class OCIWrapper
         errHandle = errHandlePointer.getPointer(0);
 
         // service context
-        svcHandlePointer = createPointerPointer();
+        Pointer svcHandlePointer = createPointerPointer();
         check("OCIHandleAlloc(OCI_HTYPE_SVCCTX)", oci.OCIHandleAlloc(
                 envHandle,
                 svcHandlePointer,
@@ -142,8 +141,17 @@ public class OCIWrapper
                     errHandle));
         }
 
-        // load table name
-        Pointer tableName = createPointer(tableDefinition.getTableName());
+        Pointer cols = createPointer((short)tableDefinition.getColumnCount());
+        check("OCIAttrSet(OCI_ATTR_NUM_COLS)", oci.OCIAttrSet(
+                dpHandle,
+                OCI.OCI_HTYPE_DIRPATH_CTX,
+                cols,
+                (int)cols.size(),
+                OCI.OCI_ATTR_NUM_COLS,
+                errHandle));
+
+        // load table name (case sensitive)
+        Pointer tableName = createPointer("\"" + tableDefinition.getTableName() + "\"");
         check("OCIAttrSet(OCI_ATTR_NAME)", oci.OCIAttrSet(
                 dpHandle,
                 OCI.OCI_HTYPE_DIRPATH_CTX,
@@ -152,13 +160,13 @@ public class OCIWrapper
                 , OCI.OCI_ATTR_NAME,
                 errHandle));
 
-        Pointer cols = createPointer((short)tableDefinition.getColumnCount());
-        check("OCIAttrSet(OCI_ATTR_NUM_COLS)", oci.OCIAttrSet(
+        Pointer noIndexErrors = createPointer((byte)1);
+        check("OCIAttrSet(OCI_ATTR_DIRPATH_NO_INDEX_ERRORS)", oci.OCIAttrSet(
                 dpHandle,
                 OCI.OCI_HTYPE_DIRPATH_CTX,
-                cols,
-                (int)cols.size(),
-                OCI.OCI_ATTR_NUM_COLS,
+                noIndexErrors,
+                (int)noIndexErrors.size(),
+                OCI.OCI_ATTR_DIRPATH_NO_INDEX_ERRORS,
                 errHandle));
 
         Pointer columnsPointer = createPointerPointer();
@@ -352,10 +360,12 @@ public class OCIWrapper
         committedOrRollbacked = true;
         logger.info("OCI : start to commit.");
 
-        check("OCIDirPathFinish", oci.OCIDirPathFinish(dpHandle, errHandle));
-
-        check("OCILogoff", oci.OCILogoff(svcHandle, errHandle));
-        svcHandle = null;
+        try {
+            check("OCIDirPathFinish", oci.OCIDirPathFinish(dpHandle, errHandle));
+        } finally {
+            check("OCILogoff", oci.OCILogoff(svcHandle, errHandle));
+            svcHandle = null;
+        }
     }
 
     public void rollback() throws SQLException
@@ -363,10 +373,12 @@ public class OCIWrapper
         committedOrRollbacked = true;
         logger.info("OCI : start to rollback.");
 
-        check("OCIDirPathAbort", oci.OCIDirPathAbort(dpHandle, errHandle));
-
-        check("OCILogoff", oci.OCILogoff(svcHandle, errHandle));
-        svcHandle = null;
+        try {
+            check("OCIDirPathAbort", oci.OCIDirPathAbort(dpHandle, errHandle));
+        } finally {
+            check("OCILogoff", oci.OCILogoff(svcHandle, errHandle));
+            svcHandle = null;
+        }
     }
 
     public void close() throws SQLException
@@ -411,6 +423,13 @@ public class OCIWrapper
     {
         // not database charset, but system charset of client
         return Pointer.wrap(Runtime.getSystemRuntime(), ByteBuffer.wrap(s.getBytes(systemCharset)));
+    }
+
+    private Pointer createPointer(byte n)
+    {
+        Pointer pointer = new ArrayMemoryIO(Runtime.getSystemRuntime(), 1);
+        pointer.putByte(0, n);
+        return pointer;
     }
 
     private Pointer createPointer(short n)

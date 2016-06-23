@@ -176,6 +176,12 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testInsertDirectDuplicate() throws Exception
+    {
+        invoke(test12c, "testInsertDirectDuplicate");
+    }
+
+    @Test
     public void testInsertDirectCreate() throws Exception
     {
         invoke("testInsertDirectCreate");
@@ -197,6 +203,24 @@ public class OracleOutputPluginTest
     public void testInsertDirectOCIMethod() throws Exception
     {
         invoke(test12c, "testInsertDirectOCIMethod");
+    }
+
+    @Test
+    public void testInsertDirectOCIMethodDuplicate() throws Exception
+    {
+        invoke(test12c, "testInsertDirectOCIMethodDuplicate");
+    }
+
+    @Test
+    public void testInsertDirectOCIMethodMultibyte() throws Exception
+    {
+        invoke(test12c, "testInsertDirectOCIMethodMultibyte");
+    }
+
+    @Test
+    public void testInsertDirectOCIMethodMultibyteDuplicate() throws Exception
+    {
+        invoke(test12c, "testInsertDirectOCIMethodMultibyteDuplicate");
     }
 
     @Test

@@ -15,7 +15,6 @@ public interface OCI
     static short OCI_NO_DATA = 100;
     static short OCI_CONTINUE = -24200;
 
-
     static int OCI_THREADED = 1;
     static int OCI_OBJECT = 2;
 
@@ -36,13 +35,14 @@ public interface OCI
     static int OCI_ATTR_NUM_ROWS = 81;
     static int OCI_ATTR_NUM_COLS = 102;
     static int OCI_ATTR_LIST_COLUMNS = 103;
+    static int OCI_ATTR_DIRPATH_NO_INDEX_ERRORS = 2013;
 
     static int OCI_DTYPE_PARAM = 53;
 
     static byte OCI_DIRPATH_COL_COMPLETE = 0;
 
-    static int SQLT_CHR = 1;
-    static int SQLT_INT = 3;
+    static short SQLT_CHR = 1;
+    static short SQLT_INT = 3;
 
     short OCIErrorGet(Pointer hndlp,
             @u_int32_t int  recordno,
@@ -129,4 +129,4 @@ public interface OCI
     short OCIDirPathFinish(Pointer dpctx, Pointer errhp);
 
     short OCIDirPathAbort(Pointer dpctx, Pointer errhp);
-}
+ }
