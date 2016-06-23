@@ -212,6 +212,24 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testLowerTable() throws Exception
+    {
+        invoke(test12c, "testLowerTable");
+    }
+
+    @Test
+    public void testLowerColumn() throws Exception
+    {
+        invoke(test12c, "testLowerColumn");
+    }
+
+    @Test
+    public void testLowerColumnOptions() throws Exception
+    {
+        invoke(test12c, "testLowerColumnOptions");
+    }
+
+    @Test
     public void testReplace() throws Exception
     {
         invoke(test12c, "testReplace");

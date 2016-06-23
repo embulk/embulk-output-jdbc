@@ -1,6 +1,9 @@
 package org.embulk.output.jdbc;
 
 import java.util.List;
+
+import org.embulk.config.ConfigException;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -24,10 +27,26 @@ public class JdbcSchema
 
     public Optional<JdbcColumn> findColumn(String name)
     {
+        // because both upper case column and lower case column may exist, search twice
         for (JdbcColumn column : columns) {
             if (column.getName().equals(name)) {
                 return Optional.of(column);
             }
+        }
+
+        JdbcColumn foundColumn = null;
+        for (JdbcColumn column : columns) {
+            if (column.getName().equalsIgnoreCase(name)) {
+                if (foundColumn != null) {
+                    throw new ConfigException(String.format("Cannot specify column '%s' because both '%s' and '%s' exist.",
+                            name, foundColumn.getName(), column.getName()));
+                }
+                foundColumn = column;
+            }
+        }
+
+        if (foundColumn != null) {
+            return Optional.of(foundColumn);
         }
         return Optional.absent();
     }
