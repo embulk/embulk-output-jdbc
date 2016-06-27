@@ -15,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.embulk.spi.util.RetryExecutor;
 import org.slf4j.Logger;
 import org.joda.time.DateTimeZone;
 
@@ -93,12 +94,16 @@ public abstract class AbstractJdbcOutputPlugin
         public DateTimeZone getDefaultTimeZone();
 
         @Config("retry_limit")
-        @ConfigDefault("0")
+        @ConfigDefault("12")
         public int getRetryLimit();
 
         @Config("retry_wait")
-        @ConfigDefault("5")
+        @ConfigDefault("1000")
         public int getRetryWait();
+
+        @Config("max_retry_wait")
+        @ConfigDefault("1800000") // 30 * 60 * 1000
+        public int getMaxRetryWait();
 
         public void setActualTable(String actualTable);
         public String getActualTable();
@@ -366,7 +371,7 @@ public abstract class AbstractJdbcOutputPlugin
             final Schema schema, final int taskCount)
     {
         try {
-            withRetry(new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
+            withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
                 public void run() throws SQLException
                 {
                     JdbcOutputConnection con = newConnection(task, true, false);
@@ -388,7 +393,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
-                withRetry(new IdempotentSqlRunnable() {
+                withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {
                     public void run() throws SQLException
                     {
                         JdbcOutputConnection con = newConnection(task, false, false);
@@ -414,7 +419,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
-                withRetry(new IdempotentSqlRunnable() {
+                withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {
                     public void run() throws SQLException
                     {
                         JdbcOutputConnection con = newConnection(task, true, true);
@@ -662,8 +667,6 @@ public abstract class AbstractJdbcOutputPlugin
             return;
         }
 
-        RetryableSQLExecutor executor = new RetryableSQLExecutor(retryableErrorStates(), retryableErrorCodes(), task.getRetryLimit(), task.getRetryWait());
-
         final JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
 
         switch (task.getMode()) {
@@ -693,12 +696,16 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            executor.retryableStmtExecute(new RetryableSQLExecution() {
-                @Override
-                public void run() throws SQLException {
-                  con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get());
-                }
-            });
+            try {
+                withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {
+                    @Override
+                    public void run() throws SQLException {
+                        con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get());
+                    }
+                });
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             break;
 
         case REPLACE:
@@ -877,7 +884,7 @@ public abstract class AbstractJdbcOutputPlugin
             }
             batch.prepare(destTable, insertIntoSchema);
 
-            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize(), retryableErrorStates(), retryableErrorCodes(), task.getRetryLimit(), task.getRetryWait());
+            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize(), retryableErrorStates(), retryableErrorCodes(), task);
             batch = null;
             return output;
 
@@ -904,11 +911,13 @@ public abstract class AbstractJdbcOutputPlugin
         private final BatchInsert batch;
         private final int batchSize;
         private final int forceBatchFlushSize;
-        private final RetryableSQLExecutor executor;
+        private final String[] retryableErrorStates;
+        private final Integer[] retryableErrorCodes;
+        private final PluginTask task;
 
         public PluginPageOutput(final PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
-                int batchSize, String[] retryableErrorStates, Integer[] retryableErrorCodes, int retryLimit, int retryWait)
+                int batchSize, String[] retryableErrorStates, Integer[] retryableErrorCodes, PluginTask task)
         {
             this.pageReader = pageReader;
             this.batch = batch;
@@ -921,7 +930,9 @@ public abstract class AbstractJdbcOutputPlugin
                             }
                         }));
             this.batchSize = batchSize;
-            this.executor = new RetryableSQLExecutor(retryableErrorStates, retryableErrorCodes, retryLimit, retryWait);
+            this.retryableErrorStates = retryableErrorStates;
+            this.retryableErrorCodes = retryableErrorCodes;
+            this.task = task;
             this.forceBatchFlushSize = batchSize * 2;
         }
 
@@ -932,7 +943,7 @@ public abstract class AbstractJdbcOutputPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     if (batch.getBatchWeight() > forceBatchFlushSize) {
-                        executor.retryableStmtExecute(new RetryableSQLExecution() {
+                        withRetry(task, retryableErrorStates, retryableErrorCodes, new IdempotentSqlRunnable() {
                             @Override
                             public void run() throws SQLException {
                                 try {
@@ -947,7 +958,7 @@ public abstract class AbstractJdbcOutputPlugin
                     batch.add();
                 }
                 if (batch.getBatchWeight() > batchSize) {
-                    executor.retryableStmtExecute(new RetryableSQLExecution() {
+                    withRetry(task, retryableErrorStates, retryableErrorCodes, new IdempotentSqlRunnable() {
                         @Override
                         public void run() throws SQLException {
                             try {
@@ -958,7 +969,7 @@ public abstract class AbstractJdbcOutputPlugin
                         }
                     });
                 }
-            } catch (IOException | SQLException ex) {
+            } catch (IOException | SQLException | InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -967,8 +978,17 @@ public abstract class AbstractJdbcOutputPlugin
         public void finish()
         {
             try {
-                batch.finish();
-            } catch (IOException | SQLException ex) {
+                withRetry(task, retryableErrorStates, retryableErrorCodes, new IdempotentSqlRunnable() {
+                    @Override
+                    public void run() throws SQLException {
+                        try {
+                            batch.finish();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
+            } catch (InterruptedException | SQLException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -1003,101 +1023,6 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    public static interface IdempotentSqlRunnable
-    {
-        public void run() throws SQLException;
-    }
-
-    protected void withRetry(IdempotentSqlRunnable op)
-            throws SQLException, InterruptedException
-    {
-        withRetry(op, "Operation failed");
-    }
-
-    protected void withRetry(final IdempotentSqlRunnable op, final String errorMessage)
-            throws SQLException, InterruptedException
-    {
-        try {
-            retryExecutor()
-                .withRetryLimit(12)
-                .withInitialRetryWait(1000)
-                .withMaxRetryWait(30 * 60 * 1000)
-                .runInterruptible(new Retryable<Void>() {
-                    public Void call() throws Exception
-                    {
-                        op.run();
-                        return null;
-                    }
-
-                    public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
-                    {
-                        if (exception instanceof SQLException) {
-                            SQLException ex = (SQLException) exception;
-                            String sqlState = ex.getSQLState();
-                            int errorCode = ex.getErrorCode();
-                            logger.warn("{} ({}:{}), retrying {}/{} after {} seconds. Message: {}",
-                                    errorMessage, errorCode, sqlState, retryCount, retryLimit, retryWait/1000,
-                                    buildExceptionMessage(exception));
-                        } else {
-                            logger.warn("{}, retrying {}/{} after {} seconds. Message: {}",
-                                    errorMessage, retryCount, retryLimit, retryWait/1000,
-                                    buildExceptionMessage(exception));
-                        }
-                        if (retryCount % 3 == 0) {
-                            logger.info("Error details:", exception);
-                        }
-                    }
-
-                    public void onGiveup(Exception firstException, Exception lastException)
-                    {
-                        if (firstException instanceof SQLException) {
-                            SQLException ex = (SQLException) firstException;
-                            String sqlState = ex.getSQLState();
-                            int errorCode = ex.getErrorCode();
-                            logger.error("{} ({}:{})", errorMessage, errorCode, sqlState);
-                        }
-                    }
-
-                    public boolean isRetryableException(Exception exception)
-                    {
-                        //if (exception instanceof SQLException) {
-                        //    SQLException ex = (SQLException) exception;
-                        //    String sqlState = ex.getSQLState();
-                        //    int errorCode = ex.getErrorCode();
-                        //    return isRetryableSQLException(ex);
-                        //}
-                        return false;  // TODO
-                    }
-                });
-
-        } catch (ExecutionException ex) {
-            Throwable cause = ex.getCause();
-            Throwables.propagateIfInstanceOf(cause, SQLException.class);
-            throw Throwables.propagate(cause);
-        }
-    }
-
-    private String buildExceptionMessage(Throwable ex) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(ex.getMessage());
-        if (ex.getCause() != null) {
-            buildExceptionMessageCont(sb, ex.getCause(), ex.getMessage());
-        }
-        return sb.toString();
-    }
-
-    private void buildExceptionMessageCont(StringBuilder sb, Throwable ex, String lastMessage) {
-        if (!lastMessage.equals(ex.getMessage())) {
-            // suppress same messages
-            sb.append(" < ");
-            sb.append(ex.getMessage());
-        }
-        if (ex.getCause() == null) {
-            return;
-        }
-        buildExceptionMessageCont(sb, ex.getCause(), ex.getMessage());
-    }
-
     protected String[] retryableErrorStates() {
         return new String[]{};
     }
@@ -1106,50 +1031,117 @@ public abstract class AbstractJdbcOutputPlugin
         return new Integer[]{};
     }
 
-    interface RetryableSQLExecution {
-        void run() throws SQLException;
+    public static interface IdempotentSqlRunnable
+    {
+        public void run() throws SQLException;
     }
 
-    static class RetryableSQLExecutor {
+    private static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, IdempotentSqlRunnable op)
+            throws SQLException, InterruptedException
+    {
+        withRetry(task, retryableErrorStates, retryableErrorCodes, op, "Operation failed");
+    }
+
+    private static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, final IdempotentSqlRunnable op, final String errorMessage)
+            throws SQLException, InterruptedException
+    {
+        try {
+            buildRetryExecutor(task)
+                .runInterruptible(new RetryableSQLExecution(retryableErrorStates, retryableErrorCodes, op, errorMessage));
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            Throwables.propagateIfInstanceOf(cause, SQLException.class);
+            throw Throwables.propagate(cause);
+        }
+    }
+
+    private static RetryExecutor buildRetryExecutor(PluginTask task) {
+        return retryExecutor()
+                .withRetryLimit(task.getRetryLimit())
+                .withInitialRetryWait(task.getRetryWait())
+                .withMaxRetryWait(task.getMaxRetryWait());
+    }
+
+    static class RetryableSQLExecution implements Retryable<Void> {
         private final String[] retryableErrorStates;
         private final Integer[] retryableErrorCodes;
-        private final int retryLimit;
-        private final int retryWait;
+        private final String errorMessage;
+        private final IdempotentSqlRunnable op;
 
-        RetryableSQLExecutor(String[] retryableErrorStates, Integer[] retryableErrorCodes, int retryLimit, int retryWait) {
+        private final Logger logger = Exec.getLogger(this.getClass());
+
+        public RetryableSQLExecution(String[] retryableErrorStates, Integer[] retryableErrorCodes, IdempotentSqlRunnable op, String errorMessage) {
             this.retryableErrorStates = retryableErrorStates;
             this.retryableErrorCodes = retryableErrorCodes;
-            this.retryLimit = retryLimit;
-            this.retryWait = retryWait;
+            this.errorMessage = errorMessage;
+            this.op = op;
         }
 
-        public void retryableStmtExecute(RetryableSQLExecution process)
-                throws SQLException
+        public Void call() throws Exception {
+            op.run();
+            return null;
+        }
+
+        public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
         {
-            int retryCount = 0;
-            while (true) {
-                try {
-                    process.run();
-                    break;
-                } catch (SQLException ex) {
-                    List<String> states = Arrays.asList(retryableErrorStates);
-                    List<Integer> codes = Arrays.asList(retryableErrorCodes);
-
-                    if (states.contains(ex.getSQLState()) || codes.contains(ex.getErrorCode())) {
-                        retryCount++;
-                        if (retryCount > retryLimit)
-                            throw ex;
-
-                        try {
-                            Thread.sleep(retryWait * 1000);
-                        } catch (InterruptedException ignored) {
-                        }
-                    } else {
-                        throw ex;
-                    }
-                }
+            if (exception instanceof SQLException) {
+                SQLException ex = (SQLException) exception;
+                String sqlState = ex.getSQLState();
+                int errorCode = ex.getErrorCode();
+                logger.warn("{} ({}:{}), retrying {}/{} after {} seconds. Message: {}",
+                        errorMessage, errorCode, sqlState, retryCount, retryLimit, retryWait/1000,
+                        buildExceptionMessage(exception));
+            } else {
+                logger.warn("{}, retrying {}/{} after {} seconds. Message: {}",
+                        errorMessage, retryCount, retryLimit, retryWait/1000,
+                        buildExceptionMessage(exception));
+            }
+            if (retryCount % 3 == 0) {
+                logger.info("Error details:", exception);
             }
         }
-    }
 
+        public void onGiveup(Exception firstException, Exception lastException)
+        {
+            if (firstException instanceof SQLException) {
+                SQLException ex = (SQLException) firstException;
+                String sqlState = ex.getSQLState();
+                int errorCode = ex.getErrorCode();
+                logger.error("{} ({}:{})", errorMessage, errorCode, sqlState);
+            }
+        }
+
+        public boolean isRetryableException(Exception exception) {
+            if (exception instanceof SQLException) {
+                SQLException ex = (SQLException)exception;
+                List<String> states = Arrays.asList(retryableErrorStates);
+                List<Integer> codes = Arrays.asList(retryableErrorCodes);
+
+                return (states.contains(ex.getSQLState()) || codes.contains(ex.getErrorCode()));
+            } else {
+                return false;
+            }
+        }
+
+        private String buildExceptionMessage(Throwable ex) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(ex.getMessage());
+            if (ex.getCause() != null) {
+                buildExceptionMessageCont(sb, ex.getCause(), ex.getMessage());
+            }
+            return sb.toString();
+        }
+
+        private void buildExceptionMessageCont(StringBuilder sb, Throwable ex, String lastMessage) {
+            if (!lastMessage.equals(ex.getMessage())) {
+                // suppress same messages
+                sb.append(" < ");
+                sb.append(ex.getMessage());
+            }
+            if (ex.getCause() == null) {
+                return;
+            }
+            buildExceptionMessageCont(sb, ex.getCause(), ex.getMessage());
+        }
+    }
 }
