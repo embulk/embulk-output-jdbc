@@ -1027,13 +1027,13 @@ public abstract class AbstractJdbcOutputPlugin
         public void run() throws SQLException;
     }
 
-    private static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, IdempotentSqlRunnable op)
+    protected static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, IdempotentSqlRunnable op)
             throws SQLException, InterruptedException
     {
         withRetry(task, retryableErrorStates, retryableErrorCodes, op, "Operation failed");
     }
 
-    private static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, final IdempotentSqlRunnable op, final String errorMessage)
+    protected static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, final IdempotentSqlRunnable op, final String errorMessage)
             throws SQLException, InterruptedException
     {
         try {
