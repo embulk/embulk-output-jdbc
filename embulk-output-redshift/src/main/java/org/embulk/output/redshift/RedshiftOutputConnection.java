@@ -4,6 +4,8 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -122,7 +124,7 @@ public class RedshiftOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys) throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 

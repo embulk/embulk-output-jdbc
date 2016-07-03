@@ -104,6 +104,10 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("1800000") // 30 * 60 * 1000
         public int getMaxRetryWait();
 
+        @Config("merge_rule")
+        @ConfigDefault("null")
+        public Optional<List<String>> getMergeRule();
+
         public void setActualTable(String actualTable);
         public String getActualTable();
 
@@ -226,7 +230,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     protected abstract JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation);
 
-    protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException;
+    protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException;
 
     protected JdbcOutputConnection newConnection(PluginTask task, boolean retryableMetadataOperation,
             boolean autoCommit) throws SQLException
@@ -695,7 +699,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get());
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get(), task.getMergeRule());
             break;
 
         case REPLACE:
@@ -845,6 +849,9 @@ public abstract class AbstractJdbcOutputPlugin
             batch = newBatchInsert(task,
                     task.getMode() == Mode.MERGE_DIRECT ?
                         task.getMergeKeys() :
+                        Optional.<List<String>>absent(),
+                    task.getMode() == Mode.MERGE_DIRECT ?
+                        task.getMergeRule() :
                         Optional.<List<String>>absent());
         } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);

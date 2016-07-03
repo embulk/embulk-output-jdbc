@@ -140,7 +140,7 @@ public class RedshiftOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
     {
         if (mergeKeys.isPresent()) {
             throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");

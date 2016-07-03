@@ -127,7 +127,7 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
     {
         if (mergeKeys.isPresent()) {
             throw new UnsupportedOperationException("Oracle output plugin doesn't support 'merge_direct' mode.");
@@ -154,6 +154,6 @@ public class OracleOutputPlugin
                     oracleTask.getBatchSize());
         }
 
-        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys, mergeRule);
     }
 }

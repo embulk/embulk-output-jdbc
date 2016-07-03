@@ -104,9 +104,9 @@ public class MySQLOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
     {
-        return new MySQLBatchInsert(getConnector(task, true), mergeKeys);
+        return new MySQLBatchInsert(getConnector(task, true), mergeKeys, mergeRule);
     }
 
 

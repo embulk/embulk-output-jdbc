@@ -151,14 +151,14 @@ public class SQLServerOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
     {
         SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
         if (sqlServerTask.getInsertMethod() == InsertMethod.NATIVE) {
             return new NativeBatchInsert(sqlServerTask.getHost().get(), sqlServerTask.getPort(), sqlServerTask.getInstance(),
                     sqlServerTask.getDatabase().get(), sqlServerTask.getUser(), sqlServerTask.getPassword());
         }
-        return new StandardBatchInsert(getConnector(task, true), mergeKeys);
+        return new StandardBatchInsert(getConnector(task, true), mergeKeys, mergeRule);
     }
 
     @Override

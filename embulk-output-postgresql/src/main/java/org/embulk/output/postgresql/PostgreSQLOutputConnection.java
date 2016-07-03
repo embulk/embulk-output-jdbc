@@ -4,6 +4,8 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.google.common.base.Optional;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -43,7 +45,7 @@ public class PostgreSQLOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys) throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -51,11 +53,23 @@ public class PostgreSQLOutputConnection
         sb.append("UPDATE ");
         quoteIdentifierString(sb, toTable);
         sb.append(" SET ");
-        for (int i=0; i < schema.getCount(); i++) {
-            if (i != 0) { sb.append(", "); }
-            quoteIdentifierString(sb, schema.getColumnName(i));
-            sb.append(" = S.");
-            quoteIdentifierString(sb, schema.getColumnName(i));
+        if (mergeRule.isPresent()) {
+            List<String> rule = mergeRule.get();
+            for (int i = 0; i < rule.size(); i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(rule.get(i));
+            }
+        } else {
+            for (int i = 0; i < schema.getCount(); i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                quoteIdentifierString(sb, schema.getColumnName(i));
+                sb.append(" = S.");
+                quoteIdentifierString(sb, schema.getColumnName(i));
+            }
         }
         sb.append(" FROM (");
         for (int i=0; i < fromTables.size(); i++) {
