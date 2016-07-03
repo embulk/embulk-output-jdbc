@@ -1,6 +1,5 @@
 package org.embulk.output.jdbc;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -371,7 +370,7 @@ public abstract class AbstractJdbcOutputPlugin
             final Schema schema, final int taskCount)
     {
         try {
-            withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
+            withRetry(task, new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
                 public void run() throws SQLException
                 {
                     JdbcOutputConnection con = newConnection(task, true, false);
@@ -393,7 +392,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
-                withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {
+                withRetry(task, new IdempotentSqlRunnable() {
                     public void run() throws SQLException
                     {
                         JdbcOutputConnection con = newConnection(task, false, false);
@@ -419,7 +418,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
-                withRetry(task, retryableErrorStates(), retryableErrorCodes(), new IdempotentSqlRunnable() {
+                withRetry(task, new IdempotentSqlRunnable() {
                     public void run() throws SQLException
                     {
                         JdbcOutputConnection con = newConnection(task, true, true);
@@ -875,7 +874,7 @@ public abstract class AbstractJdbcOutputPlugin
             }
             batch.prepare(destTable, insertIntoSchema);
 
-            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize(), retryableErrorStates(), retryableErrorCodes(), task);
+            PluginPageOutput output = new PluginPageOutput(reader, batch, columnSetters, task.getBatchSize(), task);
             batch = null;
             return output;
 
@@ -893,7 +892,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    public static class PluginPageOutput
+    public class PluginPageOutput
             implements TransactionalPageOutput
     {
         protected final List<Column> columns;
@@ -902,13 +901,11 @@ public abstract class AbstractJdbcOutputPlugin
         private final BatchInsert batch;
         private final int batchSize;
         private final int forceBatchFlushSize;
-        private final String[] retryableErrorStates;
-        private final Integer[] retryableErrorCodes;
         private final PluginTask task;
 
         public PluginPageOutput(final PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
-                int batchSize, String[] retryableErrorStates, Integer[] retryableErrorCodes, PluginTask task)
+                int batchSize, PluginTask task)
         {
             this.pageReader = pageReader;
             this.batch = batch;
@@ -921,8 +918,6 @@ public abstract class AbstractJdbcOutputPlugin
                             }
                         }));
             this.batchSize = batchSize;
-            this.retryableErrorStates = retryableErrorStates;
-            this.retryableErrorCodes = retryableErrorCodes;
             this.task = task;
             this.forceBatchFlushSize = batchSize * 2;
         }
@@ -934,7 +929,7 @@ public abstract class AbstractJdbcOutputPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     if (batch.getBatchWeight() > forceBatchFlushSize) {
-                        withRetry(task, retryableErrorStates, retryableErrorCodes, new IdempotentSqlRunnable() {
+                        withRetry(task, new IdempotentSqlRunnable() {
                             @Override
                             public void run() throws SQLException {
                                 try {
@@ -949,7 +944,7 @@ public abstract class AbstractJdbcOutputPlugin
                     batch.add();
                 }
                 if (batch.getBatchWeight() > batchSize) {
-                    withRetry(task, retryableErrorStates, retryableErrorCodes, new IdempotentSqlRunnable() {
+                    withRetry(task, new IdempotentSqlRunnable() {
                         @Override
                         public void run() throws SQLException {
                             try {
@@ -969,7 +964,7 @@ public abstract class AbstractJdbcOutputPlugin
         public void finish()
         {
             try {
-                withRetry(task, retryableErrorStates, retryableErrorCodes, new IdempotentSqlRunnable() {
+                withRetry(task, new IdempotentSqlRunnable() {
                     @Override
                     public void run() throws SQLException {
                         try {
@@ -1014,31 +1009,33 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected String[] retryableErrorStates() {
-        return new String[]{};
+    protected boolean isRetryableException(SQLException exception)
+    {
+        return isRetryableException(exception.getSQLState(), exception.getErrorCode());
+    }
+    protected boolean isRetryableException(String sqlState, int errorCode)
+    {
+        return false;
     }
 
-    protected Integer[] retryableErrorCodes() {
-        return new Integer[]{};
-    }
 
     public static interface IdempotentSqlRunnable
     {
         public void run() throws SQLException;
     }
 
-    protected static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, IdempotentSqlRunnable op)
+    protected void withRetry(PluginTask task, IdempotentSqlRunnable op)
             throws SQLException, InterruptedException
     {
-        withRetry(task, retryableErrorStates, retryableErrorCodes, op, "Operation failed");
+        withRetry(task, op, "Operation failed");
     }
 
-    protected static void withRetry(PluginTask task, String[] retryableErrorStates, Integer[] retryableErrorCodes, final IdempotentSqlRunnable op, final String errorMessage)
+    protected void withRetry(PluginTask task, final IdempotentSqlRunnable op, final String errorMessage)
             throws SQLException, InterruptedException
     {
         try {
             buildRetryExecutor(task)
-                .runInterruptible(new RetryableSQLExecution(retryableErrorStates, retryableErrorCodes, op, errorMessage));
+                .runInterruptible(new RetryableSQLExecution(op, errorMessage));
         } catch (ExecutionException ex) {
             Throwable cause = ex.getCause();
             Throwables.propagateIfInstanceOf(cause, SQLException.class);
@@ -1053,17 +1050,13 @@ public abstract class AbstractJdbcOutputPlugin
                 .withMaxRetryWait(task.getMaxRetryWait());
     }
 
-    static class RetryableSQLExecution implements Retryable<Void> {
-        private final String[] retryableErrorStates;
-        private final Integer[] retryableErrorCodes;
+    class RetryableSQLExecution implements Retryable<Void> {
         private final String errorMessage;
         private final IdempotentSqlRunnable op;
 
         private final Logger logger = Exec.getLogger(this.getClass());
 
-        public RetryableSQLExecution(String[] retryableErrorStates, Integer[] retryableErrorCodes, IdempotentSqlRunnable op, String errorMessage) {
-            this.retryableErrorStates = retryableErrorStates;
-            this.retryableErrorCodes = retryableErrorCodes;
+        public RetryableSQLExecution(IdempotentSqlRunnable op, String errorMessage) {
             this.errorMessage = errorMessage;
             this.op = op;
         }
@@ -1105,10 +1098,8 @@ public abstract class AbstractJdbcOutputPlugin
         public boolean isRetryableException(Exception exception) {
             if (exception instanceof SQLException) {
                 SQLException ex = (SQLException)exception;
-                List<String> states = Arrays.asList(retryableErrorStates);
-                List<Integer> codes = Arrays.asList(retryableErrorCodes);
 
-                return (states.contains(ex.getSQLState()) || codes.contains(ex.getErrorCode()));
+                return AbstractJdbcOutputPlugin.this.isRetryableException(ex);
             } else {
                 return false;
             }

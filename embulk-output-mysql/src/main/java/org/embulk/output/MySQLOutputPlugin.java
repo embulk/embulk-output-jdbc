@@ -109,13 +109,17 @@ public class MySQLOutputPlugin
         return new MySQLBatchInsert(getConnector(task, true), mergeKeys);
     }
 
-    @Override
-    protected String[] retryableErrorStates() {
-        return new String[]{"40001"};
-    }
 
     @Override
-    protected Integer[] retryableErrorCodes() {
-        return new Integer[]{1213, 1205};
+    protected boolean isRetryableException(String sqlState, int errorCode)
+    {
+        switch (errorCode) {
+            case 1213:
+                return true;
+            case 1205:
+                return true;
+            default:
+                return false;
+        }
     }
 }
