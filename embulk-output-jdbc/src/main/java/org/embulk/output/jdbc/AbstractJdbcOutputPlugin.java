@@ -659,14 +659,14 @@ public abstract class AbstractJdbcOutputPlugin
         return lengthSemantics.countLength(tableNameCharset, tableName) + suffixLength <= maxLength;
     }
 
-    protected void doCommit(final JdbcOutputConnection con, final PluginTask task, int taskCount)
+    protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
         if (task.getIntermediateTables().get().isEmpty()) {
             return;
         }
 
-        final JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
+        JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
 
         switch (task.getMode()) {
         case INSERT_DIRECT:
