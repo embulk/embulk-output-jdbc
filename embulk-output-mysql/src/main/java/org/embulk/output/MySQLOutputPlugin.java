@@ -114,9 +114,9 @@ public class MySQLOutputPlugin
     protected boolean isRetryableException(String sqlState, int errorCode)
     {
         switch (errorCode) {
-            case 1213:
+            case 1213: // ER_LOCK_DEADLOCK (Message: Deadlock found when trying to get lock; try restarting transaction)
                 return true;
-            case 1205:
+            case 1205: // ER_LOCK_WAIT_TIMEOUT (Message: Lock wait timeout exceeded; try restarting transaction)
                 return true;
             default:
                 return false;
