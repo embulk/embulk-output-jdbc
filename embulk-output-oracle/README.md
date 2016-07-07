@@ -19,6 +19,9 @@ Oracle output plugins for Embulk loads records to Oracle.
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
+- **retry_limit** max retry count for database operations (integer, default: 12)
+- **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
+- **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert", or "replace". See below. (string, required)
 - **insert_method**: see below
 - **batch_size**: size of a single batch insert (integer, default: 16777216)

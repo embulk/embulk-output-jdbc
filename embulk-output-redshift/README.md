@@ -23,6 +23,9 @@ Redshift output plugins for Embulk loads records to Redshift.
 - **s3_bucket**: S3 bucket name for temporary files
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default:"")
 - **options**: extra connection properties (hash, default: {})
+- **retry_limit** max retry count for database operations (integer, default: 12)
+- **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
+- **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
