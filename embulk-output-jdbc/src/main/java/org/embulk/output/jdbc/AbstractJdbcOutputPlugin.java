@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import com.sun.scenario.effect.Merge;
 import org.embulk.spi.util.RetryExecutor;
 import org.slf4j.Logger;
 import org.joda.time.DateTimeZone;
@@ -230,7 +231,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     protected abstract JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation);
 
-    protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException;
+    protected abstract BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException;
 
     protected JdbcOutputConnection newConnection(PluginTask task, boolean retryableMetadataOperation,
             boolean autoCommit) throws SQLException
@@ -699,7 +700,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), task.getMergeKeys().get(), task.getMergeRule());
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()));
             break;
 
         case REPLACE:
@@ -846,13 +847,11 @@ public abstract class AbstractJdbcOutputPlugin
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
         try {
-            batch = newBatchInsert(task,
-                    task.getMode() == Mode.MERGE_DIRECT ?
-                        task.getMergeKeys() :
-                        Optional.<List<String>>absent(),
-                    task.getMode() == Mode.MERGE_DIRECT ?
-                        task.getMergeRule() :
-                        Optional.<List<String>>absent());
+            Optional<MergeConfig> config = Optional.absent();
+            if (task.getMode() == Mode.MERGE_DIRECT && task.getMergeKeys().isPresent()) {
+                config = Optional.of(new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()));
+            }
+            batch = newBatchInsert(task, config);
         } catch (IOException | SQLException ex) {
             throw new RuntimeException(ex);
         }

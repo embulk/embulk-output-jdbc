@@ -13,11 +13,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
-import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.jdbc.StandardBatchInsert;
-import org.embulk.output.jdbc.JdbcOutputConnector;
-import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.*;
 
 public class JdbcOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -132,8 +128,8 @@ public class JdbcOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
-        return new StandardBatchInsert(getConnector(task, true), mergeKeys, mergeRule);
+        return new StandardBatchInsert(getConnector(task, true), mergeConfig);
     }
 }

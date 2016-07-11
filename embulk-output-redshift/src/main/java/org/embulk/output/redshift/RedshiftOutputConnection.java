@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.google.common.base.Optional;
+import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -124,7 +125,7 @@ public class RedshiftOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -139,6 +140,7 @@ public class RedshiftOutputConnection
             quoteIdentifierString(sb, fromTables.get(i));
         }
         sb.append(") S WHERE (");
+        List<String> mergeKeys = mergeConfig.getMergeKeys();
         for(int i=0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             sb.append("S.");

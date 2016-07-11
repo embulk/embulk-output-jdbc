@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.google.common.base.Optional;
+import org.embulk.output.jdbc.MergeConfig;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -45,7 +46,7 @@ public class PostgreSQLOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -53,8 +54,8 @@ public class PostgreSQLOutputConnection
         sb.append("UPDATE ");
         quoteIdentifierString(sb, toTable);
         sb.append(" SET ");
-        if (mergeRule.isPresent()) {
-            List<String> rule = mergeRule.get();
+        if (mergeConfig.getMergeRule().isPresent()) {
+            List<String> rule = mergeConfig.getMergeRule().get();
             for (int i = 0; i < rule.size(); i++) {
                 if (i != 0) {
                     sb.append(", ");
@@ -84,6 +85,7 @@ public class PostgreSQLOutputConnection
         }
         sb.append(") S");
         sb.append(" WHERE ");
+        List<String> mergeKeys = mergeConfig.getMergeKeys();
         for (int i=0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             quoteIdentifierString(sb, toTable);

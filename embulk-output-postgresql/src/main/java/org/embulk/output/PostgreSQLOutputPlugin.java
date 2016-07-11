@@ -8,10 +8,7 @@ import java.util.Properties;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
-import org.embulk.output.jdbc.BatchInsert;
-import org.embulk.output.jdbc.JdbcColumn;
-import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.*;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.postgresql.PostgreSQLCopyBatchInsert;
 import org.embulk.output.postgresql.PostgreSQLOutputConnector;
@@ -112,9 +109,9 @@ public class PostgreSQLOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
-        if (mergeKeys.isPresent()) {
+        if (mergeConfig.isPresent()) {
             throw new UnsupportedOperationException("PostgreSQL output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         return new PostgreSQLCopyBatchInsert(getConnector(task, true));

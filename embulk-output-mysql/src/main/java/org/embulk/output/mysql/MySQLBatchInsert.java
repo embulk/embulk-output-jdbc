@@ -5,14 +5,15 @@ import java.io.IOException;
 import java.sql.Types;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
+import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.StandardBatchInsert;
 
 public class MySQLBatchInsert
         extends StandardBatchInsert
 {
-    public MySQLBatchInsert(MySQLOutputConnector connector, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
+    public MySQLBatchInsert(MySQLOutputConnector connector, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
-        super(connector, mergeKeys, mergeRule);
+        super(connector, mergeConfig);
     }
 
     @Override

@@ -9,6 +9,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.sun.scenario.effect.Merge;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import org.embulk.spi.Exec;
@@ -240,11 +242,11 @@ public class JdbcOutputConnection
         return ColumnDeclareType.SIMPLE;
     }
 
-    public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
+    public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, Optional<MergeConfig> mergeConfig) throws SQLException
     {
         String sql;
-        if (mergeKeys.isPresent()) {
-            sql = buildPreparedMergeSql(toTable, toTableSchema, mergeKeys.get(), mergeRule);
+        if (mergeConfig.isPresent()) {
+            sql = buildPreparedMergeSql(toTable, toTableSchema, mergeConfig.get());
         } else {
             sql = buildPreparedInsertSql(toTable, toTableSchema);
         }
@@ -274,7 +276,7 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
+    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema, MergeConfig mergeConfig) throws SQLException
     {
         throw new UnsupportedOperationException("not implemented");
     }
@@ -334,11 +336,11 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
+    protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = buildCollectMergeSql(fromTables, schema, toTable, mergeKeys, mergeRule);
+            String sql = buildCollectMergeSql(fromTables, schema, toTable, mergeConfig);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -348,7 +350,7 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, List<String> mergeKeys, Optional<List<String>> mergeRule) throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
     {
         throw new UnsupportedOperationException("not implemented");
     }

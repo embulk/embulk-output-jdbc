@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+
+import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -140,9 +142,9 @@ public class RedshiftOutputPlugin
     }
 
     @Override
-    protected BatchInsert newBatchInsert(PluginTask task, Optional<List<String>> mergeKeys, Optional<List<String>> mergeRule) throws IOException, SQLException
+    protected BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
-        if (mergeKeys.isPresent()) {
+        if (mergeConfig.isPresent()) {
             throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
