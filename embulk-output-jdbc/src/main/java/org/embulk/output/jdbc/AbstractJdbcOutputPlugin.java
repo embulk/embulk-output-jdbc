@@ -848,7 +848,7 @@ public abstract class AbstractJdbcOutputPlugin
         BatchInsert batch = null;
         try {
             Optional<MergeConfig> config = Optional.absent();
-            if (task.getMode() == Mode.MERGE_DIRECT && task.getMergeKeys().isPresent()) {
+            if (task.getMode() == Mode.MERGE_DIRECT) {
                 config = Optional.of(new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()));
             }
             batch = newBatchInsert(task, config);
