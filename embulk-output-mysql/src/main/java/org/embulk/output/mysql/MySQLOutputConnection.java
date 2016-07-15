@@ -4,7 +4,6 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import com.google.common.base.Optional;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -28,12 +27,12 @@ public class MySQLOutputConnection
         sb.append("INSERT INTO ");
         quoteIdentifierString(sb, toTable);
         sb.append(" (");
-        for (int i=0; i < toTableSchema.getCount(); i++) {
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
             if(i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, toTableSchema.getColumnName(i));
         }
         sb.append(") VALUES (");
-        for(int i=0; i < toTableSchema.getCount(); i++) {
+        for(int i = 0; i < toTableSchema.getCount(); i++) {
             if(i != 0) { sb.append(", "); }
             sb.append("?");
         }
@@ -48,7 +47,7 @@ public class MySQLOutputConnection
                 sb.append(rule.get(i));
             }
         } else {
-            for (int i=0; i < toTableSchema.getCount(); i++) {
+            for (int i = 0; i < toTableSchema.getCount(); i++) {
                 if(i != 0) { sb.append(", "); }
                 String columnName = quoteIdentifierString(toTableSchema.getColumnName(i));
                 sb.append(columnName).append(" = VALUES(").append(columnName).append(")");
@@ -66,15 +65,15 @@ public class MySQLOutputConnection
         sb.append("INSERT INTO ");
         quoteIdentifierString(sb, toTable);
         sb.append(" (");
-        for (int i=0; i < schema.getCount(); i++) {
+        for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, schema.getColumnName(i));
         }
         sb.append(") ");
-        for (int i=0; i < fromTables.size(); i++) {
+        for (int i = 0; i < fromTables.size(); i++) {
             if (i != 0) { sb.append(" UNION ALL "); }
             sb.append("SELECT ");
-            for (int j=0; j < schema.getCount(); j++) {
+            for (int j = 0; j < schema.getCount(); j++) {
                 if (j != 0) { sb.append(", "); }
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
@@ -91,7 +90,7 @@ public class MySQLOutputConnection
                 sb.append(rule.get(i));
             }
         } else {
-            for (int i=0; i < schema.getCount(); i++) {
+            for (int i = 0; i < schema.getCount(); i++) {
                 if(i != 0) { sb.append(", "); }
                 String columnName = quoteIdentifierString(schema.getColumnName(i));
                 sb.append(columnName).append(" = VALUES(").append(columnName).append(")");

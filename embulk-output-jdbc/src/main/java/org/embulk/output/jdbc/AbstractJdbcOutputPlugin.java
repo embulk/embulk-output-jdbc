@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import com.sun.scenario.effect.Merge;
 import org.embulk.spi.util.RetryExecutor;
 import org.slf4j.Logger;
 import org.joda.time.DateTimeZone;
