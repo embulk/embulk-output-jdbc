@@ -5,8 +5,8 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 ## Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depnds on the mode. see below.
-* **Resume supported**: depnds on the mode. see below.
+* **Load all or nothing**: depends on the mode. see below.
+* **Resume supported**: depends on the mode. see below.
 
 ## Configuration
 
@@ -23,10 +23,10 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode)
+- **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = foo + S.foo`. (string array, default: always overwrites with new values)
 - **ssl**: enables SSL. data will be encrypted but CA or certification will not be verified (boolean, default: false)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
-- **merge_rule**: list of column assignments used in "merge", for example `foo = foo + S.foo`. (list, default: always overwrite with new values)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
   - **type**: type of a column when this plugin creates new tables (e.g. `VARCHAR(255)`, `INTEGER NOT NULL UNIQUE`). This used when this plugin creates intermediate tables (insert, truncate_insert and merge modes), when it creates the target table (insert_direct and replace modes), and when it creates nonexistent target table automatically. (string, default: depends on input column type. `BIGINT` if input column type is long, `BOOLEAN` if boolean, `DOUBLE PRECISION` if double, `CLOB` if string, `TIMESTAMP WITH TIME ZONE` if timestamp)
   - **value_type**: This plugin converts input column type (embulk type) into a database type to build a INSERT statement. This value_type option controls the type of the value in a INSERT statement. (string, default: depends on the sql type of the column. Available values options are: `byte`, `short`, `int`, `long`, `double`, `float`, `boolean`, `string`, `nstring`, `date`, `time`, `timestamp`, `decimal`, `json`, `null`, `pass`)
