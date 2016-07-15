@@ -3,7 +3,6 @@ package org.embulk.output;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.List;
 import java.util.Properties;
 
 import org.embulk.config.Config;

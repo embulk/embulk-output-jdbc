@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.sun.scenario.effect.Merge;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import org.embulk.spi.Exec;

@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.google.common.base.Optional;
 import org.embulk.output.jdbc.MergeConfig;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -30,7 +29,7 @@ public class PostgreSQLOutputConnection
         sb.append("COPY ");
         quoteIdentifierString(sb, toTable);
         sb.append(" (");
-        for (int i=0; i < toTableSchema.getCount(); i++) {
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, toTableSchema.getColumnName(i));
         }
@@ -73,10 +72,10 @@ public class PostgreSQLOutputConnection
             }
         }
         sb.append(" FROM (");
-        for (int i=0; i < fromTables.size(); i++) {
+        for (int i = 0; i < fromTables.size(); i++) {
             if (i != 0) { sb.append(" UNION ALL "); }
             sb.append("SELECT ");
-            for(int j=0; j < schema.getCount(); j++) {
+            for(int j = 0; j < schema.getCount(); j++) {
                 if (j != 0) { sb.append(", "); }
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
@@ -86,7 +85,7 @@ public class PostgreSQLOutputConnection
         sb.append(") S");
         sb.append(" WHERE ");
         List<String> mergeKeys = mergeConfig.getMergeKeys();
-        for (int i=0; i < mergeKeys.size(); i++) {
+        for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             quoteIdentifierString(sb, toTable);
             sb.append(".");
@@ -96,7 +95,7 @@ public class PostgreSQLOutputConnection
             quoteIdentifierString(sb, mergeKeys.get(i));
         }
         sb.append(" RETURNING ");
-        for (int i=0; i < mergeKeys.size(); i++) {
+        for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(", "); }
             sb.append("S.");
             quoteIdentifierString(sb, mergeKeys.get(i));
@@ -106,21 +105,21 @@ public class PostgreSQLOutputConnection
         sb.append("INSERT INTO ");
         quoteIdentifierString(sb, toTable);
         sb.append(" (");
-        for (int i=0; i < schema.getCount(); i++) {
+        for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, schema.getColumnName(i));
         }
         sb.append(") ");
         sb.append("SELECT DISTINCT ON (");
-        for (int i=0; i < mergeKeys.size(); i++) {
+        for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, mergeKeys.get(i));
         }
         sb.append(") * FROM (");
-        for (int i=0; i < fromTables.size(); i++) {
+        for (int i = 0; i < fromTables.size(); i++) {
             if (i != 0) { sb.append(" UNION ALL "); }
             sb.append("SELECT ");
-            for(int j=0; j < schema.getCount(); j++) {
+            for(int j = 0; j < schema.getCount(); j++) {
                 if (j != 0) { sb.append(", "); }
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
@@ -130,7 +129,7 @@ public class PostgreSQLOutputConnection
         sb.append(") S ");
         sb.append("WHERE NOT EXISTS (");
         sb.append("SELECT 1 FROM updated WHERE ");
-        for (int i=0; i < mergeKeys.size(); i++) {
+        for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             sb.append("S.");
             quoteIdentifierString(sb, mergeKeys.get(i));
