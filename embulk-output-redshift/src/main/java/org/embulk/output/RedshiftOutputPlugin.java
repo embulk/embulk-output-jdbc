@@ -64,6 +64,10 @@ public class RedshiftOutputPlugin
         @Config("s3_key_prefix")
         @ConfigDefault("\"\"")
         public String getS3KeyPrefix();
+
+        @Config("ssl")
+        @ConfigDefault("disable")
+        public String getSSL();
     }
 
     @Override
@@ -97,16 +101,18 @@ public class RedshiftOutputPlugin
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
         props.setProperty("tcpKeepAlive", "true");
 
-        // TODO
-        //switch task.getSssl() {
-        //when "disable":
-        //    break;
-        //when "enable":
-        //    props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");  // disable server-side validation
-        //when "verify":
-        //    props.setProperty("ssl", "true");
-        //    break;
-        //}
+        switch (task.getSSL()) {
+        case "disable":
+           break;
+        case "enable":
+            // See http://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+           props.setProperty("ssl", "true");
+           props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory"); // disable server-side validation
+           break;
+        case "verify":
+           props.setProperty("ssl", "true");
+           break;
+        }
 
         if (!retryableMetadataOperation) {
             // non-retryable batch operation uses longer timeout
