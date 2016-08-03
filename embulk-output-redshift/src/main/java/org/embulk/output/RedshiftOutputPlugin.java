@@ -101,7 +101,7 @@ public class RedshiftOutputPlugin
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
         props.setProperty("tcpKeepAlive", "true");
 
-        switch (task.getSSL()) {
+        switch (t.getSSL()) {
         case "disable":
            break;
         case "enable":
