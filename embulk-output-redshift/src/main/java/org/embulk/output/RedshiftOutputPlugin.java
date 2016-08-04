@@ -19,6 +19,7 @@ import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
+import org.embulk.output.redshift.Ssl;
 
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -67,7 +68,7 @@ public class RedshiftOutputPlugin
 
         @Config("ssl")
         @ConfigDefault("disable")
-        public String getSSL();
+        public Ssl getSsl();
     }
 
     @Override
@@ -101,15 +102,15 @@ public class RedshiftOutputPlugin
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
         props.setProperty("tcpKeepAlive", "true");
 
-        switch (t.getSSL()) {
-        case "disable":
+        switch (t.getSsl()) {
+        case disable:
            break;
-        case "enable":
+        case enable:
             // See http://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
            props.setProperty("ssl", "true");
            props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory"); // disable server-side validation
            break;
-        case "verify":
+        case verify:
            props.setProperty("ssl", "true");
            break;
         }

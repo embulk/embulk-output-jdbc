@@ -125,7 +125,7 @@ out:
 ### Build
 
 ```
-$ ./gradlew gem
+$ ../gradlew gem
 ```
 
 ### Security
