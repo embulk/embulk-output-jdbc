@@ -1,26 +1,37 @@
 package org.embulk.output.redshift;
 
-import java.lang.IllegalArgumentException;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+import org.embulk.config.ConfigException;
 
 public enum Ssl
 {
-    enable,
-    disable,
-    verify;
+    ENABLE,
+    DISABLE,
+    VERIFY;
 
-    public static Enum fromString(String value)
+    @JsonValue
+    @Override
+    public String toString()
+    {
+        return this.name().toLowerCase();
+    }
+
+    @JsonCreator
+    public static Ssl fromString(String value)
     {
         switch(value) {
         case "enable":
         case "true":
-            return enable;
+            return ENABLE;
         case "disable":
         case "false":
-            return disable;
+            return DISABLE;
         case "verify":
-            return verify;
+            return VERIFY;
         default:
-            throw new IllegalArgumentException("No constant with value " + value + " found. Supported values are: enable, disable, verify.");
+            throw new ConfigException(String.format("Unknown SSL value '%s'. Supported values are enable, true, disable, false or verify.", value));
         }
     }
 }

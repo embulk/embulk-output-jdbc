@@ -103,14 +103,14 @@ public class RedshiftOutputPlugin
         props.setProperty("tcpKeepAlive", "true");
 
         switch (t.getSsl()) {
-        case disable:
+        case DISABLE:
            break;
-        case enable:
+        case ENABLE:
             // See http://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
            props.setProperty("ssl", "true");
            props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory"); // disable server-side validation
            break;
-        case verify:
+        case VERIFY:
            props.setProperty("ssl", "true");
            break;
         }
