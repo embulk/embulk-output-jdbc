@@ -1,6 +1,12 @@
+Release 0.6.2 - 2016-08-10
+
+* Retry when deadlock occurs in MySQL (@joker1007++).
+* Added merge_rule option to define values for existing records (@tomykaira++).
+* Supported SSL in Redshift (@drivy++).
+
 Release 0.6.1 - 2016-06-23
 
-* Support merge mode in embulk-output-redishift (++@rolandhawk ).
+* Supported merge mode in embulk-output-redishift (@rolandhawk++).
 * Case insensitive for table names and column names.
 * embulk-output-oracle OCI mode throws an exception for duplicate keys instead of disabling the index.
 * Fixed unclosed connection.
@@ -9,23 +15,23 @@ Throws exception
 
 Release 0.6.0 - 2016-04-26
 
-* Support NCLOB (JDBC SQL type).
-* Support json (embulk type and embulk-output-jdbc value_type).
+* Supported NCLOB (JDBC SQL type).
+* Supported json (embulk type and embulk-output-jdbc value_type).
 
 Release 0.5.1 - 2016-03-29
 
-* Support schema in embulk-output-oracle.
-* Support multibyte object name in embulk-output-oracle OCI mode.
-* Support AWS root account in embulk-output-redshift (++@lance-edmodo).
-* Improve performance of embulk-output-redshift by uploading and copying in background.
+* Supported schema in embulk-output-oracle.
+* Supported multibyte object name in embulk-output-oracle OCI mode.
+* Supported AWS root account in embulk-output-redshift (@lance-edmodo++).
+* Improved performance of embulk-output-redshift by uploading and copying in background.
 * Ignore port if instance is specified in embulk-output-sqlserver (@emanon-was++).
-* Improve performance of embulk-output-sqlserver by supporting native library.
+* Improved performance of embulk-output-sqlserver by supporting native library.
 
 Release 0.5.0 - 2016-01-15
 
 * C library used in embulk-output-oracle OCI mode is replaced with Java classes using jnr-ffi.
   It is more portable and maintainable than ever.
-* Add embulk-output-sqlserver.
+* Added embulk-output-sqlserver.
 
 Release 0.4.5 - 2016-01-13
 
@@ -34,20 +40,20 @@ Release 0.4.5 - 2016-01-13
 
 Release 0.4.4 - 2015-01-04
 
-* Support NCHAR/NVARCHAR2 in Oracle OCI.
+* Supported NCHAR/NVARCHAR2 in Oracle OCI.
 
 Release 0.4.3 - 2015-12-17
 
 * insert, truncate_insert and merge modes support to create the target table automatically if not exists.
   (insert_direct, merge_direct and replace mode already supported.)
-* Update README about modes.
+* Updated README about modes.
 
 Release 0.4.2 - 2015-12-08
 
 This release requires embulk >= 0.7.1.
 
-* Support Oracle VARCHAR2 in insert mode.
-* Support SSL in PostrgreSQL.
+* Supported Oracle VARCHAR2 in insert mode.
+* Supported SSL in PostrgreSQL.
 * Bump AWS Java SDK version to fix date problem under Java 8u60 (@dlackty++).
 * Enabled to build native library for embulk-output-oracle in linux Java 8.
 
@@ -96,7 +102,7 @@ Release 0.2.4 - 2015-05-12
 
 Release 0.2.3 - 2015-04-23
 
-* Support merge mode for MySQL and PostgreSQL (@takumakanari++)
+* Supported merge mode for MySQL and PostgreSQL (@takumakanari++)
 * Fixed NullPointerException when a NULL value appears in a column to skip.
 
 
