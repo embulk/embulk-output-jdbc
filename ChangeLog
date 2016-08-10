@@ -2,7 +2,7 @@ Release 0.6.2 - 2016-08-10
 
 * Retry when deadlock occurs in MySQL (@joker1007++).
 * Added merge_rule option to define values for existing records (@tomykaira++).
-* Supported SSL in Redshift (@drivy++).
+* Supported SSL in Redshift (@AntoineAugusti++).
 
 Release 0.6.1 - 2016-06-23
 
