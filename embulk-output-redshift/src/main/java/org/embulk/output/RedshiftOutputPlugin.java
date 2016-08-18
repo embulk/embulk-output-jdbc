@@ -67,7 +67,7 @@ public class RedshiftOutputPlugin
         public String getS3KeyPrefix();
 
         @Config("ssl")
-        @ConfigDefault("disable")
+        @ConfigDefault("\"disable\"")
         public Ssl getSsl();
     }
 
