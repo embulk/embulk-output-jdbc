@@ -1,3 +1,7 @@
+Release 0.6.3 - 2016-08-18
+
+* Fixed the default value of ssl property of embulk-output-redshift (@AntoineAugusti++).
+
 Release 0.6.2 - 2016-08-10
 
 * Retry when deadlock occurs in MySQL (@joker1007++).
@@ -6,7 +10,7 @@ Release 0.6.2 - 2016-08-10
 
 Release 0.6.1 - 2016-06-23
 
-* Supported merge mode in embulk-output-redishift (@rolandhawk++).
+* Supported merge mode in embulk-output-redshift (@rolandhawk++).
 * Case insensitive for table names and column names.
 * embulk-output-oracle OCI mode throws an exception for duplicate keys instead of disabling the index.
 * Fixed unclosed connection.
