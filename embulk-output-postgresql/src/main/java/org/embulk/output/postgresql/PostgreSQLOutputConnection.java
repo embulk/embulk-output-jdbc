@@ -29,7 +29,7 @@ public class PostgreSQLOutputConnection
         sb.append("COPY ");
         quoteIdentifierString(sb, toTable);
         sb.append(" (");
-        for (int i=0; i < toTableSchema.getCount(); i++) {
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, toTableSchema.getColumnName(i));
         }

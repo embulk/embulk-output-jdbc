@@ -13,6 +13,7 @@ Redshift output plugins for Embulk loads records to Redshift.
 - **host**: database host name (string, required)
 - **port**: database port number (integer, default: 5439)
 - **user**: database login user name (string, required)
+- **ssl**: use SSL to connect to the database (string, default: "disable". "enable" uses SSL without server-side validation and "verify" checks the certificate. For compatibility reasons, "true" behaves as "enable" and "false" behaves as "disable".)
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required)
 - **schema**: destination schema name (string, default: "public")
@@ -103,6 +104,7 @@ out:
   type: redshift
   host: myinstance.us-west-2.redshift.amazonaws.com
   user: pg
+  ssl: enable
   password: ""
   database: my_database
   table: my_table
@@ -123,7 +125,7 @@ out:
 ### Build
 
 ```
-$ ./gradlew gem
+$ ../gradlew gem
 ```
 
 ### Security

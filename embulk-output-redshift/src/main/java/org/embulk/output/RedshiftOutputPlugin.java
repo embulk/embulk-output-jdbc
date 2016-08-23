@@ -19,6 +19,7 @@ import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
+import org.embulk.output.redshift.Ssl;
 
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -64,6 +65,10 @@ public class RedshiftOutputPlugin
         @Config("s3_key_prefix")
         @ConfigDefault("\"\"")
         public String getS3KeyPrefix();
+
+        @Config("ssl")
+        @ConfigDefault("\"disable\"")
+        public Ssl getSsl();
     }
 
     @Override
@@ -97,16 +102,18 @@ public class RedshiftOutputPlugin
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
         props.setProperty("tcpKeepAlive", "true");
 
-        // TODO
-        //switch task.getSssl() {
-        //when "disable":
-        //    break;
-        //when "enable":
-        //    props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");  // disable server-side validation
-        //when "verify":
-        //    props.setProperty("ssl", "true");
-        //    break;
-        //}
+        switch (t.getSsl()) {
+        case DISABLE:
+           break;
+        case ENABLE:
+            // See http://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+           props.setProperty("ssl", "true");
+           props.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory"); // disable server-side validation
+           break;
+        case VERIFY:
+           props.setProperty("ssl", "true");
+           break;
+        }
 
         if (!retryableMetadataOperation) {
             // non-retryable batch operation uses longer timeout

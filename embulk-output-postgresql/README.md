@@ -22,7 +22,7 @@ PostgreSQL output plugins for Embulk loads records to PostgreSQL.
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
 - **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
-- **merge_keys**: key column names for merging records in "merge" mode (string array, required in merge mode)
+- **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = foo + S.foo`. (string array, default: always overwrites with new values)
 - **ssl**: enables SSL. data will be encrypted but CA or certification will not be verified (boolean, default: false)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
