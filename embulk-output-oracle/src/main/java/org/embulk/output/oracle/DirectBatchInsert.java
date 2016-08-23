@@ -21,15 +21,11 @@ import org.embulk.output.oracle.oci.OCIManager;
 import org.embulk.output.oracle.oci.OCIWrapper;
 import org.embulk.output.oracle.oci.RowBuffer;
 import org.embulk.output.oracle.oci.TableDefinition;
-import org.embulk.spi.Exec;
 import org.embulk.spi.time.Timestamp;
-import org.slf4j.Logger;
 
 public class DirectBatchInsert implements BatchInsert
 {
     private static OCIManager ociManager = new OCIManager();
-
-    private final Logger logger = Exec.getLogger(DirectBatchInsert.class);
 
     private List<String> ociKey;
     private final String database;
@@ -40,9 +36,6 @@ public class DirectBatchInsert implements BatchInsert
     private final OracleCharset nationalCharset;
     private final int batchSize;
     private RowBuffer buffer;
-    private long totalRows;
-    private int rowSize;
-    private int batchWeight;
     private boolean closed;
 
     private DateFormat[] formats;
@@ -148,31 +141,23 @@ public class DirectBatchInsert implements BatchInsert
 
         }
 
-        rowSize = 0;
-        for (ColumnDefinition column : columns) {
-            rowSize += column.getDataSize();
-        }
-
         TableDefinition tableDefinition = new TableDefinition(schema, loadTable, columns);
         ociKey = Arrays.asList(database, user, loadTable);
-        ociManager.open(ociKey, database, user, password, tableDefinition);
+        OCIWrapper oci = ociManager.open(ociKey, database, user, password, tableDefinition, batchSize);
 
-        buffer = new RowBuffer(tableDefinition, Math.max(batchSize / rowSize, 8));
+        buffer = new RowBuffer(oci, tableDefinition);
     }
 
     @Override
     public int getBatchWeight()
     {
-        return batchWeight;
+        // Automatically flushed in RowBuffer
+        return 0;
     }
 
     @Override
     public void add() throws IOException, SQLException
     {
-        batchWeight += rowSize;
-        if (buffer.isFull()) {
-            flush();
-        }
     }
 
     @Override
@@ -187,26 +172,7 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void flush() throws IOException, SQLException
     {
-        if (buffer.getRowCount() > 0) {
-            try {
-                logger.info(String.format("Loading %,d rows", buffer.getRowCount()));
-
-                long startTime = System.currentTimeMillis();
-
-                OCIWrapper oci = ociManager.get(ociKey);
-                synchronized (oci) {
-                    oci.loadBuffer(buffer);
-                }
-
-                totalRows += buffer.getRowCount();
-                double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
-                logger.info(String.format("> %.2f seconds (loaded %,d rows in total)", seconds, totalRows));
-
-            } finally {
-                buffer.clear();
-                batchWeight = 0;
-            }
-        }
+        buffer.flush();
     }
 
     @Override

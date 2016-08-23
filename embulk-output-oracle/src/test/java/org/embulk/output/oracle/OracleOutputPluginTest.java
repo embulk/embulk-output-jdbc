@@ -206,6 +206,12 @@ public class OracleOutputPluginTest
     }
 
     @Test
+    public void testInsertDirectOCIMethodLarge() throws Exception
+    {
+        invoke(test12c, "testInsertDirectOCIMethodLarge");
+    }
+
+    @Test
     public void testInsertDirectOCIMethodDuplicate() throws Exception
     {
         invoke(test12c, "testInsertDirectOCIMethodDuplicate");

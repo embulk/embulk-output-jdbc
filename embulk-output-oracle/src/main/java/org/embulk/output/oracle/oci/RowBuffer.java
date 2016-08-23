@@ -2,6 +2,7 @@ package org.embulk.output.oracle.oci;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
@@ -12,48 +13,46 @@ import org.embulk.output.oracle.oci.TableDefinition;
 
 public class RowBuffer
 {
-    private final TableDefinition table;
-    private final int rowCount;
+    // this value was calculated by tests
+    private static final double OPTIMAL_LOAD_TIME = 10;
+    private static final int MIN_ROW_COUNT_TO_LOAD = 100;
 
-    private int currentRow = 0;
+    private final OCIWrapper oci;
+    private final TableDefinition table;
+    private final int maxRowCount;
+
+    private int rowCount = 0;
     private int currentColumn = 0;
 
-    private final short[] sizes;
+    private int rowCountToLoad;
+    private int totalLoadedRowCount = 0;
+    private int loadCount = 0;
+    private double totalLoadTime = 0;
+
+    private final ByteBuffer sizes;
+    private final ByteBuffer defaultSizes;
     private final ByteBuffer buffer;
     private final ByteBuffer defaultBuffer;
 
-    public RowBuffer(TableDefinition table, int rowCount)
+    public RowBuffer(OCIWrapper oci, TableDefinition table)
     {
+        this.oci = oci;
         this.table = table;
-        this.rowCount = rowCount;
+        maxRowCount = oci.getMaxRowCount();
+        rowCountToLoad = maxRowCount;
 
-        int rowSize = 0;
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            rowSize += table.getColumn(i).getDataSize();
-        }
-
+        ByteOrder byteOrder = Runtime.getSystemRuntime().byteOrder();
         // should be direct because used by native library
-        buffer = ByteBuffer.allocateDirect(rowSize * rowCount).order(Runtime.getSystemRuntime().byteOrder());
+        buffer = ByteBuffer.allocateDirect(table.getRowSize() * maxRowCount).order(byteOrder);
         // position is not updated
-        defaultBuffer = buffer.duplicate();
+        defaultBuffer = buffer.duplicate().order(byteOrder);
 
-        sizes = new short[table.getColumnCount() * rowCount];
+        sizes = ByteBuffer.allocateDirect(table.getColumnCount() * maxRowCount * 2).order(byteOrder);
+        defaultSizes = sizes.duplicate().order(byteOrder);
     }
 
-    public ByteBuffer getBuffer() {
-        return defaultBuffer;
-    }
-
-    public short[] getSizes() {
-        return sizes;
-    }
-
-    public void addValue(int value)
+    public void addValue(int value) throws SQLException
     {
-        if (isFull()) {
-            throw new IllegalStateException();
-        }
-
         buffer.putInt(value);
 
         next((short)4);
@@ -61,10 +60,6 @@ public class RowBuffer
 
     public void addValue(String value) throws SQLException
     {
-        if (isFull()) {
-            throw new IllegalStateException();
-        }
-
         ColumnDefinition column = table.getColumn(currentColumn);
         Charset charset = column.getCharset().getJavaCharset();
 
@@ -88,14 +83,18 @@ public class RowBuffer
         addValue(value.toPlainString());
     }
 
-    private void next(short size)
+    private void next(short size) throws SQLException
     {
-        sizes[currentRow * table.getColumnCount() + currentColumn] = size;
+        sizes.putShort(size);
 
         currentColumn++;
         if (currentColumn == table.getColumnCount()) {
             currentColumn = 0;
-            currentRow++;
+            rowCount++;
+
+            if (rowCount >= rowCountToLoad) {
+                flush();
+            }
         }
     }
 
@@ -104,21 +103,26 @@ public class RowBuffer
         return currentColumn;
     }
 
-    public int getRowCount()
+    public void flush() throws SQLException
     {
-        return currentRow;
-    }
+        if (rowCount > 0) {
+            synchronized (oci) {
+                long time = System.currentTimeMillis();
+                oci.loadBuffer(defaultBuffer, defaultSizes, rowCount);
+                totalLoadTime += System.currentTimeMillis() - time;
+                totalLoadedRowCount += rowCount;
+                loadCount += 1;
+            }
 
-    public boolean isFull()
-    {
-        return currentRow >= rowCount;
-    }
+            rowCount = 0;
+            currentColumn = 0;
+            buffer.clear();
+            sizes.clear();
 
-    public void clear()
-    {
-        currentRow = 0;
-        currentColumn = 0;
-        buffer.clear();
+            if (loadCount >= 4) {
+                rowCountToLoad = Math.min(Math.max((int)(totalLoadedRowCount / totalLoadTime * OPTIMAL_LOAD_TIME), MIN_ROW_COUNT_TO_LOAD), maxRowCount);
+            }
+        }
     }
 
 }
