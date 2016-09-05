@@ -1,6 +1,11 @@
 package org.embulk.output.sqlserver;
 
-import static org.junit.Assert.assertEquals;
+import org.embulk.output.AbstractJdbcOutputPluginTest;
+import org.embulk.output.SQLServerOutputPlugin;
+import org.embulk.output.tester.EmbulkPluginTester;
+import org.embulk.spi.OutputPlugin;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -15,16 +20,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.embulk.output.AbstractJdbcOutputPluginTest;
-import org.embulk.output.SQLServerOutputPlugin;
-import org.embulk.output.tester.EmbulkPluginTester;
-import org.embulk.spi.OutputPlugin;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 
 public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
+    private static boolean useJtdsDriver = false;
     private static boolean canTest;
     private static EmbulkPluginTester tester = new EmbulkPluginTester();
     static {
@@ -368,6 +369,33 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         assertTable(1, table);
     }
 
+    @Test
+    public void testJtds() throws Exception
+    {
+        boolean canTestJtds = false;
+        useJtdsDriver = true;
+        try {
+            new SQLServerOutputPluginTest().connect();
+            canTestJtds = true;
+
+            String table = "TEST1";
+            dropTable(table);
+            createTable(table);
+            insertRecord(table);
+            tester.run(convertYml("/sqlserver/yml/test-jtds.yml"));
+            assertTable(1, table);
+        } catch (Throwable t) {
+          System.out.println(t);
+        } finally {
+            useJtdsDriver = false;
+            if (!canTestJtds) {
+                System.out.println("Warning: jTDS driver can't connect to database.");
+                System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+            }
+        }
+    }
+
+
     private void assertTable(int skip, String table) throws Exception
     {
         assertTable(skip, table, false);
@@ -668,7 +696,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Override
     protected Connection connect() throws SQLException
     {
-        return DriverManager.getConnection("jdbc:sqlserver://localhost\\SQLEXPRESS:1433;databasename=TESTDB", "TEST_USER", "test_pw");
+        if(useJtdsDriver) {
+            return DriverManager.getConnection("jdbc:jtds:sqlserver://localhost:1433/TESTDB;instance=SQLEXPRESS", "TEST_USER", "test_pw");
+        } else {
+            return DriverManager.getConnection("jdbc:sqlserver://localhost\\SQLEXPRESS:1433;databasename=TESTDB", "TEST_USER", "test_pw");
+        }
     }
 
 }
