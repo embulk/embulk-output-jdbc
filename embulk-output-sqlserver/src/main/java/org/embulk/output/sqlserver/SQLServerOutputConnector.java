@@ -1,11 +1,11 @@
 package org.embulk.output.sqlserver;
 
+import org.embulk.output.jdbc.JdbcOutputConnector;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import org.embulk.output.jdbc.JdbcOutputConnector;
 
 public class SQLServerOutputConnector
         implements JdbcOutputConnector
@@ -13,14 +13,11 @@ public class SQLServerOutputConnector
     private final String url;
     private final Properties properties;
     private final String schemaName;
+    private final Driver driver;
 
-    public SQLServerOutputConnector(String url, Properties properties, String schemaName)
+    public SQLServerOutputConnector(Driver driver, String url, Properties properties, String schemaName)
     {
-        try {
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        this.driver = driver;
         this.url = url;
         this.properties = properties;
         this.schemaName = schemaName;
@@ -29,7 +26,7 @@ public class SQLServerOutputConnector
     @Override
     public SQLServerOutputConnection connect(boolean autoCommit) throws SQLException
     {
-        Connection c = DriverManager.getConnection(url, properties);
+        Connection c = driver.connect(url, properties);
         if (c == null) {
             // driver.connect returns null when url is "jdbc:mysql://...".
             throw new SQLException("Invalid url : " + url);
