@@ -17,9 +17,9 @@ import org.embulk.output.sqlserver.setter.SQLServerColumnSetterFactory;
 import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
-import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
+
 import static java.util.Locale.ENGLISH;
 
 public class SQLServerOutputPlugin
@@ -111,30 +111,34 @@ public class SQLServerOutputPlugin
     protected SQLServerOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
-        Driver driver;
         boolean useJtdsDriver = false;
 
         if (sqlServerTask.getDriverPath().isPresent()) {
             loadDriverJar(sqlServerTask.getDriverPath().get());
             try {
-                driver = (Driver) Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             } catch(Exception e) {
                 throw new ConfigException("Driver set at field 'driver_path' doesn't include Microsoft SQLServerDriver", e);
             }
         } else {
             // prefer Microsoft SQLServerDriver if it is in classpath
             try {
-                driver = (Driver) Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             } catch(Exception e) {
                 logger.info("Using jTDS Driver");
-                driver = new net.sourceforge.jtds.jdbc.Driver();
+                try {
+                    Class.forName("net.sourceforge.jtds.jdbc.Driver");
+                } catch(Exception e2) {
+                    throw new ConfigException("'driver_path' doesn't set and can't found jTDS driver", e2);
+
+                }
                 useJtdsDriver = true;
             }
         }
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
         logger.info("Connecting to {} options {}", urlProps.getUrl(), urlProps.getProps());
-        return new SQLServerOutputConnector(driver, urlProps.getUrl(), urlProps.getProps(), null);
+        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), null);
     }
 
     private UrlAndProperties getUrlAndProperties(SQLServerPluginTask sqlServerTask, boolean useJtdsDriver)
