@@ -90,6 +90,19 @@ public class SQLServerOutputPlugin
         {
             return this.props;
         }
+
+        public Properties getPropsWithMaskedSecret()
+        {
+            Properties safeProps = new Properties();
+            for(String key : getProps().stringPropertyNames()) {
+                if (key.equals("password")) {
+                    safeProps.setProperty(key, "***");
+                } else {
+                    safeProps.setProperty(key, getProps().getProperty(key));
+                }
+            }
+            return safeProps;
+        }
     }
 
     @Override
@@ -137,7 +150,7 @@ public class SQLServerOutputPlugin
         }
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
-        logger.info("Connecting to {} options {}", urlProps.getUrl(), urlProps.getProps());
+        logger.info("Connecting to {} options {}", urlProps.getUrl(), urlProps.getPropsWithMaskedSecret());
         return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), null);
     }
 
