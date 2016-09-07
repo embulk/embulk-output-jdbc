@@ -377,21 +377,25 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         try {
             new SQLServerOutputPluginTest().connect();
             canTestJtds = true;
+        } catch (Throwable t) {
+            System.out.println(t);
+        } finally {
+            if (!canTestJtds) {
+                System.out.println("Warning: jTDS driver can't connect to database.");
+                System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+                return;
+            }
+        }
 
+        try {
             String table = "TEST1";
             dropTable(table);
             createTable(table);
             insertRecord(table);
             tester.run(convertYml("/sqlserver/yml/test-jtds.yml"));
             assertTable(1, table);
-        } catch (Throwable t) {
-          System.out.println(t);
         } finally {
             useJtdsDriver = false;
-            if (!canTestJtds) {
-                System.out.println("Warning: jTDS driver can't connect to database.");
-                System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
-            }
         }
     }
 
