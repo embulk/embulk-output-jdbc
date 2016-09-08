@@ -40,7 +40,7 @@ public class DB2OutputPlugin
         public String getUser();
 
         @Config("password")
-        @ConfigDefault("\"\"")
+        @ConfigDefault("null")
         public Optional<String> getPassword();
     }
 
