@@ -86,7 +86,7 @@ public abstract class AbstractJdbcOutputPluginTest
     {
         StringBuilder builder = new StringBuilder();
         Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-        for (String line : Files.readLines(convertPath(ymlName), Charset.defaultCharset())) {
+        for (String line : Files.readLines(convertPath(ymlName), Charset.forName("UTF8"))) {
             line = convertYmlLine(line);
             Matcher matcher = pathPrefixPattern.matcher(line);
             if (matcher.matches()) {
