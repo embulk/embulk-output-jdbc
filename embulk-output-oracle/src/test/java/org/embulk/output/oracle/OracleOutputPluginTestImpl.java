@@ -212,6 +212,22 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    public void testInsertDirectOCIMethodLarge() throws Exception
+    {
+        String table = "TEST1";
+
+        dropTable(table);
+        createTable(table);
+
+        run("/oracle/yml/test-insert-direct-oci-method-large.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(9999, rows.size());
+        for (int i = 0; i < rows.size(); i++) {
+            assertEquals(String.format("%04d", i + 1), rows.get(i).get(0));
+        }
+    }
+
     public void testInsertDirectOCIMethodDuplicate() throws Exception
     {
         String table = "TEST1";

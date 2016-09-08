@@ -32,6 +32,7 @@ public interface OCI
     static int OCI_ATTR_SCHEMA_NAME = 9;
     static int OCI_ATTR_CHARSET_ID = 31;
     static int OCI_ATTR_DATEFORMAT = 75;
+    static int OCI_ATTR_BUF_SIZE = 77;
     static int OCI_ATTR_NUM_ROWS = 81;
     static int OCI_ATTR_NUM_COLS = 102;
     static int OCI_ATTR_LIST_COLUMNS = 103;

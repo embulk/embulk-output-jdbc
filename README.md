@@ -27,8 +27,8 @@ See [embulk-output-sqlserver](embulk-output-sqlserver/).
 ### Overview
 
 * **Plugin type**: output
-* **Load all or nothing**: depnds on the mode. see below.
-* **Resume supported**: depnds on the mode. see below.
+* **Load all or nothing**: depends on the mode. see below.
+* **Resume supported**: depends on the mode. see below.
 
 ### Configuration
 
