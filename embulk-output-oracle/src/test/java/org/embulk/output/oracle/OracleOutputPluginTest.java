@@ -67,13 +67,16 @@ public class OracleOutputPluginTest
 
         List<URL> urls = new ArrayList<URL>();
 
-        File testRoot = new File(OracleOutputPluginTest.class.getResource("/oracle/").toURI()).getParentFile();
         String pluginClassName = "org.embulk.output.OracleOutputPlugin";
-        URL pluginClassUrl = OracleOutputPluginTest.class.getResource("/"  +pluginClassName.replace('.', '/') + ".class");
+        URL pluginClassUrl = OracleOutputPluginTest.class.getResource("/" + pluginClassName.replace('.', '/') + ".class");
         File root = new File(pluginClassUrl.toURI()).getParentFile().getParentFile().getParentFile().getParentFile();
+        URL testClassUrl = OracleOutputPluginTest.class.getResource("/" + OracleOutputPluginTest.class.getName().replace('.', '/') + ".class");
+        File testRoot = new File(testClassUrl.toURI()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
+        File testResourceRoot = new File(OracleOutputPluginTest.class.getResource("/oracle/").toURI()).getParentFile();
 
         urls.add(root.toURI().toURL());
         urls.add(testRoot.toURI().toURL());
+        urls.add(testResourceRoot.toURI().toURL());
 
         URL jdbcDriverUrl = OracleOutputPluginTest.class.getResource(jdbcDriverPath);
         if (jdbcDriverUrl == null) {
