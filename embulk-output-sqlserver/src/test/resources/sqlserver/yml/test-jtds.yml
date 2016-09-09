@@ -40,4 +40,4 @@ out:
     user: TEST_USER
     password: test_pw
     table: TEST1
-    mode: replace
+    mode: insert_direct
