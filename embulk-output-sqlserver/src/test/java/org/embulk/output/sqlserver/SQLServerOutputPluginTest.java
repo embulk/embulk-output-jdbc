@@ -393,7 +393,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             createTable(table);
             insertRecord(table);
             tester.run(convertYml("/sqlserver/yml/test-jtds.yml"));
-            assertTable(1, table);
+            assertTableJtds(1, table);
         } finally {
             useJtdsDriver = false;
         }
@@ -403,6 +403,120 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     private void assertTable(int skip, String table) throws Exception
     {
         assertTable(skip, table, false);
+    }
+
+    private void assertTableJtds(int skip, String table) throws Exception
+    {
+        List<List<Object>> rows = select(table);
+        assertEquals(skip + 3, rows.size());
+        rows = rows.subList(skip, skip + 3);
+
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals(1234, i2.next());
+            assertEquals(123456, i2.next());
+            assertEquals(12345678901L, i2.next());
+            assertEquals(false, i2.next());
+            assertEquals(new BigDecimal("1.23"), i2.next());
+            assertEquals(new BigDecimal("3.456"), i2.next());
+            assertEquals(new BigDecimal("12.3400"), i2.next());
+            assertEquals(new BigDecimal("123.4567"), i2.next());
+            assertEquals(Float.valueOf(0.1234567F), i2.next());
+            assertEquals(Double.valueOf(0.12345678901234D), i2.next());
+            assertEquals("a   ", i2.next());
+            assertEquals("b", i2.next());
+            assertEquals("c", i2.next());
+            assertEquals("A   ", i2.next());
+            assertEquals("B", i2.next());
+            assertEquals("C", i2.next());
+            assertEquals("2016-01-01", i2.next());
+            assertEquals(createTimestamp("2017/01/01 01:02:03", 123000000), i2.next());
+            // Embulk timestamp doesn't support values under microseconds.
+            //assertEquals(createTimestamp("2018/01/01 01:02:03", 123456000), i2.next()); // java.lang.AssertionError: expected:<2018-01-01 01:02:03.123456> but was:<2018-01-01 01:02:03.1234560>
+            i2.next();
+
+            assertEquals(createTimestamp("2019/01/01 01:02:03", 120000000).toString(), i2.next());
+            assertEquals(createTimestamp("2020/01/01 01:02:00", 0), i2.next());
+
+            // Embulk timestamp doesn't support values under microseconds.
+            //assertEquals(createTime("03:04:05", 123456000), i2.next()); // java.lang.AssertionError: expected:<03:04:05.123456000> but was:<2018-01-01 01:02:03.1234560>
+            i2.next();
+
+            //assertEquals(createTime("06:07:08", 120000000), i2.next()); // java.lang.AssertionError: expected:<06:07:08.120000000> but was:<2018-01-01 01:02:03.1234560>
+            i2.next();
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(255, i2.next());
+            assertEquals(-32768, i2.next());
+            assertEquals(-2147483648, i2.next());
+            assertEquals(-9223372036854775808L, i2.next());
+            assertEquals(true, i2.next());
+            assertEquals(new BigDecimal("-9999999999.99"), i2.next());
+            assertEquals(new BigDecimal("-99.999"), i2.next());
+            assertEquals(new BigDecimal("-214748.3648"), i2.next());
+            assertEquals(new BigDecimal("-922337203685477.5808"), i2.next());
+            assertEquals(Float.valueOf(-9999000000F), i2.next());
+            assertEquals(Double.valueOf(-999999999999000000D), i2.next());
+            // char, varchar, text don't be capable on Unicode chars
+            //assertEquals("あい", i2.next());
+            i2.next();
+            //assertEquals("あいうえ", i2.next());
+            i2.next();
+            //assertEquals("あいうえお", i2.next());
+            i2.next();
+
+            // nchar, nvarcar, ntext
+            assertEquals("かき  ", i2.next());
+            assertEquals("かきくけ", i2.next());
+            assertEquals("かきくけこ", i2.next());
+
+            assertEquals("2016-12-31", i2.next());
+            assertEquals(createTimestamp("2017/12/31 23:59:59", 997000000), i2.next());
+            // Embulk timestamp doesn't support values under microseconds.
+            //assertEquals(createTimestamp("2018/12/31 23:59:59", 999999000), i2.next()); // java.lang.AssertionError: expected:<2018-12-31 23:59:59.999999> but was:<2018-12-31 23:59:59.9999990>
+            i2.next();
+
+            assertEquals(createTimestamp("2019/12/31 23:59:59", 990000000).toString(), i2.next());
+            assertEquals(createTimestamp("2021/01/01 00:00:00", 0), i2.next());
+            // Embulk timestamp doesn't support values under microseconds.
+            //assertEquals(createTime("23:59:59", 999999000), i2.next()); // java.lang.AssertionError: expected:<23:59:59.999999000> but was:<23:59:59.9999990>
+            i2.next();
+
+            // assertEquals(createTime("23:59:59", 990000000), i2.next()); // java.lang.AssertionError: expected:<23:59:59.990000000> but was:<23:59:59.99>
+            i2.next();
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
     }
 
     private void assertTable(int skip, String table, boolean precise) throws Exception
@@ -701,7 +815,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     protected Connection connect() throws SQLException
     {
         if(useJtdsDriver) {
-            return DriverManager.getConnection("jdbc:jtds:sqlserver://localhost:1433/TESTDB;instance=SQLEXPRESS", "TEST_USER", "test_pw");
+            return DriverManager.getConnection("jdbc:jtds:sqlserver://localhost:1433/TESTDB;instance=SQLEXPRESS;useLOBs=false", "TEST_USER", "test_pw");
         } else {
             return DriverManager.getConnection("jdbc:sqlserver://localhost\\SQLEXPRESS:1433;databasename=TESTDB", "TEST_USER", "test_pw");
         }
