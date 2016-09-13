@@ -90,19 +90,6 @@ public class SQLServerOutputPlugin
         {
             return this.props;
         }
-
-        public Properties getPropsWithMaskedSecret()
-        {
-            Properties safeProps = new Properties();
-            for(String key : getProps().stringPropertyNames()) {
-                if (key.equals("password")) {
-                    safeProps.setProperty(key, "***");
-                } else {
-                    safeProps.setProperty(key, getProps().getProperty(key));
-                }
-            }
-            return safeProps;
-        }
     }
 
     @Override
@@ -150,7 +137,7 @@ public class SQLServerOutputPlugin
         }
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
-        logger.info("Connecting to {} options {}", urlProps.getUrl(), urlProps.getPropsWithMaskedSecret());
+        logger.info("Connecting to {} options {}", urlProps.getUrl(), getPropsWithMaskedSecret(urlProps));
         return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), null);
     }
 
@@ -259,5 +246,19 @@ public class SQLServerOutputPlugin
     protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
     {
         return new SQLServerColumnSetterFactory(batch, defaultTimeZone);
+    }
+
+    private Properties getPropsWithMaskedSecret(UrlAndProperties urlAndProperties)
+    {
+        Properties safeProps = new Properties();
+        Properties originalProps = urlAndProperties.getProps();
+        for(String key : originalProps.stringPropertyNames()) {
+            if (key.equals("password")) {
+                safeProps.setProperty(key, "***");
+            } else {
+                safeProps.setProperty(key, originalProps.getProperty(key));
+            }
+        }
+        return safeProps;
     }
 }
