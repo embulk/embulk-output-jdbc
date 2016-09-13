@@ -435,18 +435,14 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals("2016-01-01", i2.next());
             assertEquals(createTimestamp("2017/01/01 01:02:03", 123000000), i2.next());
             // Embulk timestamp doesn't support values under microseconds.
-            //assertEquals(createTimestamp("2018/01/01 01:02:03", 123456000), i2.next()); // java.lang.AssertionError: expected:<2018-01-01 01:02:03.123456> but was:<2018-01-01 01:02:03.1234560>
-            i2.next();
+            assertEquals("2018-01-01 01:02:03.1234560", i2.next().toString());
 
             assertEquals(createTimestamp("2019/01/01 01:02:03", 120000000).toString(), i2.next());
             assertEquals(createTimestamp("2020/01/01 01:02:00", 0), i2.next());
 
             // Embulk timestamp doesn't support values under microseconds.
-            //assertEquals(createTime("03:04:05", 123456000), i2.next()); // java.lang.AssertionError: expected:<03:04:05.123456000> but was:<2018-01-01 01:02:03.1234560>
-            i2.next();
-
-            //assertEquals(createTime("06:07:08", 120000000), i2.next()); // java.lang.AssertionError: expected:<06:07:08.120000000> but was:<2018-01-01 01:02:03.1234560>
-            i2.next();
+            assertEquals("03:04:05.1234560", i2.next().toString());
+            assertEquals("06:07:08.12", i2.next().toString());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
@@ -478,17 +474,12 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals("2016-12-31", i2.next());
             assertEquals(createTimestamp("2017/12/31 23:59:59", 997000000), i2.next());
             // Embulk timestamp doesn't support values under microseconds.
-            //assertEquals(createTimestamp("2018/12/31 23:59:59", 999999000), i2.next()); // java.lang.AssertionError: expected:<2018-12-31 23:59:59.999999> but was:<2018-12-31 23:59:59.9999990>
-            i2.next();
-
+            assertEquals("2018-12-31 23:59:59.9999990", i2.next().toString());
             assertEquals(createTimestamp("2019/12/31 23:59:59", 990000000).toString(), i2.next());
             assertEquals(createTimestamp("2021/01/01 00:00:00", 0), i2.next());
             // Embulk timestamp doesn't support values under microseconds.
-            //assertEquals(createTime("23:59:59", 999999000), i2.next()); // java.lang.AssertionError: expected:<23:59:59.999999000> but was:<23:59:59.9999990>
-            i2.next();
-
-            // assertEquals(createTime("23:59:59", 990000000), i2.next()); // java.lang.AssertionError: expected:<23:59:59.990000000> but was:<23:59:59.99>
-            i2.next();
+            assertEquals("23:59:59.9999990", i2.next().toString());
+            assertEquals("23:59:59.99", i2.next().toString());
         }
         {
             Iterator<Object> i2 = i1.next().iterator();
