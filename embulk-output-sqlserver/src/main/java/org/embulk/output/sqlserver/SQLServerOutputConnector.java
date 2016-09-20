@@ -1,11 +1,11 @@
 package org.embulk.output.sqlserver;
 
+import org.embulk.output.jdbc.JdbcOutputConnector;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import org.embulk.output.jdbc.JdbcOutputConnector;
 
 public class SQLServerOutputConnector
         implements JdbcOutputConnector
@@ -16,11 +16,6 @@ public class SQLServerOutputConnector
 
     public SQLServerOutputConnector(String url, Properties properties, String schemaName)
     {
-        try {
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
         this.url = url;
         this.properties = properties;
         this.schemaName = schemaName;
