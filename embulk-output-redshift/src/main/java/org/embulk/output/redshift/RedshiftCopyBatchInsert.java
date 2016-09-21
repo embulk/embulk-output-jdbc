@@ -22,6 +22,7 @@ import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
@@ -30,6 +31,7 @@ import com.amazonaws.auth.policy.Statement;
 import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
@@ -45,6 +47,7 @@ public class RedshiftCopyBatchInsert
     private final String iamReaderUserName;
     private final AWSCredentialsProvider credentialsProvider;
     private final AmazonS3Client s3;
+    private final String s3RegionName;
     private final AWSSecurityTokenServiceClient sts;
     private final ExecutorService executorService;
 
@@ -72,9 +75,21 @@ public class RedshiftCopyBatchInsert
         this.credentialsProvider = credentialsProvider;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
-
         this.executorService = Executors.newCachedThreadPool();
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
+
+        String s3RegionName = null;
+        try {
+            String s3Location = s3.getBucketLocation(s3BucketName);
+            Region s3Region = Region.fromValue(s3Location);
+            com.amazonaws.regions.Region region = s3Region.toAWSRegion();
+            s3RegionName = region.getName();
+            logger.info("S3 region for bucket '" + s3BucketName + "' is '" + s3RegionName + "'.");
+        } catch (AmazonClientException | IllegalArgumentException e) {
+            logger.warn("Cannot get S3 region for bucket '" + s3BucketName + "'."
+                    + " IAM user needs \"s3:GetBucketLocation\" permission if Redshift region and S3 region are different.");
+        }
+        this.s3RegionName = s3RegionName;
     }
 
     @Override
@@ -274,6 +289,12 @@ public class RedshiftCopyBatchInsert
                 sb.append(creds.getSessionToken());
             }
             sb.append("' ");
+            if (s3RegionName != null) {
+                sb.append("REGION '");
+                sb.append(s3RegionName);
+                sb.append("' ");
+            }
+
             sb.append(COPY_AFTER_FROM);
             return sb.toString();
         }
