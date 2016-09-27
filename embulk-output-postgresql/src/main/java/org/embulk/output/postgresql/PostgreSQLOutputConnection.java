@@ -164,6 +164,12 @@ public class PostgreSQLOutputConnection
             return "TEXT";
         case "BLOB":
             return "BYTEA";
+        case "VARCHAR":
+            if (c.getDataLength() == Integer.MAX_VALUE) {
+                // getDataLength for varchar without length specifier will return 2147483647 .
+                // but cannot create column of varchar(2147483647) .
+                return "VARCHAR";
+            }
         default:
             return super.buildColumnTypeName(c);
         }
