@@ -1,3 +1,10 @@
+Release 0.6.4 - 2016-09-30
+
+* Improvee performance of embulk-output-oracle oci mode.
+* embulk-output-sqlserver bundled jTDS, open source JDBC driver for SQL Server, and used it in default (@uu59++).
+* Enabled to use S3 bucket whose region is different from Redshift region.
+* Enabled to use varchar without length specifier in embulk-output-postgresql merge mode.
+
 Release 0.6.3 - 2016-08-18
 
 * Fixed the default value of ssl property of embulk-output-redshift (@AntoineAugusti++).
