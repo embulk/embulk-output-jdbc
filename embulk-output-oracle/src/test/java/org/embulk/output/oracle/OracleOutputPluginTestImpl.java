@@ -19,32 +19,52 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
 import org.embulk.output.AbstractJdbcOutputPluginTest;
+import org.embulk.output.OracleOutputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
+import org.embulk.spi.InputPlugin;
+import org.embulk.spi.OutputPlugin;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 
 public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
 {
-    private EmbulkPluginTester tester;
+    private static boolean useJtdsDriver = false;
+    private static boolean canTest;
+    private static EmbulkPluginTester tester = new EmbulkPluginTester();
+    static {
+        tester.addPlugin(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
+        tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
+    }
+
+
     private String pluginName;
 
     public void setTester(EmbulkPluginTester tester) {
-        this.tester = tester;
+        //this.tester = tester;
     }
 
     public void setPluginName(String pluginName) {
         this.pluginName = pluginName;
     }
 
-    public String beforeClass()
+    @BeforeClass
+    public static void beforeClass() throws Exception
     {
+        if (System.getProperty("path.separator").equals(";")) {
+            // for Windows
+            System.setProperty("file.encoding", "MS932");
+        }
+
         try {
             Class.forName("oracle.jdbc.OracleDriver");
 
-            try (Connection connection = connect()) {
+            try (Connection connection = new OracleOutputPluginTestImpl().connect()) {
                 String version = connection.getMetaData().getDriverVersion();
                 System.out.println("Driver version = " + version);
-                return version;
+                //return version;
             }
 
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
@@ -60,9 +80,10 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
             //   GRANT DBA TO EMBULK_USER;
         }
 
-        return null;
+        //return null;
     }
 
+    @Test
     public void testInsert() throws Exception
     {
         String table = "TEST1";
@@ -75,6 +96,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testInsertCreate() throws Exception
     {
         String table = "TEST1";
@@ -86,6 +108,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable1(table);
     }
 
+    @Test
     public void testInsertEmpty() throws Exception
     {
         String table = "TEST1";
@@ -99,6 +122,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTableEmpty(table);
     }
 
+    @Test
     public void testTruncateInsert() throws Exception
     {
         String table = "TEST1";
@@ -112,6 +136,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testTruncateInsertOCIMethod() throws Exception
     {
         String table = "TEST1";
@@ -125,6 +150,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testTruncateInsertCreate() throws Exception
     {
         String table = "TEST1";
@@ -136,6 +162,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable1(table);
     }
 
+    @Test
     public void testInsertDirect() throws Exception
     {
         String table = "TEST1";
@@ -148,6 +175,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testInsertDirectDuplicate() throws Exception
     {
         String table = "TEST1";
@@ -164,6 +192,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         }
     }
 
+    @Test
     public void testInsertDirectEmpty() throws Exception
     {
         String table = "TEST1";
@@ -177,6 +206,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTableEmpty(table);
     }
 
+    @Test
     public void testInsertDirectCreate() throws Exception
     {
         String table = "TEST1";
@@ -188,6 +218,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable1(table);
     }
 
+    @Test
     public void testInsertDirectDirectMethod() throws Exception
     {
         String table = "TEST1";
@@ -200,6 +231,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testInsertDirectOCIMethod() throws Exception
     {
         String table = "TEST1";
@@ -212,6 +244,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testInsertDirectOCIMethodLarge() throws Exception
     {
         String table = "TEST1";
@@ -228,6 +261,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         }
     }
 
+    @Test
     public void testInsertDirectOCIMethodDuplicate() throws Exception
     {
         String table = "TEST1";
@@ -244,6 +278,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         }
     }
 
+    @Test
     public void testInsertDirectOCIMethodMultibyte() throws Exception
     {
         String table = "ＴＥＳＴ１";
@@ -256,6 +291,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testInsertDirectOCIMethodMultibyteDuplicate() throws Exception
     {
         String table = "ＴＥＳＴ１";
@@ -272,6 +308,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         }
     }
 
+    @Test
     public void testInsertDirectOCIMethodSplit() throws Exception
     {
         String table = "TEST1";
@@ -284,6 +321,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testUrl() throws Exception
     {
         String table = "TEST1";
@@ -296,6 +334,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testLowerTable() throws Exception
     {
         String table = "TEST1";
@@ -308,6 +347,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testLowerColumn() throws Exception
     {
         String table = "TEST1";
@@ -320,6 +360,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testLowerColumnOptions() throws Exception
     {
         String table = "TEST1";
@@ -332,6 +373,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
+    @Test
     public void testReplace() throws Exception
     {
         String table = "TEST1";
@@ -344,6 +386,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable2(table);
     }
 
+    @Test
     public void testReplaceOCIMethod() throws Exception
     {
         String table = "TEST1";
@@ -356,6 +399,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable2(table);
     }
 
+    @Test
     public void testReplaceEmpty() throws Exception
     {
         String table = "TEST1";
@@ -368,6 +412,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertTableEmpty(table);
     }
 
+    @Test
     public void testReplaceCreate() throws Exception
     {
         String table = "TEST1";
@@ -380,6 +425,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
     }
 
 
+    @Test
     public void testReplaceLongName() throws Exception
     {
         String table = "TEST12345678901234567890123456";
@@ -392,6 +438,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable2(table);
     }
 
+    @Test
     public void testReplaceLongNameMultibyte() throws Exception
     {
         String table = "ＴＥＳＴ123456789012345678";
@@ -401,6 +448,7 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
         assertGeneratedTable2(table);
     }
 
+    @Test
     public void testStringTimestamp() throws Exception
     {
         String table = "TEST1";
@@ -626,11 +674,11 @@ public class OracleOutputPluginTestImpl extends AbstractJdbcOutputPluginTest
     {
         tester.run(convertYml(ymlName));
     }
-
+/*
     @Override
     protected String convertYmlLine(String line)
     {
         return line.replaceAll("type: oracle", "type: " + pluginName);
     }
-
+*/
 }
