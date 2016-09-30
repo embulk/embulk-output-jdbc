@@ -36,14 +36,20 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     public static void beforeClass()
     {
         try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Warning: you should put 'sqljdbc41.jar' in 'embulk-input-sqlserver/driver' directory in order to test.");
+            return;
+        }
+
+        try {
             new SQLServerOutputPluginTest().connect();
             canTest = true;
         } catch (Throwable t) {
             System.out.println(t);
         } finally {
             if (!canTest) {
-                System.out.println("Warning: you should put sqljdbc41.jar on classpath and prepare database.");
-                System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+                System.out.println("Warning: you should prepare database in order to test (server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW).");
             }
         }
     }
