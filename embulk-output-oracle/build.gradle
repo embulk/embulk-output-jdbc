@@ -1,7 +1,7 @@
-[compileTestJava]*.options*.encoding = 'UTF-8'
-
 dependencies {
     compile project(':embulk-output-jdbc')
+
     testCompile 'org.embulk:embulk-standards:0.8.8'
     testCompile files('../embulk-output-jdbc/build/classes/test/')
+    testCompile files('driver/ojdbc7.jar')
 }
