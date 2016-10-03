@@ -13,7 +13,7 @@ import com.google.inject.Module;
 
 public class EmbulkPluginTester
 {
-    private static class PluginDefinition
+    public static class PluginDefinition
     {
         public final Class<?> iface;
         public final String name;
@@ -45,6 +45,11 @@ public class EmbulkPluginTester
     public void addPlugin(Class<?> iface, String name, Class<?> impl)
     {
         plugins.add(new PluginDefinition(iface, name, impl));
+    }
+
+    public List<PluginDefinition> getPlugins()
+    {
+        return plugins;
     }
 
     public void run(String yml) throws Exception

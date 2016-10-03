@@ -1,6 +1,9 @@
 package org.embulk.output;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -11,10 +14,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
+import org.embulk.output.tester.EmbulkPluginTester.PluginDefinition;
+import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.io.Files;
 
@@ -22,14 +29,72 @@ public abstract class AbstractJdbcOutputPluginTest
 {
     protected static boolean enabled;
     protected static EmbulkPluginTester tester = new EmbulkPluginTester();
+    private static Map<String, ?> testConfigurations;
 
-    protected void dropTable(String table) throws SQLException
+
+    private static Map<String, ?> getTestConfigurations() throws IOException
+    {
+        if (testConfigurations == null) {
+            String pluginName = null;
+            for (PluginDefinition pluginDefinition : tester.getPlugins()) {
+                if (AbstractJdbcOutputPlugin.class.isAssignableFrom(pluginDefinition.impl)) {
+                    pluginName = pluginDefinition.name;
+                    break;
+                }
+            }
+
+            Yaml yaml = new Yaml();
+            File configurationFile = new File("tests.yml");
+            if (!configurationFile.exists()) {
+                configurationFile = new File("../tests.yml");
+                if (!configurationFile.exists()) {
+                    throw new IOException("\"tests.yml\" doesn't exist.");
+                }
+            }
+
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(configurationFile), Charset.forName("UTF8"));
+            try {
+                Map<String, ?> allTestConfigurations = (Map<String, ?>)yaml.load(reader);
+                testConfigurations = (Map<String, ?>)allTestConfigurations.get(pluginName);
+            } finally {
+                reader.close();
+            }
+        }
+        return testConfigurations;
+    }
+
+    protected static String getHost() throws IOException
+    {
+        return (String)getTestConfigurations().get("host");
+    }
+
+    protected static int getPort() throws IOException
+    {
+        return (Integer)getTestConfigurations().get("port");
+    }
+
+    protected static String getUser() throws IOException
+    {
+        return (String)getTestConfigurations().get("user");
+    }
+
+    protected static String getPassword() throws IOException
+    {
+        return (String)getTestConfigurations().get("password");
+    }
+
+    protected static String getDatabase() throws IOException
+    {
+        return (String)getTestConfigurations().get("database");
+    }
+
+    protected void dropTable(String table) throws SQLException, IOException
     {
         String sql = String.format("DROP TABLE %s", table);
         executeSQL(sql, true);
     }
 
-    protected List<List<Object>> select(String table) throws SQLException
+    protected List<List<Object>> select(String table) throws SQLException, IOException
     {
         try (Connection connection = connect()) {
             try (Statement statement = connection.createStatement()) {
@@ -63,12 +128,12 @@ public abstract class AbstractJdbcOutputPluginTest
         return resultSet.getObject(index);
     }
 
-    protected void executeSQL(String sql) throws SQLException
+    protected void executeSQL(String sql) throws SQLException, IOException
     {
         executeSQL(sql, false);
     }
 
-    protected void executeSQL(String sql, boolean ignoreError) throws SQLException
+    protected void executeSQL(String sql, boolean ignoreError) throws SQLException, IOException
     {
         if (!enabled) {
             return;
@@ -130,6 +195,6 @@ public abstract class AbstractJdbcOutputPluginTest
         return new File(getClass().getResource(name).toURI());
     }
 
-    protected abstract Connection connect() throws SQLException;
+    protected abstract Connection connect() throws SQLException, IOException;
 
 }

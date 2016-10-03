@@ -1,9 +1,11 @@
 package org.embulk.output.oracle;
 
+import static java.util.Locale.ENGLISH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -58,7 +60,8 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 
         } catch (SQLException e) {
             System.err.println(e);
-            System.err.println("Warning: prepare a schema on Oracle 12c (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
+            System.err.println(String.format(ENGLISH, "Warning: prepare a schema on Oracle 12c (server = %s, port = %d, database = %s, user = %s, password = %s, charset = UTF-8).",
+                    getHost(), getPort(), getDatabase(), getUser(), getPassword()));
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;
@@ -470,7 +473,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
-    private void createTable(String table) throws SQLException
+    private void createTable(String table) throws SQLException, IOException
     {
         String sql = String.format("CREATE TABLE %s ("
                 + "ID              CHAR(4),"
@@ -484,12 +487,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         executeSQL(sql);
     }
 
-    private void insertRecord(String table) throws SQLException
+    private void insertRecord(String table) throws SQLException, IOException
     {
         insertRecord(table, "9999");
     }
 
-    private void insertRecord(String table, String id) throws SQLException
+    private void insertRecord(String table, String id) throws SQLException, IOException
     {
         executeSQL(String.format("INSERT INTO %s VALUES('%s', NULL, NULL, NULL, NULL, NULL, NULL)", table, id));
     }
@@ -690,9 +693,10 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Override
-    protected Connection connect() throws SQLException
+    protected Connection connect() throws SQLException, IOException
     {
-        return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
+        return DriverManager.getConnection(String.format(ENGLISH, "jdbc:oracle:thin:@%s:%d:%s", getHost(), getPort(), getDatabase()),
+                getUser(), getPassword());
     }
 
 }

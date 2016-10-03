@@ -6,6 +6,7 @@ import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,6 +20,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import static java.util.Locale.ENGLISH;
 import static org.junit.Assert.assertEquals;
 
 
@@ -30,7 +32,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @BeforeClass
-    public static void beforeClass()
+    public static void beforeClass() throws IOException
     {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -46,7 +48,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             System.out.println(t);
         } finally {
             if (!enabled) {
-                System.out.println("Warning: you should prepare database in order to test (server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW).");
+                System.out.println(String.format(ENGLISH, "Warning: you should prepare database in order to test (server = %s, port = %d, database = %s, user = %s, password = %s).",
+                        getHost(), getPort(), getDatabase(), getUser(), getPassword()));
             }
         }
     }
@@ -341,7 +344,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         } catch (Throwable t) {
             System.out.println(t);
             System.out.println("Warning: jTDS driver can't connect to database.");
-            System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+            System.out.println(String.format(ENGLISH, "(server = %s, port = %d, database = %s, user = %s, password = %s)",
+                    getHost(), getPort(), getDatabase(), getUser(), getPassword()));
             return;
         }
 
@@ -707,7 +711,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         return new PreciseTime(date.getTime(), nanos);
     }
 
-    private void createTable(String table) throws SQLException
+    private void createTable(String table) throws SQLException, IOException
     {
         String sql = String.format("CREATE TABLE %s ("
                 + "ID                  CHAR(4),"
@@ -739,7 +743,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         executeSQL(sql);
     }
 
-    private void insertRecord(String table) throws SQLException
+    private void insertRecord(String table) throws SQLException, IOException
     {
         executeSQL(String.format("INSERT INTO %s VALUES('9999',"
                 + "NULL,"
@@ -769,13 +773,15 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Override
-    protected Connection connect() throws SQLException
+    protected Connection connect() throws SQLException, IOException
     {
+        String url;
         if(useJtdsDriver) {
-            return DriverManager.getConnection("jdbc:jtds:sqlserver://localhost:1433/TESTDB;instance=SQLEXPRESS;useLOBs=false", "TEST_USER", "test_pw");
+            url = "jdbc:jtds:sqlserver://%s:%d/%s;useLOBs=false";
         } else {
-            return DriverManager.getConnection("jdbc:sqlserver://localhost\\SQLEXPRESS:1433;databasename=TESTDB", "TEST_USER", "test_pw");
+            url = "jdbc:sqlserver://%s:%d;databasename=%s";
         }
+        return DriverManager.getConnection(String.format(ENGLISH, url, getHost(), getPort(), getDatabase()), getUser(), getPassword());
     }
 
 }
