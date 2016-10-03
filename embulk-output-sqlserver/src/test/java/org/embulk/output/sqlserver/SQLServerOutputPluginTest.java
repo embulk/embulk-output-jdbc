@@ -2,7 +2,6 @@ package org.embulk.output.sqlserver;
 
 import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.SQLServerOutputPlugin;
-import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
     private static boolean useJtdsDriver = false;
-    private static boolean canTest;
-    private static EmbulkPluginTester tester = new EmbulkPluginTester();
     static {
         tester.addPlugin(OutputPlugin.class, "sqlserver", SQLServerOutputPlugin.class);
     }
@@ -44,11 +41,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 
         try {
             new SQLServerOutputPluginTest().connect();
-            canTest = true;
+            enabled = true;
         } catch (Throwable t) {
             System.out.println(t);
         } finally {
-            if (!canTest) {
+            if (!enabled) {
                 System.out.println("Warning: you should prepare database in order to test (server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW).");
             }
         }
@@ -57,17 +54,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirect() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-insert-direct.yml"));
+        test("/sqlserver/yml/test-insert-direct.yml");
 
         assertTable(1, table);
     }
@@ -75,15 +68,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-insert-direct.yml"));
+        test("/sqlserver/yml/test-insert-direct.yml");
 
         assertGeneratedTable(table);
     }
@@ -91,17 +80,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsert() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-insert.yml"));
+        test("/sqlserver/yml/test-insert.yml");
 
         assertTable(1, table);
     }
@@ -109,15 +94,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-insert.yml"));
+        test("/sqlserver/yml/test-insert.yml");
 
         assertGeneratedTable(table);
     }
@@ -125,17 +106,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testTruncateInsert() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-truncate-insert.yml"));
+        test("/sqlserver/yml/test-truncate-insert.yml");
 
         assertTable(0, table);
     }
@@ -143,17 +120,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplace() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-replace.yml"));
+        test("/sqlserver/yml/test-replace.yml");
 
         assertGeneratedTable(table);
     }
@@ -161,10 +134,6 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceLongName() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST___Ａ１２３４５６７８９Ｂ１２３４５６７８９Ｃ１２３４５６７８９Ｄ１２３４５６７８９Ｅ１２３４５６７８９Ｆ１２３４５６７８９Ｇ１２３４５６７８９Ｈ１２３４５６７８９Ｉ１２３４５６７８９Ｊ１２３４５６７８９Ｋ１２３４５６７８９Ｌ１２３４５６７８９";
         assertEquals(127, table.length());
 
@@ -172,7 +141,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-replace-long-name.yml"));
+        test("/sqlserver/yml/test-replace-long-name.yml");
 
         assertGeneratedTable(table);
     }
@@ -180,15 +149,11 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-replace.yml"));
+        test("/sqlserver/yml/test-replace.yml");
 
         assertGeneratedTable(table);
     }
@@ -196,17 +161,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testStringToTimestamp() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-string-timestamp.yml"));
+        test("/sqlserver/yml/test-string-timestamp.yml");
 
         assertTable(1, table, true);
     }
@@ -214,7 +175,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testNativeString() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -223,7 +184,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         dropTable(table);
         executeSQL(String.format("CREATE TABLE %S (ITEM1 CHAR(4), ITEM2 VARCHAR(8), ITEM3 TEXT, ITEM4 NCHAR(4), ITEM5 NVARCHAR(8), ITEM6 NTEXT)", table));
 
-        tester.run(convertYml("/sqlserver/yml/test-native-string.yml"));
+        test("/sqlserver/yml/test-native-string.yml");
 
         List<List<Object>> rows = select(table);
         assertEquals(2, rows.size());
@@ -250,7 +211,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testNativeInteger() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -259,7 +220,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         dropTable(table);
         executeSQL(String.format("CREATE TABLE %S (ITEM1 TINYINT, ITEM2 SMALLINT, ITEM3 INT, ITEM4 BIGINT, ITEM5 BIT)", table));
 
-        tester.run(convertYml("/sqlserver/yml/test-native-integer.yml"));
+        test("/sqlserver/yml/test-native-integer.yml");
 
         List<List<Object>> rows = select(table);
         assertEquals(2, rows.size());
@@ -284,7 +245,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testNativeDecimal() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -293,7 +254,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         dropTable(table);
         executeSQL(String.format("CREATE TABLE %S (ITEM1 DECIMAL(20,2), ITEM2 NUMERIC(20,2), ITEM3 SMALLMONEY, ITEM4 MONEY, ITEM5 REAL, ITEM6 FLOAT)", table));
 
-        tester.run(convertYml("/sqlserver/yml/test-native-decimal.yml"));
+        test("/sqlserver/yml/test-native-decimal.yml");
 
         List<List<Object>> rows = select(table);
         assertEquals(2, rows.size());
@@ -320,7 +281,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testNativeDate() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -329,7 +290,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         dropTable(table);
         executeSQL(String.format("CREATE TABLE %S (ITEM1 DATE, ITEM2 SMALLDATETIME, ITEM3 DATETIME, ITEM4 DATETIME2, ITEM5 DATETIME2(2), ITEM6 TIME, ITEM7 TIME(2))", table));
 
-        tester.run(convertYml("/sqlserver/yml/test-native-date.yml"));
+        test("/sqlserver/yml/test-native-date.yml");
 
         List<List<Object>> rows = select(table);
         assertEquals(2, rows.size());
@@ -360,17 +321,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testNative() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        tester.run(convertYml("/sqlserver/yml/test-native.yml"));
+        test("/sqlserver/yml/test-native.yml");
 
         assertTable(1, table);
     }
@@ -378,19 +335,14 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testJtds() throws Exception
     {
-        boolean canTestJtds = false;
         useJtdsDriver = true;
         try {
-            new SQLServerOutputPluginTest().connect();
-            canTestJtds = true;
+            connect();
         } catch (Throwable t) {
             System.out.println(t);
-        } finally {
-            if (!canTestJtds) {
-                System.out.println("Warning: jTDS driver can't connect to database.");
-                System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
-                return;
-            }
+            System.out.println("Warning: jTDS driver can't connect to database.");
+            System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+            return;
         }
 
         try {
@@ -398,7 +350,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             dropTable(table);
             createTable(table);
             insertRecord(table);
-            tester.run(convertYml("/sqlserver/yml/test-jtds.yml"));
+            test("/sqlserver/yml/test-jtds.yml");
             assertTableJtds(1, table);
         } finally {
             useJtdsDriver = false;
@@ -518,6 +470,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertTable(int skip, String table, boolean precise) throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         List<List<Object>> rows = select(table);
         assertEquals(skip + 3, rows.size());
         rows = rows.subList(skip, skip + 3);
@@ -614,6 +570,10 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertGeneratedTable(String table) throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         List<List<Object>> rows = select(table);
         assertEquals(3, rows.size());
 

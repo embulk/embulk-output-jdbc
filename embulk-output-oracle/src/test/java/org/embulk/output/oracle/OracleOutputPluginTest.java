@@ -23,7 +23,6 @@ import org.embulk.exec.PartialExecutionException;
 import org.embulk.input.filesplit.LocalFileSplitInputPlugin;
 import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.OracleOutputPlugin;
-import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
@@ -32,8 +31,6 @@ import org.junit.Test;
 
 public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
-    private static boolean canTest;
-    private static EmbulkPluginTester tester = new EmbulkPluginTester();
     static {
         tester.addPlugin(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
         tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
@@ -57,7 +54,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         try (Connection connection = new OracleOutputPluginTest().connect()) {
             String version = connection.getMetaData().getDriverVersion();
             System.out.println("Driver version = " + version);
-            canTest = true;
+            enabled = true;
 
         } catch (SQLException e) {
             System.err.println(e);
@@ -71,16 +68,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsert() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-insert.yml");
+        test("/oracle/yml/test-insert.yml");
 
         assertTable(table);
     }
@@ -88,15 +81,11 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        run("/oracle/yml/test-insert.yml");
+        test("/oracle/yml/test-insert.yml");
 
         assertGeneratedTable1(table);
     }
@@ -104,17 +93,13 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertEmpty() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
         new File(convertPath("/oracle/data/"), "test2").mkdir();
-        run("/oracle/yml/test-insert-empty.yml");
+        test("/oracle/yml/test-insert-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -122,17 +107,13 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testTruncateInsert() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        run("/oracle/yml/test-truncate-insert.yml");
+        test("/oracle/yml/test-truncate-insert.yml");
 
         assertTable(table);
     }
@@ -140,17 +121,13 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testTruncateInsertOCIMethod() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
         insertRecord(table);
 
-        run("/oracle/yml/test-truncate-insert-oci-method.yml");
+        test("/oracle/yml/test-truncate-insert-oci-method.yml");
 
         assertTable(table);
     }
@@ -158,15 +135,11 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testTruncateInsertCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        run("/oracle/yml/test-truncate-insert.yml");
+        test("/oracle/yml/test-truncate-insert.yml");
 
         assertGeneratedTable1(table);
     }
@@ -174,16 +147,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirect() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-insert-direct.yml");
+        test("/oracle/yml/test-insert-direct.yml");
 
         assertTable(table);
     }
@@ -191,7 +160,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectDuplicate() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -202,7 +171,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         insertRecord(table, "A002");
 
         try {
-            run("/oracle/yml/test-insert-direct.yml");
+            test("/oracle/yml/test-insert-direct.yml");
             fail("Exception expected.");
         } catch (Exception e) {
             System.out.println(e);
@@ -212,17 +181,13 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectEmpty() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
         new File(convertPath("/oracle/data/"), "test2").mkdir();
-        run("/oracle/yml/test-insert-direct-empty.yml");
+        test("/oracle/yml/test-insert-direct-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -230,15 +195,11 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        run("/oracle/yml/test-insert-direct.yml");
+        test("/oracle/yml/test-insert-direct.yml");
 
         assertGeneratedTable1(table);
     }
@@ -246,17 +207,13 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectDirectMethod() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
         try {
-            run("/oracle/yml/test-insert-direct-direct-method.yml");
+            test("/oracle/yml/test-insert-direct-direct-method.yml");
         } catch (PartialExecutionException e) {
             if (e.getCause() != null && e.getCause().getClass().equals(RuntimeException.class)
                     && e.getCause().getCause() != null && e.getCause().getCause().getClass().equals(AssertionError.class)) {
@@ -274,16 +231,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectOCIMethod() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-insert-direct-oci-method.yml");
+        test("/oracle/yml/test-insert-direct-oci-method.yml");
 
         assertTable(table);
     }
@@ -291,7 +244,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectOCIMethodLarge() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -300,7 +253,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-insert-direct-oci-method-large.yml");
+        test("/oracle/yml/test-insert-direct-oci-method-large.yml");
 
         List<List<Object>> rows = select(table);
         assertEquals(9999, rows.size());
@@ -312,7 +265,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectOCIMethodDuplicate() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -323,7 +276,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         insertRecord(table, "A002");
 
         try {
-            run("/oracle/yml/test-insert-direct-oci-method.yml");
+            test("/oracle/yml/test-insert-direct-oci-method.yml");
             fail("Exception expected.");
         } catch (Exception e) {
             System.out.println(e);
@@ -333,16 +286,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectOCIMethodMultibyte() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "ＴＥＳＴ１";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-insert-direct-oci-method-multibyte.yml");
+        test("/oracle/yml/test-insert-direct-oci-method-multibyte.yml");
 
         assertTable(table);
     }
@@ -350,7 +299,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectOCIMethodMultibyteDuplicate() throws Exception
     {
-        if (!canTest) {
+        if (!enabled) {
             return;
         }
 
@@ -361,7 +310,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         insertRecord(table, "A002");
 
         try {
-            run("/oracle/yml/test-insert-direct-oci-method-multibyte.yml");
+            test("/oracle/yml/test-insert-direct-oci-method-multibyte.yml");
             fail("Exception expected.");
         } catch (Exception e) {
             System.out.println(e);
@@ -371,16 +320,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectOCIMethodSplit() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-insert-direct-oci-method-split.yml");
+        test("/oracle/yml/test-insert-direct-oci-method-split.yml");
 
         assertTable(table);
     }
@@ -388,16 +333,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testUrl() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-url.yml");
+        test("/oracle/yml/test-url.yml");
 
         assertTable(table);
     }
@@ -405,16 +346,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testLowerTable() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-lower-table.yml");
+        test("/oracle/yml/test-lower-table.yml");
 
         assertTable(table);
     }
@@ -422,16 +359,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testLowerColumn() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-lower-column.yml");
+        test("/oracle/yml/test-lower-column.yml");
 
         assertTable(table);
     }
@@ -439,16 +372,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testLowerColumnOptions() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-lower-column-options.yml");
+        test("/oracle/yml/test-lower-column-options.yml");
 
         assertTable(table);
     }
@@ -456,16 +385,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplace() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-replace.yml");
+        test("/oracle/yml/test-replace.yml");
 
         assertGeneratedTable2(table);
     }
@@ -473,16 +398,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceOCIMethod() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-replace-oci-method.yml");
+        test("/oracle/yml/test-replace-oci-method.yml");
 
         assertGeneratedTable2(table);
     }
@@ -490,16 +411,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceEmpty() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-replace-empty.yml");
+        test("/oracle/yml/test-replace-empty.yml");
 
         assertTableEmpty(table);
     }
@@ -507,15 +424,11 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceCreate() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
 
-        run("/oracle/yml/test-replace.yml");
+        test("/oracle/yml/test-replace.yml");
 
         assertGeneratedTable2(table);
     }
@@ -524,16 +437,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceLongName() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST12345678901234567890123456";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-replace-long-name.yml");
+        test("/oracle/yml/test-replace-long-name.yml");
 
         assertGeneratedTable2(table);
     }
@@ -541,13 +450,9 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceLongNameMultibyte() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "ＴＥＳＴ123456789012345678";
 
-        run("/oracle/yml/test-replace-long-name-multibyte.yml");
+        test("/oracle/yml/test-replace-long-name-multibyte.yml");
 
         assertGeneratedTable2(table);
     }
@@ -555,16 +460,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testStringTimestamp() throws Exception
     {
-        if (!canTest) {
-            return;
-        }
-
         String table = "TEST1";
 
         dropTable(table);
         createTable(table);
 
-        run("/oracle/yml/test-string-timestamp.yml");
+        test("/oracle/yml/test-string-timestamp.yml");
 
         assertTable(table);
     }
@@ -595,6 +496,10 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertTable(String table) throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         // datetime of UTC will be inserted by embulk.
         // datetime of default timezone will be selected by JDBC.
         TimeZone timeZone = TimeZone.getDefault();
@@ -642,12 +547,20 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertTableEmpty(String table) throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         List<List<Object>> rows = select(table);
         assertEquals(0, rows.size());
     }
 
     private void assertGeneratedTable1(String table) throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         // datetime of UTC will be inserted by embulk.
         // datetime of default timezone will be selected by JDBC.
         TimeZone timeZone = TimeZone.getDefault();
@@ -695,6 +608,10 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertGeneratedTable2(String table) throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         // datetime of UTC will be inserted by embulk.
         // datetime of default timezone will be selected by JDBC.
         TimeZone timeZone = TimeZone.getDefault();
@@ -776,11 +693,6 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     protected Connection connect() throws SQLException
     {
         return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
-    }
-
-    private void run(String ymlName) throws Exception
-    {
-        tester.run(convertYml(ymlName));
     }
 
 }
