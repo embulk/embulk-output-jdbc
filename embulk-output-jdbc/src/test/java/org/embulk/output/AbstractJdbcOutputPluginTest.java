@@ -222,6 +222,11 @@ public abstract class AbstractJdbcOutputPluginTest
 
     protected String convertYmlLine(String line)
     {
+        line = line.replaceAll("#host#", getHost());
+        line = line.replaceAll("#port#", Integer.toString(getPort()));
+        line = line.replaceAll("#database#", getDatabase());
+        line = line.replaceAll("#user#", getUser());
+        line = line.replaceAll("#password#", getPassword());
         return line;
     }
 

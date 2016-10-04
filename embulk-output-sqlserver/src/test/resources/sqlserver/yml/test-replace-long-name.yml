@@ -35,9 +35,9 @@ in:
     - {name: TIME_2_ITEM, type: timestamp, format: '%H:%M:%S.%N'}
 out:
     type: sqlserver
-    host: localhost
-    database: TESTDB
-    user: TEST_USER
-    password: test_pw
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
     table: TEST___Ａ１２３４５６７８９Ｂ１２３４５６７８９Ｃ１２３４５６７８９Ｄ１２３４５６７８９Ｅ１２３４５６７８９Ｆ１２３４５６７８９Ｇ１２３４５６７８９Ｈ１２３４５６７８９Ｉ１２３４５６７８９Ｊ１２３４５６７８９Ｋ１２３４５６７８９Ｌ１２３４５６７８９
     mode: replace
