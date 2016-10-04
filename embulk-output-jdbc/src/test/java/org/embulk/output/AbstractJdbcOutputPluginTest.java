@@ -33,6 +33,7 @@ public abstract class AbstractJdbcOutputPluginTest
     private static final String CONFIG_FILE_NAME = "tests.yml";
 
     protected boolean enabled;
+    // TODO:destroy EmbulkPluginTester after test
     protected EmbulkPluginTester tester = new EmbulkPluginTester();
     private String pluginName;
     private Map<String, ?> testConfigurations;
