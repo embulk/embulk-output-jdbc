@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.output.tester.EmbulkPluginTester.PluginDefinition;
@@ -25,10 +26,15 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.io.Files;
 
+import static java.util.Locale.ENGLISH;
+
 public abstract class AbstractJdbcOutputPluginTest
 {
+    private static final String CONFIG_FILE_NAME = "tests.yml";
+
     protected boolean enabled;
     protected EmbulkPluginTester tester = new EmbulkPluginTester();
+    private String pluginName;
     private Map<String, ?> testConfigurations;
 
     protected AbstractJdbcOutputPluginTest()
@@ -43,10 +49,9 @@ public abstract class AbstractJdbcOutputPluginTest
     protected abstract void prepare() throws SQLException;
 
 
-    private Map<String, ?> getTestConfigurations()
+    private Map<String, ?> getTestConfigs()
     {
         if (testConfigurations == null) {
-            String pluginName = null;
             for (PluginDefinition pluginDefinition : tester.getPlugins()) {
                 if (AbstractJdbcOutputPlugin.class.isAssignableFrom(pluginDefinition.impl)) {
                     pluginName = pluginDefinition.name;
@@ -55,19 +60,24 @@ public abstract class AbstractJdbcOutputPluginTest
             }
 
             Yaml yaml = new Yaml();
-            File configurationFile = new File("tests.yml");
-            if (!configurationFile.exists()) {
-                configurationFile = new File("../tests.yml");
-                if (!configurationFile.exists()) {
-                    throw new RuntimeException("\"tests.yml\" doesn't exist.");
+            File configFile = new File(CONFIG_FILE_NAME);
+            if (!configFile.exists()) {
+                configFile = new File("../" + CONFIG_FILE_NAME);
+                if (!configFile.exists()) {
+                    throw new ConfigException(String.format(ENGLISH, "\"%s\" doesn't exist.",
+                            CONFIG_FILE_NAME));
                 }
             }
 
             try {
-                InputStreamReader reader = new InputStreamReader(new FileInputStream(configurationFile), Charset.forName("UTF8"));
+                InputStreamReader reader = new InputStreamReader(new FileInputStream(configFile), Charset.forName("UTF8"));
                 try {
-                    Map<String, ?> allTestConfigurations = (Map<String, ?>)yaml.load(reader);
-                    testConfigurations = (Map<String, ?>)allTestConfigurations.get(pluginName);
+                    Map<String, ?> allTestConfigs = (Map<String, ?>)yaml.load(reader);
+                    if (!allTestConfigs.containsKey(pluginName)) {
+                        throw new ConfigException(String.format(ENGLISH, "\"%s\" doesn't contain \"%s\" element.",
+                                CONFIG_FILE_NAME, pluginName));
+                    }
+                    testConfigurations = (Map<String, ?>)allTestConfigs.get(pluginName);
                 } finally {
                     reader.close();
                 }
@@ -78,29 +88,39 @@ public abstract class AbstractJdbcOutputPluginTest
         return testConfigurations;
     }
 
+    private Object getTestConfig(String name)
+    {
+        Map<String, ?> testConfigs = getTestConfigs();
+        if (!testConfigs.containsKey(name)) {
+            throw new ConfigException(String.format(ENGLISH, "\"%s\" element in \"%s\" doesn't contain \"%s\" element.",
+                    pluginName, CONFIG_FILE_NAME, name));
+        }
+        return testConfigs.get(name);
+    }
+
     protected String getHost()
     {
-        return (String)getTestConfigurations().get("host");
+        return (String)getTestConfig("host");
     }
 
     protected int getPort()
     {
-        return (Integer)getTestConfigurations().get("port");
+        return (Integer)getTestConfig("port");
     }
 
     protected String getUser()
     {
-        return (String)getTestConfigurations().get("user");
+        return (String)getTestConfig("user");
     }
 
     protected String getPassword()
     {
-        return (String)getTestConfigurations().get("password");
+        return (String)getTestConfig("password");
     }
 
     protected String getDatabase()
     {
-        return (String)getTestConfigurations().get("database");
+        return (String)getTestConfig("database");
     }
 
     protected void dropTable(String table) throws SQLException
