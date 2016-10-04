@@ -17,10 +17,10 @@ in:
     - {name: timestamp_item, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
 out:
     type: oracle
-    host: localhost
-    database: TESTDB
-    user: TEST_USER
-    password: test_pw
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
     table: TEST1
     mode: insert_direct
     #driver_path: driver/ojdbc7.jar
