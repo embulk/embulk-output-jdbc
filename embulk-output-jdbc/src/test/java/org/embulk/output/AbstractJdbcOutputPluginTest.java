@@ -27,12 +27,23 @@ import com.google.common.io.Files;
 
 public abstract class AbstractJdbcOutputPluginTest
 {
-    protected static boolean enabled;
-    protected static EmbulkPluginTester tester = new EmbulkPluginTester();
-    private static Map<String, ?> testConfigurations;
+    protected boolean enabled;
+    protected EmbulkPluginTester tester = new EmbulkPluginTester();
+    private Map<String, ?> testConfigurations;
+
+    protected AbstractJdbcOutputPluginTest()
+    {
+        try {
+            prepare();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected abstract void prepare() throws SQLException;
 
 
-    private static Map<String, ?> getTestConfigurations()
+    private Map<String, ?> getTestConfigurations()
     {
         if (testConfigurations == null) {
             String pluginName = null;
@@ -67,27 +78,27 @@ public abstract class AbstractJdbcOutputPluginTest
         return testConfigurations;
     }
 
-    protected static String getHost()
+    protected String getHost()
     {
         return (String)getTestConfigurations().get("host");
     }
 
-    protected static int getPort()
+    protected int getPort()
     {
         return (Integer)getTestConfigurations().get("port");
     }
 
-    protected static String getUser()
+    protected String getUser()
     {
         return (String)getTestConfigurations().get("user");
     }
 
-    protected static String getPassword()
+    protected String getPassword()
     {
         return (String)getTestConfigurations().get("password");
     }
 
-    protected static String getDatabase()
+    protected String getDatabase()
     {
         return (String)getTestConfigurations().get("database");
     }

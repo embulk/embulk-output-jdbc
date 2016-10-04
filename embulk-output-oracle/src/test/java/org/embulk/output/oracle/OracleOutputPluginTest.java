@@ -26,20 +26,17 @@ import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.OracleOutputPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 
 public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
-    static {
+    @Override
+    protected void prepare() throws SQLException
+    {
         tester.addPlugin(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
         tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
-    }
 
-    @BeforeClass
-    public static void beforeClass() throws Exception
-    {
         if (System.getProperty("path.separator").equals(";")) {
             // for Windows
             System.setProperty("file.encoding", "MS932");
@@ -52,7 +49,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
             return;
         }
 
-        try (Connection connection = new OracleOutputPluginTest().connect()) {
+        try (Connection connection = connect()) {
             String version = connection.getMetaData().getDriverVersion();
             System.out.println("Driver version = " + version);
             enabled = true;

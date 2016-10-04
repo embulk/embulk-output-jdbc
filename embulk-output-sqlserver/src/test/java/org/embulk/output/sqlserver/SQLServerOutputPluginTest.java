@@ -3,7 +3,6 @@ package org.embulk.output.sqlserver;
 import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.SQLServerOutputPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -25,14 +24,13 @@ import static org.junit.Assert.assertEquals;
 
 public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
-    private static boolean useJtdsDriver = false;
-    static {
-        tester.addPlugin(OutputPlugin.class, "sqlserver", SQLServerOutputPlugin.class);
-    }
+    private boolean useJtdsDriver = false;
 
-    @BeforeClass
-    public static void beforeClass()
-    {
+
+    @Override
+    protected void prepare() throws SQLException {
+        tester.addPlugin(OutputPlugin.class, "sqlserver", SQLServerOutputPlugin.class);
+
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
@@ -41,7 +39,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         }
 
         try {
-            new SQLServerOutputPluginTest().connect();
+            connect();
             enabled = true;
         } catch (Throwable t) {
             System.out.println(t);
