@@ -6,7 +6,6 @@ import org.embulk.spi.OutputPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,7 +31,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @BeforeClass
-    public static void beforeClass() throws IOException
+    public static void beforeClass()
     {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -711,7 +710,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         return new PreciseTime(date.getTime(), nanos);
     }
 
-    private void createTable(String table) throws SQLException, IOException
+    private void createTable(String table) throws SQLException
     {
         String sql = String.format("CREATE TABLE %s ("
                 + "ID                  CHAR(4),"
@@ -743,7 +742,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         executeSQL(sql);
     }
 
-    private void insertRecord(String table) throws SQLException, IOException
+    private void insertRecord(String table) throws SQLException
     {
         executeSQL(String.format("INSERT INTO %s VALUES('9999',"
                 + "NULL,"
@@ -773,7 +772,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Override
-    protected Connection connect() throws SQLException, IOException
+    protected Connection connect() throws SQLException
     {
         String url;
         if(useJtdsDriver) {

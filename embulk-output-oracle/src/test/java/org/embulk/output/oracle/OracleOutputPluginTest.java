@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -473,7 +472,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         assertTable(table);
     }
 
-    private void createTable(String table) throws SQLException, IOException
+    private void createTable(String table) throws SQLException
     {
         String sql = String.format("CREATE TABLE %s ("
                 + "ID              CHAR(4),"
@@ -487,12 +486,12 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         executeSQL(sql);
     }
 
-    private void insertRecord(String table) throws SQLException, IOException
+    private void insertRecord(String table) throws SQLException
     {
         insertRecord(table, "9999");
     }
 
-    private void insertRecord(String table, String id) throws SQLException, IOException
+    private void insertRecord(String table, String id) throws SQLException
     {
         executeSQL(String.format("INSERT INTO %s VALUES('%s', NULL, NULL, NULL, NULL, NULL, NULL)", table, id));
     }
@@ -693,7 +692,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Override
-    protected Connection connect() throws SQLException, IOException
+    protected Connection connect() throws SQLException
     {
         return DriverManager.getConnection(String.format(ENGLISH, "jdbc:oracle:thin:@%s:%d:%s", getHost(), getPort(), getDatabase()),
                 getUser(), getPassword());

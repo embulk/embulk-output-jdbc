@@ -32,7 +32,7 @@ public abstract class AbstractJdbcOutputPluginTest
     private static Map<String, ?> testConfigurations;
 
 
-    private static Map<String, ?> getTestConfigurations() throws IOException
+    private static Map<String, ?> getTestConfigurations()
     {
         if (testConfigurations == null) {
             String pluginName = null;
@@ -48,53 +48,57 @@ public abstract class AbstractJdbcOutputPluginTest
             if (!configurationFile.exists()) {
                 configurationFile = new File("../tests.yml");
                 if (!configurationFile.exists()) {
-                    throw new IOException("\"tests.yml\" doesn't exist.");
+                    throw new RuntimeException("\"tests.yml\" doesn't exist.");
                 }
             }
 
-            InputStreamReader reader = new InputStreamReader(new FileInputStream(configurationFile), Charset.forName("UTF8"));
             try {
-                Map<String, ?> allTestConfigurations = (Map<String, ?>)yaml.load(reader);
-                testConfigurations = (Map<String, ?>)allTestConfigurations.get(pluginName);
-            } finally {
-                reader.close();
+                InputStreamReader reader = new InputStreamReader(new FileInputStream(configurationFile), Charset.forName("UTF8"));
+                try {
+                    Map<String, ?> allTestConfigurations = (Map<String, ?>)yaml.load(reader);
+                    testConfigurations = (Map<String, ?>)allTestConfigurations.get(pluginName);
+                } finally {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         return testConfigurations;
     }
 
-    protected static String getHost() throws IOException
+    protected static String getHost()
     {
         return (String)getTestConfigurations().get("host");
     }
 
-    protected static int getPort() throws IOException
+    protected static int getPort()
     {
         return (Integer)getTestConfigurations().get("port");
     }
 
-    protected static String getUser() throws IOException
+    protected static String getUser()
     {
         return (String)getTestConfigurations().get("user");
     }
 
-    protected static String getPassword() throws IOException
+    protected static String getPassword()
     {
         return (String)getTestConfigurations().get("password");
     }
 
-    protected static String getDatabase() throws IOException
+    protected static String getDatabase()
     {
         return (String)getTestConfigurations().get("database");
     }
 
-    protected void dropTable(String table) throws SQLException, IOException
+    protected void dropTable(String table) throws SQLException
     {
         String sql = String.format("DROP TABLE %s", table);
         executeSQL(sql, true);
     }
 
-    protected List<List<Object>> select(String table) throws SQLException, IOException
+    protected List<List<Object>> select(String table) throws SQLException
     {
         try (Connection connection = connect()) {
             try (Statement statement = connection.createStatement()) {
@@ -128,12 +132,12 @@ public abstract class AbstractJdbcOutputPluginTest
         return resultSet.getObject(index);
     }
 
-    protected void executeSQL(String sql) throws SQLException, IOException
+    protected void executeSQL(String sql) throws SQLException
     {
         executeSQL(sql, false);
     }
 
-    protected void executeSQL(String sql, boolean ignoreError) throws SQLException, IOException
+    protected void executeSQL(String sql, boolean ignoreError) throws SQLException
     {
         if (!enabled) {
             return;
@@ -195,6 +199,6 @@ public abstract class AbstractJdbcOutputPluginTest
         return new File(getClass().getResource(name).toURI());
     }
 
-    protected abstract Connection connect() throws SQLException, IOException;
+    protected abstract Connection connect() throws SQLException;
 
 }
