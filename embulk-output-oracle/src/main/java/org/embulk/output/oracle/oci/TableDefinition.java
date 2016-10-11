@@ -40,4 +40,13 @@ public class TableDefinition
     {
         return columns[index];
     }
+
+    public int getRowSize()
+    {
+        int rowSize = 0;
+        for (ColumnDefinition column : columns) {
+            rowSize += column.getDataSize();
+        }
+        return rowSize;
+    }
 }

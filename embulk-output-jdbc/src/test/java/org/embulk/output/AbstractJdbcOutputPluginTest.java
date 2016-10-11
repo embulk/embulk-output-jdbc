@@ -14,10 +14,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.embulk.output.tester.EmbulkPluginTester;
+
 import com.google.common.io.Files;
 
 public abstract class AbstractJdbcOutputPluginTest
 {
+    protected static boolean enabled;
+    protected static EmbulkPluginTester tester = new EmbulkPluginTester();
+
     protected void dropTable(String table) throws SQLException
     {
         String sql = String.format("DROP TABLE %s", table);
@@ -65,6 +70,10 @@ public abstract class AbstractJdbcOutputPluginTest
 
     protected void executeSQL(String sql, boolean ignoreError) throws SQLException
     {
+        if (!enabled) {
+            return;
+        }
+
         try (Connection connection = connect()) {
             try {
                 connection.setAutoCommit(true);
@@ -82,11 +91,20 @@ public abstract class AbstractJdbcOutputPluginTest
         }
     }
 
+    protected void test(String ymlPath) throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        tester.run(convertYml(ymlPath));
+    }
+
     protected String convertYml(String ymlName) throws Exception
     {
         StringBuilder builder = new StringBuilder();
         Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-        for (String line : Files.readLines(convertPath(ymlName), Charset.defaultCharset())) {
+        for (String line : Files.readLines(convertPath(ymlName), Charset.forName("UTF8"))) {
             line = convertYmlLine(line);
             Matcher matcher = pathPrefixPattern.matcher(line);
             if (matcher.matches()) {

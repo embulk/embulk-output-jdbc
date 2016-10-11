@@ -1,7 +1,7 @@
 
 plugins {
-    id 'com.jfrog.bintray' version '1.1'
-    id 'com.github.jruby-gradle.base' version '0.1.5'
+    id 'com.jfrog.bintray' version '1.6'
+    id 'com.github.jruby-gradle.base' version '1.2.1'
     id 'java'
     id 'checkstyle'
 }
@@ -9,7 +9,7 @@ import com.github.jrubygradle.JRubyExec
 
 allprojects {
     group = 'org.embulk.output.jdbc'
-    version = '0.6.3'
+    version = '0.6.4'
 }
 
 subprojects {
@@ -39,6 +39,7 @@ subprojects {
 
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
+        options.encoding = 'UTF-8'
     }
     tasks.withType(FindBugs) {
         reports {
@@ -84,7 +85,7 @@ subprojects {
 
     task gem(type: JRubyExec, dependsOn: ['build', 'gemspec', 'classpath']) {
         jrubyArgs '-rrubygems/gem_runner', "-eGem::GemRunner.new.run(ARGV)", 'build'
-        script "${project.projectDir.absolutePath}/build/gemspec"
+        scriptArgs "${project.projectDir.absolutePath}/build/gemspec"
         doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "${parent.projectDir}/pkg") }
     }
 
