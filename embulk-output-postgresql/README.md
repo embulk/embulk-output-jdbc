@@ -1,6 +1,6 @@
-# PostgreSQL output plugins for Embulk
+# PostgreSQL output plugin for Embulk
 
-PostgreSQL output plugins for Embulk loads records to PostgreSQL.
+PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 
 ## Overview
 

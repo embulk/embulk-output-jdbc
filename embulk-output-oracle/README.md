@@ -1,6 +1,6 @@
-# Oracle output plugins for Embulk
+# Oracle output plugin for Embulk
 
-Oracle output plugins for Embulk loads records to Oracle.
+Oracle output plugin for Embulk loads records to Oracle.
 
 ## Overview
 
