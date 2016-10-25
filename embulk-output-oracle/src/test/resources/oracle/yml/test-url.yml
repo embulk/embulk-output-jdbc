@@ -17,9 +17,9 @@ in:
     - {name: TIMESTAMP_ITEM, type: timestamp, format: '%Y/%m/%d %H:%M:%S'}
 out:
     type: oracle
-    user: TEST_USER
-    password: test_pw
+    user: #user#
+    password: #password#
     table: TEST1
     mode: insert_direct
     #driver_path: driver/ojdbc7.jar
-    url: jdbc:oracle:thin:@localhost:1521:TESTDB
+    url: jdbc:oracle:thin:@#host#:#port#:#database#

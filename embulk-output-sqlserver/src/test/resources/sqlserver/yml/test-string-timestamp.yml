@@ -35,10 +35,10 @@ in:
     - {name: TIME_2_ITEM, type: timestamp, format: '%H:%M:%S.%N'}
 out:
     type: sqlserver
-    host: localhost
-    database: TESTDB
-    user: TEST_USER
-    password: test_pw
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
     table: TEST1
     mode: insert_direct
     column_options:

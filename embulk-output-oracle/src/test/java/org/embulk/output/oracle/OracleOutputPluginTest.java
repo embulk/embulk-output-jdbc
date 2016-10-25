@@ -1,5 +1,6 @@
 package org.embulk.output.oracle;
 
+import static java.util.Locale.ENGLISH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -25,20 +26,17 @@ import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.OracleOutputPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 
 public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
-    static {
+    @Override
+    protected void prepare() throws SQLException
+    {
         tester.addPlugin(OutputPlugin.class, "oracle", OracleOutputPlugin.class);
         tester.addPlugin(InputPlugin.class, "filesplit", LocalFileSplitInputPlugin.class);
-    }
 
-    @BeforeClass
-    public static void beforeClass() throws Exception
-    {
         if (System.getProperty("path.separator").equals(";")) {
             // for Windows
             System.setProperty("file.encoding", "MS932");
@@ -51,14 +49,15 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
             return;
         }
 
-        try (Connection connection = new OracleOutputPluginTest().connect()) {
+        try (Connection connection = connect()) {
             String version = connection.getMetaData().getDriverVersion();
             System.out.println("Driver version = " + version);
             enabled = true;
 
         } catch (SQLException e) {
             System.err.println(e);
-            System.err.println("Warning: prepare a schema on Oracle 12c (database = 'TESTDB', user = 'TEST_USER', password = 'test_pw', charset = UTF-8).");
+            System.err.println(String.format(ENGLISH, "Warning: prepare a schema on Oracle 12c (server = %s, port = %d, database = %s, user = %s, password = %s, charset = UTF-8).",
+                    getHost(), getPort(), getDatabase(), getUser(), getPassword()));
             // for example
             //   CREATE USER EMBULK_USER IDENTIFIED BY "embulk_pw";
             //   GRANT DBA TO EMBULK_USER;
@@ -692,7 +691,8 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Override
     protected Connection connect() throws SQLException
     {
-        return DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:TESTDB", "TEST_USER", "test_pw");
+        return DriverManager.getConnection(String.format(ENGLISH, "jdbc:oracle:thin:@%s:%d:%s", getHost(), getPort(), getDatabase()),
+                getUser(), getPassword());
     }
 
 }

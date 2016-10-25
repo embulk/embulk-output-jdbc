@@ -1,6 +1,9 @@
 package org.embulk.output;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -11,17 +14,115 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.embulk.config.ConfigException;
+import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
+import org.embulk.output.tester.EmbulkPluginTester.PluginDefinition;
+import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.io.Files;
 
+import static java.util.Locale.ENGLISH;
+
 public abstract class AbstractJdbcOutputPluginTest
 {
-    protected static boolean enabled;
-    protected static EmbulkPluginTester tester = new EmbulkPluginTester();
+    private static final String CONFIG_FILE_NAME = "tests.yml";
+
+    protected boolean enabled;
+    // TODO:destroy EmbulkPluginTester after test
+    protected EmbulkPluginTester tester = new EmbulkPluginTester();
+    private String pluginName;
+    private Map<String, ?> testConfigurations;
+
+    protected AbstractJdbcOutputPluginTest()
+    {
+        try {
+            prepare();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected abstract void prepare() throws SQLException;
+
+
+    private Map<String, ?> getTestConfigs()
+    {
+        if (testConfigurations == null) {
+            for (PluginDefinition pluginDefinition : tester.getPlugins()) {
+                if (AbstractJdbcOutputPlugin.class.isAssignableFrom(pluginDefinition.impl)) {
+                    pluginName = pluginDefinition.name;
+                    break;
+                }
+            }
+
+            Yaml yaml = new Yaml();
+            File configFile = new File(CONFIG_FILE_NAME);
+            if (!configFile.exists()) {
+                configFile = new File("../" + CONFIG_FILE_NAME);
+                if (!configFile.exists()) {
+                    throw new ConfigException(String.format(ENGLISH, "\"%s\" doesn't exist.",
+                            CONFIG_FILE_NAME));
+                }
+            }
+
+            try {
+                InputStreamReader reader = new InputStreamReader(new FileInputStream(configFile), Charset.forName("UTF8"));
+                try {
+                    Map<String, ?> allTestConfigs = (Map<String, ?>)yaml.load(reader);
+                    if (!allTestConfigs.containsKey(pluginName)) {
+                        throw new ConfigException(String.format(ENGLISH, "\"%s\" doesn't contain \"%s\" element.",
+                                CONFIG_FILE_NAME, pluginName));
+                    }
+                    testConfigurations = (Map<String, ?>)allTestConfigs.get(pluginName);
+                } finally {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return testConfigurations;
+    }
+
+    private Object getTestConfig(String name)
+    {
+        Map<String, ?> testConfigs = getTestConfigs();
+        if (!testConfigs.containsKey(name)) {
+            throw new ConfigException(String.format(ENGLISH, "\"%s\" element in \"%s\" doesn't contain \"%s\" element.",
+                    pluginName, CONFIG_FILE_NAME, name));
+        }
+        return testConfigs.get(name);
+    }
+
+    protected String getHost()
+    {
+        return (String)getTestConfig("host");
+    }
+
+    protected int getPort()
+    {
+        return (Integer)getTestConfig("port");
+    }
+
+    protected String getUser()
+    {
+        return (String)getTestConfig("user");
+    }
+
+    protected String getPassword()
+    {
+        return (String)getTestConfig("password");
+    }
+
+    protected String getDatabase()
+    {
+        return (String)getTestConfig("database");
+    }
 
     protected void dropTable(String table) throws SQLException
     {
@@ -122,6 +223,11 @@ public abstract class AbstractJdbcOutputPluginTest
 
     protected String convertYmlLine(String line)
     {
+        line = line.replaceAll("#host#", getHost());
+        line = line.replaceAll("#port#", Integer.toString(getPort()));
+        line = line.replaceAll("#database#", getDatabase());
+        line = line.replaceAll("#user#", getUser());
+        line = line.replaceAll("#password#", getPassword());
         return line;
     }
 

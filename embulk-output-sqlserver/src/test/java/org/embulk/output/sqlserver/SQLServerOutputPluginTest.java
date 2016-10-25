@@ -3,7 +3,6 @@ package org.embulk.output.sqlserver;
 import org.embulk.output.AbstractJdbcOutputPluginTest;
 import org.embulk.output.SQLServerOutputPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -19,19 +18,19 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import static java.util.Locale.ENGLISH;
 import static org.junit.Assert.assertEquals;
 
 
 public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 {
-    private static boolean useJtdsDriver = false;
-    static {
-        tester.addPlugin(OutputPlugin.class, "sqlserver", SQLServerOutputPlugin.class);
-    }
+    private boolean useJtdsDriver = false;
 
-    @BeforeClass
-    public static void beforeClass()
-    {
+
+    @Override
+    protected void prepare() throws SQLException {
+        tester.addPlugin(OutputPlugin.class, "sqlserver", SQLServerOutputPlugin.class);
+
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
@@ -40,13 +39,14 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         }
 
         try {
-            new SQLServerOutputPluginTest().connect();
+            connect();
             enabled = true;
         } catch (Throwable t) {
             System.out.println(t);
         } finally {
             if (!enabled) {
-                System.out.println("Warning: you should prepare database in order to test (server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW).");
+                System.out.println(String.format(ENGLISH, "Warning: you should prepare database in order to test (server = %s, port = %d, database = %s, user = %s, password = %s).",
+                        getHost(), getPort(), getDatabase(), getUser(), getPassword()));
             }
         }
     }
@@ -341,7 +341,8 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         } catch (Throwable t) {
             System.out.println(t);
             System.out.println("Warning: jTDS driver can't connect to database.");
-            System.out.println("(server = localhost, port = 1433, instance = SQLEXPRESS, database = TESTDB, user = TEST_USER, password = TEST_PW)");
+            System.out.println(String.format(ENGLISH, "(server = %s, port = %d, database = %s, user = %s, password = %s)",
+                    getHost(), getPort(), getDatabase(), getUser(), getPassword()));
             return;
         }
 
@@ -771,11 +772,13 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Override
     protected Connection connect() throws SQLException
     {
+        String url;
         if(useJtdsDriver) {
-            return DriverManager.getConnection("jdbc:jtds:sqlserver://localhost:1433/TESTDB;instance=SQLEXPRESS;useLOBs=false", "TEST_USER", "test_pw");
+            url = "jdbc:jtds:sqlserver://%s:%d/%s;useLOBs=false";
         } else {
-            return DriverManager.getConnection("jdbc:sqlserver://localhost\\SQLEXPRESS:1433;databasename=TESTDB", "TEST_USER", "test_pw");
+            url = "jdbc:sqlserver://%s:%d;databasename=%s";
         }
+        return DriverManager.getConnection(String.format(ENGLISH, url, getHost(), getPort(), getDatabase()), getUser(), getPassword());
     }
 
 }
