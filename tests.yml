@@ -1,0 +1,14 @@
+sqlserver:
+  host: localhost
+  port: 1433
+  database: TESTDB
+  user: TEST_USER
+  password: test_pw
+
+oracle:
+  host: localhost
+  port: 1521
+  database: TESTDB
+  user: TEST_USER
+  password: test_pw
+

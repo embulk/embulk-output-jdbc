@@ -1,6 +1,6 @@
-# Redshift output plugins for Embulk
+# Redshift output plugin for Embulk
 
-Redshift output plugins for Embulk loads records to Redshift.
+Redshift output plugin for Embulk loads records to Redshift.
 
 ## Overview
 

@@ -1,6 +1,6 @@
-# SQL Server output plugins for Embulk
+# SQL Server output plugin for Embulk
 
-SQL Server output plugins for Embulk loads records to SQL Server.
+SQL Server output plugin for Embulk loads records to SQL Server.
 
 ## Overview
 

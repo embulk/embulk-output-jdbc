@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.google.common.base.Optional;
 import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import org.embulk.spi.Exec;
@@ -134,14 +133,14 @@ public class RedshiftOutputConnection
         sb.append("DELETE FROM ");
         quoteIdentifierString(sb, toTable);
         sb.append(" USING (");
-        for(int i=0; i < fromTables.size(); i++) {
-            if(i != 0) { sb.append(" UNION ALL "); }
+        for (int i = 0; i < fromTables.size(); i++) {
+            if (i != 0) { sb.append(" UNION ALL "); }
             sb.append("SELECT * FROM ");
             quoteIdentifierString(sb, fromTables.get(i));
         }
         sb.append(") S WHERE (");
         List<String> mergeKeys = mergeConfig.getMergeKeys();
-        for(int i=0; i < mergeKeys.size(); i++) {
+        for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             sb.append("S.");
             quoteIdentifierString(sb, mergeKeys.get(i));
@@ -155,10 +154,15 @@ public class RedshiftOutputConnection
         sb.append("INSERT INTO ");
         quoteIdentifierString(sb, toTable);
         sb.append(" (");
-        for(int i=0; i < fromTables.size(); i++) {
-            if(i != 0) { sb.append(" UNION ALL "); }
+        for (int i = 0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            quoteIdentifierString(sb, schema.getColumnName(i));
+        }
+        sb.append(") (");
+        for (int i = 0; i < fromTables.size(); i++) {
+            if (i != 0) { sb.append(" UNION ALL "); }
             sb.append("SELECT ");
-            for(int j=0; j < schema.getCount(); j++) {
+            for (int j = 0; j < schema.getCount(); j++) {
                 if (j != 0) { sb.append(", "); }
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }

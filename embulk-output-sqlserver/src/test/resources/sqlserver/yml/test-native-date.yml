@@ -17,10 +17,10 @@ in:
     - {name: ITEM7, type: timestamp, format: '%H:%M:%S.%N'}
 out:
     type: sqlserver
-    host: localhost
-    database: TESTDB
-    user: TEST_USER
-    password: test_pw
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
     table: TEST5
     mode: insert_direct
     insert_method: native
