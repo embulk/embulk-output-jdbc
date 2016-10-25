@@ -22,6 +22,10 @@ See [embulk-output-redshift](embulk-output-redshift/).
 
 See [embulk-output-sqlserver](embulk-output-sqlserver/).
 
+## DB2
+
+See [embulk-output-db2](embulk-output-db2/).
+
 ## Others (generic JDBC)
 
 See [embulk-output-jdbc](embulk-output-jdbc/).

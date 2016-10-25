@@ -1,0 +1,7 @@
+[compileTestJava]*.options*.encoding = 'UTF-8'
+
+dependencies {
+    compile project(':embulk-output-jdbc')
+
+    testCompile project(':embulk-output-jdbc').sourceSets.test.output
+}
