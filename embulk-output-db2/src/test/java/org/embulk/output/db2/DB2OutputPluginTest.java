@@ -237,6 +237,20 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
         assertCharTable(table, true, 0);
     }
 
+    @Test
+    public void testReplaceLongName() throws Exception
+    {
+        // 128 characters
+        String table = "TEST_CHAR_1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678";
+
+        dropTable(table);
+        createCharTable(table);
+
+        test("/db2/yml/test-replace-long-name.yml");
+
+        assertCharTable(table, true, 0);
+    }
+
 
     @Override
     protected Object getValue(ResultSet resultSet, int index) throws SQLException {
