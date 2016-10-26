@@ -1,6 +1,7 @@
 package org.embulk.output.redshift;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -128,18 +129,41 @@ public class RedshiftOutputConnection
     {
         StringBuilder sb = new StringBuilder();
 
+        List<String> mergeKeys = mergeConfig.getMergeKeys();
+
+        List updateKeys = new ArrayList();
+        for (int i = 0; i < schema.getCount(); i++) {
+            String updateKey = schema.getColumnName(i);
+            if (!mergeKeys.contains(updateKey)) {
+                updateKeys.add(updateKey);
+            }
+        }
+
         sb.append("BEGIN TRANSACTION;");
 
-        sb.append("DELETE FROM ");
+        sb.append("UPDATE ");
         quoteIdentifierString(sb, toTable);
-        sb.append(" USING (");
+        sb.append(" SET ");
+        for (int i = 0; i < updateKeys.size(); i++) {
+            if (i != 0) { sb.append(", "); }
+            quoteIdentifierString(sb, updateKeys.get(i).toString());
+            sb.append(" = ");
+            sb.append("S.");
+            quoteIdentifierString(sb, updateKeys.get(i).toString());
+        }
+        sb.append(" FROM ( ");
         for (int i = 0; i < fromTables.size(); i++) {
             if (i != 0) { sb.append(" UNION ALL "); }
-            sb.append("SELECT * FROM ");
+            sb.append(" SELECT ");
+            for (int j = 0; j < schema.getCount(); j++) {
+                if (j != 0) { sb.append(", "); }
+                quoteIdentifierString(sb, schema.getColumnName(j));
+            }
+            sb.append(" FROM ");
             quoteIdentifierString(sb, fromTables.get(i));
         }
-        sb.append(") S WHERE (");
-        List<String> mergeKeys = mergeConfig.getMergeKeys();
+        sb.append(" ) S WHERE ");
+
         for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             sb.append("S.");
@@ -149,7 +173,7 @@ public class RedshiftOutputConnection
             sb.append(".");
             quoteIdentifierString(sb, mergeKeys.get(i));
         }
-        sb.append(");");
+        sb.append(";");
 
         sb.append("INSERT INTO ");
         quoteIdentifierString(sb, toTable);
@@ -160,7 +184,7 @@ public class RedshiftOutputConnection
         }
         sb.append(") (");
         for (int i = 0; i < fromTables.size(); i++) {
-            if (i != 0) { sb.append(" UNION ALL "); }
+            if (i != 0) { sb.append(" UNION ALL ("); }
             sb.append("SELECT ");
             for (int j = 0; j < schema.getCount(); j++) {
                 if (j != 0) { sb.append(", "); }
@@ -168,12 +192,28 @@ public class RedshiftOutputConnection
             }
             sb.append(" FROM ");
             quoteIdentifierString(sb, fromTables.get(i));
+            sb.append(" WHERE NOT EXISTS (SELECT 1 FROM ");
+            quoteIdentifierString(sb, toTable);
+            sb.append(" WHERE ");
+
+            for (int k = 0; k < mergeKeys.size(); k++) {
+                if (k != 0) { sb.append(" AND "); }
+                quoteIdentifierString(sb, fromTables.get(i));
+                sb.append(".");
+                quoteIdentifierString(sb, mergeKeys.get(k));
+                sb.append(" = ");
+                quoteIdentifierString(sb, toTable);
+                sb.append(".");
+                quoteIdentifierString(sb, mergeKeys.get(k));
+            }
+            sb.append(")) ");
         }
-        sb.append(");");
+        sb.append(";");
 
         sb.append("END TRANSACTION;");
 
         return sb.toString();
+
     }
 
 }
