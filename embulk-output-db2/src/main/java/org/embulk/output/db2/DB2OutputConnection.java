@@ -8,6 +8,8 @@ import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
 
+import static java.util.Locale.ENGLISH;
+
 public class DB2OutputConnection
         extends JdbcOutputConnection
 {
@@ -27,17 +29,6 @@ public class DB2OutputConnection
         sb.append(" TO ");
         sb.append(quoteIdentifierString(toTable));
         return sb.toString();
-    }
-
-    @Override
-    protected String buildColumnTypeName(JdbcColumn c)
-    {
-        switch(c.getSimpleTypeName()) {
-        case "BOOLEAN":
-            return "SMALLINT";
-        default:
-            return super.buildColumnTypeName(c);
-        }
     }
 
     @Override
@@ -94,20 +85,46 @@ public class DB2OutputConnection
         return sb.toString();
     }
 
-    private static final String[] STANDARD_SIZE_TYPE_NAMES = new String[] {
-        "GRAPHIC", "VARGRAPHIC",
-    };
-
     @Override
-    protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
+    protected String buildColumnTypeName(JdbcColumn c)
     {
-        for (String x : STANDARD_SIZE_TYPE_NAMES) {
-            if (x.equals(convertedTypeName)) {
-                return ColumnDeclareType.SIZE;
-            }
-        }
+        switch(c.getSimpleTypeName()) {
+        case "BOOLEAN":
+            return "SMALLINT";
 
-        return super.getColumnDeclareType(convertedTypeName, col);
+        // NCHAR/NVARCHAR/NCLOB are synonyms for CHAR/VARCHAR/CLOB/GRAPHIC/VARGRAPHIC
+        case "CHAR":
+        case "VARCHAR":
+        case "CLOB":
+            String charUnit;
+            if (c.getSizeTypeParameter() == c.getDataLength()) {
+                charUnit = "OCTETS";
+            } else if (c.getSizeTypeParameter() * 2 == c.getDataLength()) {
+                charUnit = "CODEUNITS16";
+            } else if (c.getSizeTypeParameter() * 4 == c.getDataLength()) {
+                charUnit = "CODEUNITS32";
+            } else {
+                throw new IllegalArgumentException(String.format(ENGLISH, "Column %s has unexpected size %d and length %d.",
+                        c.getName(), c.getSizeTypeParameter(), c.getDataLength()));
+            }
+            return String.format(ENGLISH, "%s(%d %s)", c.getSimpleTypeName(), c.getSizeTypeParameter(), charUnit);
+
+        case "GRAPHIC":
+        case "VARGRAPHIC":
+            String graphicUnit;
+            if (c.getSizeTypeParameter() == c.getDataLength()) {
+                graphicUnit = "CODEUNITS16";
+            } else if (c.getSizeTypeParameter() * 2 == c.getDataLength()) {
+                graphicUnit = "CODEUNITS32";
+            } else {
+                throw new IllegalArgumentException(String.format(ENGLISH, "Column %s has unexpected size %d and length %d.",
+                        c.getName(), c.getSizeTypeParameter(), c.getDataLength()));
+            }
+            return String.format(ENGLISH, "%s(%d %s)", c.getSimpleTypeName(), c.getSizeTypeParameter(), graphicUnit);
+
+        default:
+            return super.buildColumnTypeName(c);
+        }
     }
 
     @Override
