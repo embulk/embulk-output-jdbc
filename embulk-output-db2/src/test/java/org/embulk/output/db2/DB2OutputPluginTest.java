@@ -126,6 +126,19 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
         assertDateTimeTable(table);
     }
 
+    @Test
+    public void testTruncateInsert() throws Exception
+    {
+        String table = "TEST_NUMBER";
+
+        dropTable(table);
+        createNumberTable(table);
+
+        test("/db2/yml/test-truncate-insert.yml");
+
+        assertNumberTable(table, 0);
+    }
+
 
     @Override
     protected Object getValue(ResultSet resultSet, int index) throws SQLException {
@@ -233,10 +246,15 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertNumberTable(String table) throws SQLException
     {
+        assertNumberTable(table, 1);
+    }
+
+    private void assertNumberTable(String table, int skip) throws SQLException
+    {
         List<List<Object>> rows = select(table);
-        assertEquals(4, rows.size());
+        assertEquals(skip + 3, rows.size());
         {
-            List<Object> row = rows.get(1);
+            List<Object> row = rows.get(skip + 0);
             assertEquals("A001", row.get(0));
             assertEquals(12345, row.get(1));
             assertEquals(123456789, row.get(2));
@@ -248,7 +266,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(3.45678901234D, row.get(8));
         }
         {
-            List<Object> row = rows.get(2);
+            List<Object> row = rows.get(skip + 1);
             assertEquals("A002", row.get(0));
             assertEquals(-9999, row.get(1));
             assertEquals(-999999999, row.get(2));
@@ -260,7 +278,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(-9.99999999999999D, row.get(8));
         }
         {
-            List<Object> row = rows.get(3);
+            List<Object> row = rows.get(skip + 2);
             assertEquals("A003", row.get(0));
             assertEquals(null, row.get(1));
             assertEquals(null, row.get(2));
