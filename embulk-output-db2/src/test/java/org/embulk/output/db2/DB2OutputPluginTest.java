@@ -71,7 +71,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
         test("/db2/yml/test-insert-direct-char.yml");
 
-        assertCharTable(table);
+        assertCharTable(table, false);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
         test("/db2/yml/test-insert-char.yml");
 
-        assertCharTable(table);
+        assertCharTable(table, false);
     }
 
     @Test
@@ -124,6 +124,79 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
         test("/db2/yml/test-insert-datetime.yml");
 
         assertDateTimeTable(table);
+    }
+
+    @Test
+    public void testInsertCreateNumber() throws Exception
+    {
+        String table = "TEST_NUMBER";
+
+        dropTable(table);
+
+        test("/db2/yml/test-insert-number.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(3, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals("A001", row.get(0));
+            assertEquals(12345L, row.get(1));
+            assertEquals(123456789L, row.get(2));
+            assertEquals(123456789012L, row.get(3));
+            assertEquals("123456.78", row.get(4));
+            assertEquals("876543.21", row.get(5));
+            assertEquals(1.23456D, row.get(6));
+            assertEquals(1.23456789012D, row.get(7));
+            assertEquals(3.45678901234D, row.get(8));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals("A002", row.get(0));
+            assertEquals(-9999L, row.get(1));
+            assertEquals(-999999999L, row.get(2));
+            assertEquals(-999999999999L, row.get(3));
+            assertEquals("-999999.99", row.get(4));
+            assertEquals("-999999.99", row.get(5));
+            assertEquals(-9.999999D, row.get(6));
+            assertEquals(-9.999999D, row.get(7));
+            assertEquals(-9.99999999999999D, row.get(8));
+        }
+        {
+            List<Object> row = rows.get(2);
+            assertEquals("A003", row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+            assertEquals(null, row.get(6));
+            assertEquals(null, row.get(7));
+            assertEquals(null, row.get(8));
+        }
+    }
+
+    @Test
+    public void testInsertCreateChar() throws Exception
+    {
+        String table = "TEST_CHAR";
+
+        dropTable(table);
+
+        test("/db2/yml/test-insert-char.yml");
+
+        assertCharTable(table, true, 0);
+    }
+
+    @Test
+    public void testInsertCreateDateTime() throws Exception
+    {
+        String table = "TEST_DATETIME";
+
+        dropTable(table);
+
+        test("/db2/yml/test-insert-datetime.yml");
+
+        assertDateTimeTable(table, 0);
     }
 
     @Test
@@ -291,24 +364,29 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
         }
     }
 
-    private void assertCharTable(String table) throws SQLException
+    private void assertCharTable(String table, boolean trimming) throws SQLException
+    {
+        assertCharTable(table, trimming, 1);
+    }
+
+    private void assertCharTable(String table, boolean trimming, int skip) throws SQLException
     {
         List<List<Object>> rows = select(table);
-        assertEquals(4, rows.size());
+        assertEquals(skip + 3, rows.size());
         {
-            List<Object> row = rows.get(1);
+            List<Object> row = rows.get(skip + 0);
             assertEquals("A001", row.get(0));
-            assertEquals("aa  ", row.get(1));
+            assertEquals(trimming ? "aa" : "aa  ", row.get(1));
             assertEquals("AA", row.get(2));
             assertEquals("aaaaaaaaaaaa", row.get(3));
-            assertEquals("ああ  ", row.get(4));
+            assertEquals(trimming? "ああ" : "ああ  ", row.get(4));
             assertEquals("いいいい", row.get(5));
-            assertEquals("ａａ  ", row.get(6));
+            assertEquals(trimming? "ａａ" : "ａａ  ", row.get(6));
             assertEquals("ＡＡ", row.get(7));
             assertEquals("ａａａａａａａａ", row.get(8));
         }
         {
-            List<Object> row = rows.get(2);
+            List<Object> row = rows.get(skip + 1);
             assertEquals("A002", row.get(0));
             assertEquals("XXXX", row.get(1));
             assertEquals("XXXXXXXX", row.get(2));
@@ -320,7 +398,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals("XXXXXXXXXXXXXXXX", row.get(8));
         }
         {
-            List<Object> row = rows.get(3);
+            List<Object> row = rows.get(skip + 2);
             assertEquals("A003", row.get(0));
             assertEquals(null, row.get(1));
             assertEquals(null, row.get(2));
@@ -335,10 +413,15 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertDateTimeTable(String table) throws SQLException, ParseException
     {
+        assertDateTimeTable(table, 1);
+    }
+
+    private void assertDateTimeTable(String table, int skip) throws SQLException, ParseException
+    {
         List<List<Object>> rows = select(table);
-        assertEquals(4, rows.size());
+        assertEquals(skip + 3, rows.size());
         {
-            List<Object> row = rows.get(1);
+            List<Object> row = rows.get(skip + 0);
             assertEquals("A001", row.get(0));
             assertEquals(createDate("2016/09/08"), row.get(1));
             assertEquals(createTime("12:34:45"), row.get(2));
@@ -348,7 +431,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(createTimestamp("2016/09/11 12:34:45", 123456000), row.get(5));
         }
         {
-            List<Object> row = rows.get(2);
+            List<Object> row = rows.get(skip + 1);
             assertEquals("A002", row.get(0));
             assertEquals(createDate("2016/12/31"), row.get(1));
             assertEquals(createTime("23:59:59"), row.get(2));
@@ -357,7 +440,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
             assertEquals(createTimestamp("2016/12/31 23:59:59", 999999000), row.get(5));
         }
         {
-            List<Object> row = rows.get(3);
+            List<Object> row = rows.get(skip + 2);
             assertEquals("A003", row.get(0));
             assertEquals(null, row.get(1));
             assertEquals(null, row.get(2));
