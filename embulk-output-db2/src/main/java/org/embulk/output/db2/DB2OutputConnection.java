@@ -94,6 +94,22 @@ public class DB2OutputConnection
         return sb.toString();
     }
 
+    private static final String[] STANDARD_SIZE_TYPE_NAMES = new String[] {
+        "GRAPHIC", "VARGRAPHIC",
+    };
+
+    @Override
+    protected ColumnDeclareType getColumnDeclareType(String convertedTypeName, JdbcColumn col)
+    {
+        for (String x : STANDARD_SIZE_TYPE_NAMES) {
+            if (x.equals(convertedTypeName)) {
+                return ColumnDeclareType.SIZE;
+            }
+        }
+
+        return super.getColumnDeclareType(convertedTypeName, col);
+    }
+
     @Override
     public void close() throws SQLException
     {
