@@ -58,44 +58,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
         test("/db2/yml/test-insert-direct-number.yml");
 
-        List<List<Object>> rows = select(table);
-        assertEquals(4, rows.size());
-        {
-            List<Object> row = rows.get(1);
-            assertEquals("A001", row.get(0));
-            assertEquals(12345, row.get(1));
-            assertEquals(123456789, row.get(2));
-            assertEquals(123456789012L, row.get(3));
-            assertEquals(new BigDecimal("123456.78"), row.get(4));
-            assertEquals(new BigDecimal("876543.21"), row.get(5));
-            assertEquals(1.23456F, row.get(6));
-            assertEquals(1.23456789012D, row.get(7));
-            assertEquals(3.45678901234D, row.get(8));
-        }
-        {
-            List<Object> row = rows.get(2);
-            assertEquals("A002", row.get(0));
-            assertEquals(-9999, row.get(1));
-            assertEquals(-999999999, row.get(2));
-            assertEquals(-999999999999L, row.get(3));
-            assertEquals(new BigDecimal("-999999.99"), row.get(4));
-            assertEquals(new BigDecimal("-999999.99"), row.get(5));
-            assertEquals(-9.999999F, row.get(6));
-            assertEquals(-9.999999D, row.get(7));
-            assertEquals(-9.99999999999999D, row.get(8));
-        }
-        {
-            List<Object> row = rows.get(3);
-            assertEquals("A003", row.get(0));
-            assertEquals(null, row.get(1));
-            assertEquals(null, row.get(2));
-            assertEquals(null, row.get(3));
-            assertEquals(null, row.get(4));
-            assertEquals(null, row.get(5));
-            assertEquals(null, row.get(6));
-            assertEquals(null, row.get(7));
-            assertEquals(null, row.get(8));
-        }
+        assertNumberTable(table);
     }
 
     @Test
@@ -108,44 +71,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
         test("/db2/yml/test-insert-direct-char.yml");
 
-        List<List<Object>> rows = select(table);
-        assertEquals(4, rows.size());
-        {
-            List<Object> row = rows.get(1);
-            assertEquals("A001", row.get(0));
-            assertEquals("aa  ", row.get(1));
-            assertEquals("AA", row.get(2));
-            assertEquals("aaaaaaaaaaaa", row.get(3));
-            assertEquals("ああ  ", row.get(4));
-            assertEquals("いいいい", row.get(5));
-            assertEquals("ａａ  ", row.get(6));
-            assertEquals("ＡＡ", row.get(7));
-            assertEquals("ａａａａａａａａ", row.get(8));
-        }
-        {
-            List<Object> row = rows.get(2);
-            assertEquals("A002", row.get(0));
-            assertEquals("XXXX", row.get(1));
-            assertEquals("XXXXXXXX", row.get(2));
-            assertEquals("XXXXXXXXXXXXXXXX", row.get(3));
-            assertEquals("XXXX", row.get(4));
-            assertEquals("XXXXXXXX", row.get(5));
-            assertEquals("XXXX", row.get(6));
-            assertEquals("XXXXXXXX", row.get(7));
-            assertEquals("XXXXXXXXXXXXXXXX", row.get(8));
-        }
-        {
-            List<Object> row = rows.get(3);
-            assertEquals("A003", row.get(0));
-            assertEquals(null, row.get(1));
-            assertEquals(null, row.get(2));
-            assertEquals(null, row.get(3));
-            assertEquals(null, row.get(4));
-            assertEquals(null, row.get(5));
-            assertEquals(null, row.get(6));
-            assertEquals(null, row.get(7));
-            assertEquals(null, row.get(8));
-        }
+        assertCharTable(table);
     }
 
     @Test
@@ -158,35 +84,46 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
         test("/db2/yml/test-insert-direct-datetime.yml");
 
-        List<List<Object>> rows = select(table);
-        assertEquals(4, rows.size());
-        {
-            List<Object> row = rows.get(1);
-            assertEquals("A001", row.get(0));
-            assertEquals(createDate("2016/09/08"), row.get(1));
-            assertEquals(createTime("12:34:45"), row.get(2));
-            assertEquals(createTimestamp("2016/09/09 12:34:45", 123456000), row.get(3));
-            assertEquals(createTimestamp("2016/09/10 12:34:45", 0), row.get(4));
-            assertEquals(createTimestamp("2016/09/11 12:34:45", 123456000), row.get(5));
-        }
-        {
-            List<Object> row = rows.get(2);
-            assertEquals("A002", row.get(0));
-            assertEquals(createDate("2016/12/31"), row.get(1));
-            assertEquals(createTime("23:59:59"), row.get(2));
-            assertEquals(createTimestamp("2016/12/31 23:59:59", 999999000), row.get(3));
-            assertEquals(createTimestamp("2016/12/31 23:59:59", 0), row.get(4));
-            assertEquals(createTimestamp("2016/12/31 23:59:59", 999999000), row.get(5));
-        }
-        {
-            List<Object> row = rows.get(3);
-            assertEquals("A003", row.get(0));
-            assertEquals(null, row.get(1));
-            assertEquals(null, row.get(2));
-            assertEquals(null, row.get(3));
-            assertEquals(null, row.get(4));
-            assertEquals(null, row.get(5));
-        }
+        assertDateTimeTable(table);
+    }
+
+    @Test
+    public void testInsertNumber() throws Exception
+    {
+        String table = "TEST_NUMBER";
+
+        dropTable(table);
+        createNumberTable(table);
+
+        test("/db2/yml/test-insert-number.yml");
+
+        assertNumberTable(table);
+    }
+
+    @Test
+    public void testInsertChar() throws Exception
+    {
+        String table = "TEST_CHAR";
+
+        dropTable(table);
+        createCharTable(table);
+
+        test("/db2/yml/test-insert-char.yml");
+
+        assertCharTable(table);
+    }
+
+    @Test
+    public void testInsertDateTime() throws Exception
+    {
+        String table = "TEST_DATETIME";
+
+        dropTable(table);
+        createDateTimeTable(table);
+
+        test("/db2/yml/test-insert-datetime.yml");
+
+        assertDateTimeTable(table);
     }
 
 
@@ -194,7 +131,6 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
     protected Object getValue(ResultSet resultSet, int index) throws SQLException {
         Object value = super.getValue(resultSet, index);
         if (value instanceof Clob) {
-            //return readClob((Clob)value);
             return resultSet.getString(index);
         }
         return value;
@@ -293,6 +229,124 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
                 + "NULL,"
                 + "NULL,"
                 + "NULL)", table));
+    }
+
+    private void assertNumberTable(String table) throws SQLException
+    {
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        {
+            List<Object> row = rows.get(1);
+            assertEquals("A001", row.get(0));
+            assertEquals(12345, row.get(1));
+            assertEquals(123456789, row.get(2));
+            assertEquals(123456789012L, row.get(3));
+            assertEquals(new BigDecimal("123456.78"), row.get(4));
+            assertEquals(new BigDecimal("876543.21"), row.get(5));
+            assertEquals(1.23456F, row.get(6));
+            assertEquals(1.23456789012D, row.get(7));
+            assertEquals(3.45678901234D, row.get(8));
+        }
+        {
+            List<Object> row = rows.get(2);
+            assertEquals("A002", row.get(0));
+            assertEquals(-9999, row.get(1));
+            assertEquals(-999999999, row.get(2));
+            assertEquals(-999999999999L, row.get(3));
+            assertEquals(new BigDecimal("-999999.99"), row.get(4));
+            assertEquals(new BigDecimal("-999999.99"), row.get(5));
+            assertEquals(-9.999999F, row.get(6));
+            assertEquals(-9.999999D, row.get(7));
+            assertEquals(-9.99999999999999D, row.get(8));
+        }
+        {
+            List<Object> row = rows.get(3);
+            assertEquals("A003", row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+            assertEquals(null, row.get(6));
+            assertEquals(null, row.get(7));
+            assertEquals(null, row.get(8));
+        }
+    }
+
+    private void assertCharTable(String table) throws SQLException
+    {
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        {
+            List<Object> row = rows.get(1);
+            assertEquals("A001", row.get(0));
+            assertEquals("aa  ", row.get(1));
+            assertEquals("AA", row.get(2));
+            assertEquals("aaaaaaaaaaaa", row.get(3));
+            assertEquals("ああ  ", row.get(4));
+            assertEquals("いいいい", row.get(5));
+            assertEquals("ａａ  ", row.get(6));
+            assertEquals("ＡＡ", row.get(7));
+            assertEquals("ａａａａａａａａ", row.get(8));
+        }
+        {
+            List<Object> row = rows.get(2);
+            assertEquals("A002", row.get(0));
+            assertEquals("XXXX", row.get(1));
+            assertEquals("XXXXXXXX", row.get(2));
+            assertEquals("XXXXXXXXXXXXXXXX", row.get(3));
+            assertEquals("XXXX", row.get(4));
+            assertEquals("XXXXXXXX", row.get(5));
+            assertEquals("XXXX", row.get(6));
+            assertEquals("XXXXXXXX", row.get(7));
+            assertEquals("XXXXXXXXXXXXXXXX", row.get(8));
+        }
+        {
+            List<Object> row = rows.get(3);
+            assertEquals("A003", row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+            assertEquals(null, row.get(6));
+            assertEquals(null, row.get(7));
+            assertEquals(null, row.get(8));
+        }
+    }
+
+    private void assertDateTimeTable(String table) throws SQLException, ParseException
+    {
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        {
+            List<Object> row = rows.get(1);
+            assertEquals("A001", row.get(0));
+            assertEquals(createDate("2016/09/08"), row.get(1));
+            assertEquals(createTime("12:34:45"), row.get(2));
+            assertEquals(createTimestamp("2016/09/09 12:34:45", 123456000), row.get(3));
+            assertEquals(createTimestamp("2016/09/10 12:34:45", 0), row.get(4));
+            // Embulk TimestampParser cannot parse values under microseconds.
+            assertEquals(createTimestamp("2016/09/11 12:34:45", 123456000), row.get(5));
+        }
+        {
+            List<Object> row = rows.get(2);
+            assertEquals("A002", row.get(0));
+            assertEquals(createDate("2016/12/31"), row.get(1));
+            assertEquals(createTime("23:59:59"), row.get(2));
+            assertEquals(createTimestamp("2016/12/31 23:59:59", 999999000), row.get(3));
+            assertEquals(createTimestamp("2016/12/31 23:59:59", 0), row.get(4));
+            assertEquals(createTimestamp("2016/12/31 23:59:59", 999999000), row.get(5));
+        }
+        {
+            List<Object> row = rows.get(3);
+            assertEquals("A003", row.get(0));
+            assertEquals(null, row.get(1));
+            assertEquals(null, row.get(2));
+            assertEquals(null, row.get(3));
+            assertEquals(null, row.get(4));
+            assertEquals(null, row.get(5));
+        }
     }
 
     @Override
