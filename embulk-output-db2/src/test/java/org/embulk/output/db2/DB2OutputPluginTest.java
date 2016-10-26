@@ -212,6 +212,31 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
         assertNumberTable(table, 0);
     }
 
+    @Test
+    public void testReplace() throws Exception
+    {
+        String table = "TEST_CHAR";
+
+        dropTable(table);
+        createCharTable(table);
+
+        test("/db2/yml/test-replace.yml");
+
+        assertCharTable(table, true, 0);
+    }
+
+    @Test
+    public void testReplaceCreate() throws Exception
+    {
+        String table = "TEST_CHAR";
+
+        dropTable(table);
+
+        test("/db2/yml/test-replace.yml");
+
+        assertCharTable(table, true, 0);
+    }
+
 
     @Override
     protected Object getValue(ResultSet resultSet, int index) throws SQLException {
