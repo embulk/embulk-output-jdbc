@@ -1,3 +1,7 @@
+Release 0.7.0 - 2016-10-26
+
+* Added embulk-output-db2 to support IBM DB2.
+
 Release 0.6.5 - 2016-10-11
 
 * Enabled to merge Redshift table with an identity column.
