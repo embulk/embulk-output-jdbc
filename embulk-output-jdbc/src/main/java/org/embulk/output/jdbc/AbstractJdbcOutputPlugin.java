@@ -108,6 +108,10 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("null")
         public Optional<List<String>> getMergeRule();
 
+        @Config("after_load")
+        @ConfigDefault("null")
+        public Optional<String> getAfterLoad();
+
         public void setActualTable(String actualTable);
         public String getActualTable();
 
@@ -394,7 +398,7 @@ public abstract class AbstractJdbcOutputPlugin
     private ConfigDiff commit(final PluginTask task,
             Schema schema, final int taskCount)
     {
-        if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
+        if (!task.getMode().isDirectModify() || task.getAfterLoad().isPresent()) {  // no intermediate data if isDirectModify == true
             try {
                 withRetry(task, new IdempotentSqlRunnable() {
                     public void run() throws SQLException
@@ -492,7 +496,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (mode.tempTablePerTask()) {
                 String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable(), con, 3,
                         task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                for (int i=0; i < taskCount; i++) {
+                for (int i = 0; i < taskCount; i++) {
                     intermTableNames.add(namePrefix + String.format("%03d", i));
                 }
             } else {
@@ -666,16 +670,15 @@ public abstract class AbstractJdbcOutputPlugin
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
-        if (task.getIntermediateTables().get().isEmpty()) {
-            return;
-        }
-
         JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
 
         switch (task.getMode()) {
         case INSERT_DIRECT:
         case MERGE_DIRECT:
             // already done
+            if (task.getAfterLoad().isPresent()) {
+                con.executeSql(task.getAfterLoad().get());
+            }
             break;
 
         case INSERT:

@@ -280,6 +280,19 @@ public class JdbcOutputConnection
         throw new UnsupportedOperationException("not implemented");
     }
 
+    protected void executeSql(String sql) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+            executeUpdate(stmt, sql);
+            commitIfNecessary(connection);
+        } catch (SQLException ex) {
+            throw safeRollback(connection, ex);
+        } finally {
+            stmt.close();
+        }
+    }
+
     protected void collectInsert(List<String> fromTables, JdbcSchema schema, String toTable,
             boolean truncateDestinationFirst) throws SQLException
     {
