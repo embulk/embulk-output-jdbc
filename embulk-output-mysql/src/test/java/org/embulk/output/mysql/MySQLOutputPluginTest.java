@@ -163,6 +163,41 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
         }
     }
 
+    @Test
+    public void testReplaceAfterLoad() throws Exception
+    {
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-replace-after-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(3, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9L, i2.next());
+            assertEquals("x", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0L, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9L, i2.next());
+            assertEquals("x", i2.next());
+        }
+    }
+
     private void createTable(String table) throws SQLException
     {
         String sql = String.format("create table %s ("
@@ -171,16 +206,6 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
                 + "varchar_item    varchar(8),"
                 + "primary key (id))", table);
         executeSQL(sql);
-    }
-
-    private void insertRecord(String table) throws SQLException
-    {
-        insertRecord(table, "9999");
-    }
-
-    private void insertRecord(String table, String id) throws SQLException
-    {
-        executeSQL(String.format("INSERT INTO %s VALUES('%s', NULL, NULL, NULL, NULL, NULL, NULL)", table, id));
     }
 
     @Override

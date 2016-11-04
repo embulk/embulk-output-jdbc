@@ -370,14 +370,15 @@ public class JdbcOutputConnection
         throw new UnsupportedOperationException("not implemented");
     }
 
-    public void replaceTable(String fromTable, JdbcSchema schema, String toTable) throws SQLException
+    public void replaceTable(String fromTable, JdbcSchema schema, String toTable, Optional<String> additionalSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
             dropTableIfExists(stmt, toTable);
-
             executeUpdate(stmt, buildRenameTableSql(fromTable, toTable));
-
+            if (additionalSql.isPresent()) {
+                executeUpdate(stmt, additionalSql.get());
+            }
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);

@@ -707,7 +707,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         case REPLACE:
             // swap table
-            con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getActualTable());
+            con.replaceTable(task.getIntermediateTables().get().get(0), schema, task.getActualTable(), task.getAfterLoad());
             break;
         }
     }
