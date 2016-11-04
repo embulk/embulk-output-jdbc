@@ -41,8 +41,104 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
 
         dropTable(table);
         createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
 
         test("/mysql/yml/test-insert-direct-after-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(5, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("x", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("x", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("z", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B002", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("x", i2.next());
+        }
+    }
+
+    @Test
+    public void testInsertAfterLoad() throws Exception
+    {
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-insert-after-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(5, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("x", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("x", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("z", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B002", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("x", i2.next());
+        }
+    }
+
+    @Test
+    public void testTruncateInsertAfterLoad() throws Exception
+    {
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-truncate-insert-after-load.yml");
 
         List<List<Object>> rows = select(table);
         assertEquals(3, rows.size());

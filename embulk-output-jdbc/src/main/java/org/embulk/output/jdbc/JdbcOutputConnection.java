@@ -294,7 +294,7 @@ public class JdbcOutputConnection
     }
 
     protected void collectInsert(List<String> fromTables, JdbcSchema schema, String toTable,
-            boolean truncateDestinationFirst) throws SQLException
+            boolean truncateDestinationFirst, Optional<String> additionalSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
@@ -304,6 +304,9 @@ public class JdbcOutputConnection
             }
             String sql = buildCollectInsertSql(fromTables, schema, toTable);
             executeUpdate(stmt, sql);
+            if (additionalSql.isPresent()) {
+                executeUpdate(stmt, additionalSql.get());
+            }
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);

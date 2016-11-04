@@ -686,7 +686,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false);
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false, task.getAfterLoad());
             break;
 
         case TRUNCATE_INSERT:
@@ -694,7 +694,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true);
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true, task.getAfterLoad());
             break;
 
         case MERGE:

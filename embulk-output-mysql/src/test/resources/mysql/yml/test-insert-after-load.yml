@@ -1,0 +1,22 @@
+in:
+  type: file
+  path_prefix: '/mysql/data/test1.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: id, type: string}
+    - {name: int_item, type: long}
+    - {name: varchar_item, type: string}
+out:
+    type: mysql
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
+    table: test1
+    mode: insert
+    after_load: "update test1 set varchar_item = 'x' where int_item = 9"
