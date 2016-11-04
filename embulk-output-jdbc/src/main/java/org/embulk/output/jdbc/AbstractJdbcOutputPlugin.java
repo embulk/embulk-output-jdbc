@@ -702,7 +702,8 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(), new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()));
+            con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(),
+                    new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()), task.getAfterLoad());
             break;
 
         case REPLACE:

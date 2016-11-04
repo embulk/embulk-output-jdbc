@@ -351,12 +351,16 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
+    protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig,
+            Optional<String> additionalSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
             String sql = buildCollectMergeSql(fromTables, schema, toTable, mergeConfig);
             executeUpdate(stmt, sql);
+            if (additionalSql.isPresent()) {
+                executeUpdate(stmt, additionalSql.get());
+            }
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
