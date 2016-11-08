@@ -1,16 +1,18 @@
 package org.embulk.output.redshift;
 
-import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
-import org.embulk.output.jdbc.MergeConfig;
-import org.slf4j.Logger;
-import org.embulk.spi.Exec;
-import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.spi.Exec;
+import org.slf4j.Logger;
+
+import com.google.common.base.Optional;
 
 public class RedshiftOutputConnection
         extends JdbcOutputConnection
@@ -46,7 +48,7 @@ public class RedshiftOutputConnection
     // Redshift does not support DROP TABLE IF EXISTS.
     // Dropping part runs DROP TABLE and ignores errors.
     @Override
-    public void replaceTable(String fromTable, JdbcSchema schema, String toTable) throws SQLException
+    public void replaceTable(String fromTable, JdbcSchema schema, String toTable, Optional<String> additionalSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
@@ -71,6 +73,10 @@ public class RedshiftOutputConnection
                 quoteIdentifierString(sb, toTable);
                 String sql = sb.toString();
                 executeUpdate(stmt, sql);
+            }
+
+            if (additionalSql.isPresent()) {
+                executeUpdate(stmt, additionalSql.get());
             }
 
             commitIfNecessary(connection);
