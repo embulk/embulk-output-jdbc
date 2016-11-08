@@ -129,6 +129,10 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertCreateNumber() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "TEST_NUMBER";
 
         dropTable(table);
@@ -363,6 +367,10 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertNumberTable(String table, int skip) throws SQLException
     {
+        if (!enabled) {
+            return;
+        }
+
         List<List<Object>> rows = select(table);
         assertEquals(skip + 3, rows.size());
         {
@@ -410,6 +418,10 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertCharTable(String table, boolean trimming, int skip) throws SQLException
     {
+        if (!enabled) {
+            return;
+        }
+
         List<List<Object>> rows = select(table);
         assertEquals(skip + 3, rows.size());
         {
@@ -457,6 +469,10 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
 
     private void assertDateTimeTable(String table, int skip) throws SQLException, ParseException
     {
+        if (!enabled) {
+            return;
+        }
+
         List<List<Object>> rows = select(table);
         assertEquals(skip + 3, rows.size());
         {
