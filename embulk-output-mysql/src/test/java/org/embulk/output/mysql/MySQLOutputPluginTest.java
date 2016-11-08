@@ -37,6 +37,10 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertDirectAfterLoad() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "test1";
 
         dropTable(table);
@@ -84,6 +88,10 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testInsertAfterLoad() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "test1";
 
         dropTable(table);
@@ -131,6 +139,10 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testTruncateInsertAfterLoad() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "test1";
 
         dropTable(table);
@@ -166,6 +178,10 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testReplaceAfterLoad() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "test1";
 
         dropTable(table);
@@ -201,6 +217,10 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testMergeDirectAfterLoad() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "test1";
 
         dropTable(table);
@@ -250,6 +270,10 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     @Test
     public void testMergeAfterLoad() throws Exception
     {
+        if (!enabled) {
+            return;
+        }
+
         String table = "test1";
 
         dropTable(table);
