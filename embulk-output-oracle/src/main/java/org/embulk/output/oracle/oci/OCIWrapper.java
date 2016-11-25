@@ -529,18 +529,30 @@ public class OCIWrapper
             case OCI.OCI_SUCCESS:
                 break;
 
+            case OCI.OCI_SUCCESS_WITH_INFO:
+                if (errHandle != null) {
+                    ArrayMemoryIO errrCode = new ArrayMemoryIO(Runtime.getSystemRuntime(), 4);
+                    ArrayMemoryIO buffer = new ArrayMemoryIO(Runtime.getSystemRuntime(), 512);
+                    if (oci.OCIErrorGet(errHandle, 1, null, errrCode, buffer, (int)buffer.size(), OCI.OCI_HTYPE_ERROR) == OCI.OCI_SUCCESS) {
+                        String message = new String(buffer.array(), systemCharset);
+                        logger.warn(message);
+                    }
+                }
+                break;
+
             case OCI.OCI_ERROR:
                 if (errHandle == null) {
                     throwException("OCI : %s failed : %d.", operation, result);
-                }
-                ArrayMemoryIO errrCode = new ArrayMemoryIO(Runtime.getSystemRuntime(), 4);
-                ArrayMemoryIO buffer = new ArrayMemoryIO(Runtime.getSystemRuntime(), 512);
-                if (oci.OCIErrorGet(errHandle, 1, null, errrCode, buffer, (int)buffer.size(), OCI.OCI_HTYPE_ERROR) != OCI.OCI_SUCCESS) {
-                    throwException("OCI : %s failed : %d. OCIErrorGet failed.", operation, result);
-                }
+                } else {
+                    ArrayMemoryIO errrCode = new ArrayMemoryIO(Runtime.getSystemRuntime(), 4);
+                    ArrayMemoryIO buffer = new ArrayMemoryIO(Runtime.getSystemRuntime(), 512);
+                    if (oci.OCIErrorGet(errHandle, 1, null, errrCode, buffer, (int)buffer.size(), OCI.OCI_HTYPE_ERROR) != OCI.OCI_SUCCESS) {
+                        throwException("OCI : %s failed : %d. OCIErrorGet failed.", operation, result);
+                    }
 
-                String message = new String(buffer.array(), systemCharset);
-                throwException("OCI : %s failed : %d. %s", operation, result, message);
+                    String message = new String(buffer.array(), systemCharset);
+                    throwException("OCI : %s failed : %d. %s", operation, result, message);
+                }
 
             case OCI.OCI_INVALID_HANDLE:
                 throwException("OCI : %s failed : invalid handle.", operation);
