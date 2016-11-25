@@ -10,6 +10,7 @@ import jnr.ffi.types.u_int8_t;
 public interface OCI
 {
     static short OCI_SUCCESS = 0;
+    static short OCI_SUCCESS_WITH_INFO = 1;
     static short OCI_ERROR = -1;
     static short OCI_INVALID_HANDLE = -2;
     static short OCI_NO_DATA = 100;

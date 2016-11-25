@@ -45,7 +45,7 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            System.err.println("Warning: you should put 'ojdbc7.jar' in 'embulk-input-oracle/driver' directory in order to test.");
+            System.err.println("Warning: you should put 'ojdbc7.jar' in 'embulk-output-oracle/driver' directory in order to test.");
             return;
         }
 
