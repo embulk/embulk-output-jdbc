@@ -32,7 +32,7 @@ public class DB2OutputPluginTest extends AbstractJdbcOutputPluginTest
         try {
             Class.forName("com.ibm.db2.jcc.DB2Driver");
         } catch (ClassNotFoundException e) {
-            System.err.println("Warning: you should put 'db2jcc4.jar' in 'embulk-input-db2/driver' directory in order to test.");
+            System.err.println("Warning: you should put 'db2jcc4.jar' in 'embulk-output-db2/driver' directory in order to test.");
             return;
         }
 
