@@ -670,10 +670,6 @@ public abstract class AbstractJdbcOutputPlugin
     protected void doCommit(JdbcOutputConnection con, PluginTask task, int taskCount)
         throws SQLException
     {
-        if (task.getIntermediateTables().get().isEmpty()) {
-            return;
-        }
-
         JdbcSchema schema = filterSkipColumns(task.getTargetTableSchema());
 
         switch (task.getMode()) {

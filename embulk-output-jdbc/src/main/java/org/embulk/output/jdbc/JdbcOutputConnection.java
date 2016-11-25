@@ -296,6 +296,10 @@ public class JdbcOutputConnection
     protected void collectInsert(List<String> fromTables, JdbcSchema schema, String toTable,
             boolean truncateDestinationFirst, Optional<String> additionalSql) throws SQLException
     {
+        if (fromTables.isEmpty()) {
+            return;
+        }
+
         Statement stmt = connection.createStatement();
         try {
             if (truncateDestinationFirst) {
@@ -354,6 +358,10 @@ public class JdbcOutputConnection
     protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig,
             Optional<String> additionalSql) throws SQLException
     {
+        if (fromTables.isEmpty()) {
+            return;
+        }
+
         Statement stmt = connection.createStatement();
         try {
             String sql = buildCollectMergeSql(fromTables, schema, toTable, mergeConfig);
