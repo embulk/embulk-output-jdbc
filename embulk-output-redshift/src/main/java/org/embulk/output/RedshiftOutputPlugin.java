@@ -1,6 +1,5 @@
 package org.embulk.output;
 
-import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -9,10 +8,10 @@ import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import org.embulk.spi.Exec;
+import org.embulk.util.aws.credentials.AwsCredentials;
+import org.embulk.util.aws.credentials.AwsCredentialsTask;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -26,7 +25,7 @@ public class RedshiftOutputPlugin
 {
     private final Logger logger = Exec.getLogger(RedshiftOutputPlugin.class);
 
-    public interface RedshiftPluginTask extends PluginTask
+    public interface RedshiftPluginTask extends AwsCredentialsTask, PluginTask
     {
         @Config("host")
         public String getHost();
@@ -48,12 +47,6 @@ public class RedshiftOutputPlugin
         @Config("schema")
         @ConfigDefault("\"public\"")
         public String getSchema();
-
-        @Config("access_key_id")
-        public String getAccessKeyId();
-
-        @Config("secret_access_key")
-        public String getSecretAccessKey();
 
         @Config("iam_user_name")
         @ConfigDefault("\"\"")
@@ -132,20 +125,7 @@ public class RedshiftOutputPlugin
 
     private static AWSCredentialsProvider getAWSCredentialsProvider(RedshiftPluginTask task)
     {
-        final AWSCredentials creds = new BasicAWSCredentials(
-                task.getAccessKeyId(), task.getSecretAccessKey());
-        return new AWSCredentialsProvider() {
-            @Override
-            public AWSCredentials getCredentials()
-            {
-                return creds;
-            }
-
-            @Override
-            public void refresh()
-            {
-            }
-        };
+        return AwsCredentials.getAWSCredentialsProvider(task);
     }
 
     @Override

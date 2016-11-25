@@ -18,10 +18,14 @@ subprojects {
     apply plugin: 'findbugs'
     //apply plugin: 'jacoco'
     apply plugin: 'com.github.jruby-gradle.base'
+    apply plugin: 'eclipse'
 
     repositories {
         mavenCentral()
         jcenter()
+        maven {
+            url "http://dl.bintray.com/embulk-input-s3/maven"
+        }
     }
 
     configurations {
