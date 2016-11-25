@@ -1,3 +1,8 @@
+Release 0.7.1 - 2016-11-25
+
+* Enabled to execute SQL after loading.
+* Redshift merge mode uses UPDATE-INSERT instead of DELETE-INSERT in order to retain columns not contained in input schema (@Olaktal++).
+
 Release 0.7.0 - 2016-10-26
 
 * Added embulk-output-db2 to support IBM DB2.
