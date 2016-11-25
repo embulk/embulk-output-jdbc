@@ -18,7 +18,6 @@ subprojects {
     apply plugin: 'findbugs'
     //apply plugin: 'jacoco'
     apply plugin: 'com.github.jruby-gradle.base'
-    apply plugin: 'eclipse'
 
     repositories {
         mavenCentral()
