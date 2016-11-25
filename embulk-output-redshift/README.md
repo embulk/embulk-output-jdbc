@@ -20,6 +20,45 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **table**: destination table name (string, required)
 - **access_key_id**: access key id for AWS
 - **secret_access_key**: secret access key for AWS
+- **auth_method**: name of mechanism to authenticate requests (basic, env, instance, profile, properties, anonymous, or session. default: basic)
+
+  - "basic": uses access_key_id and secret_access_key to authenticate.
+
+    - **access_key_id**: AWS access key ID (string, required)
+
+    - **secret_access_key**: AWS secret access key (string, required)
+
+  - "env": uses AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY) environment variables.
+
+  - "instance": uses EC2 instance profile.
+
+  - "profile": uses credentials written in a file. Format of the file is as following, where `[...]` is a name of profile.
+
+    - **profile_file**: path to a profiles file. (string, default: given by AWS_CREDENTIAL_PROFILES_FILE environment varialbe, or ~/.aws/credentials).
+
+    - **profile_name**: name of a profile. (string, default: `"default"`)
+
+    ```
+    [default]
+    aws_access_key_id=YOUR_ACCESS_KEY_ID
+    aws_secret_access_key=YOUR_SECRET_ACCESS_KEY
+
+    [profile2]
+    ...
+    ```
+
+  - "properties": uses aws.accessKeyId and aws.secretKey Java system properties.
+
+  - "anonymous": uses anonymous access. This auth method can access only public files.
+
+  - "session": uses temporary-generated access_key_id, secret_access_key and session_token.
+
+    - **access_key_id**: AWS access key ID (string, required)
+
+    - **secret_access_key**: AWS secret access key (string, required)
+
+    - **session_token**: session token (string, required)
+
 - **iam_user_name**: IAM user name for uploading temporary files to S3. The user should have permissions of `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket` and `sts:GetFederationToken`. And furthermore, the user should have permission of `s3:GetBucketLocation` if Redshift region and S3 bucket region are different. (string, default: "", but we strongly recommend that you use IAM user for security reasons. see below.)
 - **s3_bucket**: S3 bucket name for temporary files
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default:"")
@@ -120,6 +159,38 @@ out:
     my_col_3: {type: 'INT NOT NULL'}
     my_col_4: {value_type: string, timestamp_format: `%Y-%m-%d %H:%M:%S %z`, timezone: '-0700'}
     my_col_5: {type: 'DECIMAL(18,9)', value_type: pass}
+```
+
+To use IAM Role:
+
+```yaml
+out:
+  type: redshift
+  host: myinstance.us-west-2.redshift.amazonaws.com
+  user: pg
+  password: ""
+  database: my_database
+  table: my_table
+  s3_bucket: my-redshift-transfer-bucket
+  s3_key_prefix: temp/redshift
+  mode: insert
+  auth_method: instance
+```
+
+To use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables:
+
+```yaml
+out:
+  type: redshift
+  host: myinstance.us-west-2.redshift.amazonaws.com
+  user: pg
+  password: ""
+  database: my_database
+  table: my_table
+  s3_bucket: my-redshift-transfer-bucket
+  s3_key_prefix: temp/redshift
+  mode: insert
+  auth_method: env
 ```
 
 ### Build
