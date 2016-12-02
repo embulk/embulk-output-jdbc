@@ -194,6 +194,10 @@ public class RedshiftCopyBatchInsert
                     c.getSecretAccessKey(),
                     c.getSessionToken());
         } else {
+            if (credentialsProvider.getCredentials() instanceof BasicSessionCredentials) {
+                BasicSessionCredentials credentials = (BasicSessionCredentials) credentialsProvider.getCredentials();
+                return credentials;
+            }
             return new BasicSessionCredentials(credentialsProvider.getCredentials().getAWSAccessKeyId(),
                     credentialsProvider.getCredentials().getAWSSecretKey(), null);
         }

@@ -1,6 +1,5 @@
 package org.embulk.output;
 
-import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -9,10 +8,10 @@ import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import org.embulk.spi.Exec;
+import org.embulk.util.aws.credentials.AwsCredentials;
+import org.embulk.util.aws.credentials.AwsCredentialsTaskWithPrefix;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -26,7 +25,7 @@ public class RedshiftOutputPlugin
 {
     private final Logger logger = Exec.getLogger(RedshiftOutputPlugin.class);
 
-    public interface RedshiftPluginTask extends PluginTask
+    public interface RedshiftPluginTask extends AwsCredentialsTaskWithPrefix, PluginTask
     {
         @Config("host")
         public String getHost();
@@ -49,11 +48,15 @@ public class RedshiftOutputPlugin
         @ConfigDefault("\"public\"")
         public String getSchema();
 
+        // for backward compatibility
         @Config("access_key_id")
-        public String getAccessKeyId();
+        @ConfigDefault("null")
+        Optional<String> getOldAccessKeyId();
 
+        // for backward compatibility
         @Config("secret_access_key")
-        public String getSecretAccessKey();
+        @ConfigDefault("null")
+        Optional<String> getOldSecretAccessKey();
 
         @Config("iam_user_name")
         @ConfigDefault("\"\"")
@@ -132,20 +135,21 @@ public class RedshiftOutputPlugin
 
     private static AWSCredentialsProvider getAWSCredentialsProvider(RedshiftPluginTask task)
     {
-        final AWSCredentials creds = new BasicAWSCredentials(
-                task.getAccessKeyId(), task.getSecretAccessKey());
-        return new AWSCredentialsProvider() {
-            @Override
-            public AWSCredentials getCredentials()
-            {
-                return creds;
-            }
+        return AwsCredentials.getAWSCredentialsProvider(task);
+    }
 
-            @Override
-            public void refresh()
-            {
+    private void setAWSCredentialsBackwardCompatibility(RedshiftPluginTask t)
+    {
+        if ("basic".equals(t.getAuthMethod())) {
+            if (t.getOldAccessKeyId().isPresent() && !t.getAccessKeyId().isPresent()) {
+                logger.warn("'access_key_id' is deprecated. Please use 'aws_access_key_id'.");
+                t.setAccessKeyId(t.getOldAccessKeyId());
             }
-        };
+            if (t.getOldSecretAccessKey().isPresent() && !t.getSecretAccessKey().isPresent()) {
+                logger.warn("'secret_access_key' is deprecated. Please use 'aws_secret_access_key'.");
+                t.setSecretAccessKey(t.getOldSecretAccessKey());
+            }
+        }
     }
 
     @Override
@@ -155,6 +159,7 @@ public class RedshiftOutputPlugin
             throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
+        setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
                 getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName());
     }

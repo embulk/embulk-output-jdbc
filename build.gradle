@@ -22,6 +22,9 @@ subprojects {
     repositories {
         mavenCentral()
         jcenter()
+        maven {
+            url "http://dl.bintray.com/embulk-input-s3/maven"
+        }
     }
 
     configurations {
