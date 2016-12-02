@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableSet;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import org.embulk.spi.Exec;
 import org.embulk.util.aws.credentials.AwsCredentials;
-import org.embulk.util.aws.credentials.AwsCredentialsTask;
+import org.embulk.util.aws.credentials.AwsCredentialsTaskWithPrefix;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
@@ -25,7 +25,7 @@ public class RedshiftOutputPlugin
 {
     private final Logger logger = Exec.getLogger(RedshiftOutputPlugin.class);
 
-    public interface RedshiftPluginTask extends AwsCredentialsTask, PluginTask
+    public interface RedshiftPluginTask extends AwsCredentialsTaskWithPrefix, PluginTask
     {
         @Config("host")
         public String getHost();
@@ -47,6 +47,16 @@ public class RedshiftOutputPlugin
         @Config("schema")
         @ConfigDefault("\"public\"")
         public String getSchema();
+
+        // for backward compatibility
+        @Config("access_key_id")
+        @ConfigDefault("null")
+        Optional<String> getOldAccessKeyId();
+
+        // for backward compatibility
+        @Config("secret_access_key")
+        @ConfigDefault("null")
+        Optional<String> getOldSecretAccessKey();
 
         @Config("iam_user_name")
         @ConfigDefault("\"\"")
@@ -128,6 +138,20 @@ public class RedshiftOutputPlugin
         return AwsCredentials.getAWSCredentialsProvider(task);
     }
 
+    private void setAWSCredentialsBackwardCompatibility(RedshiftPluginTask t)
+    {
+        if ("basic".equals(t.getAuthMethod())) {
+            if (t.getOldAccessKeyId().isPresent() && !t.getAccessKeyId().isPresent()) {
+                logger.warn("'access_key_id' is deprecated. Please use 'aws_access_key_id'.");
+                t.setAccessKeyId(t.getOldAccessKeyId());
+            }
+            if (t.getOldSecretAccessKey().isPresent() && !t.getSecretAccessKey().isPresent()) {
+                logger.warn("'secret_access_key' is deprecated. Please use 'aws_secret_access_key'.");
+                t.setSecretAccessKey(t.getOldSecretAccessKey());
+            }
+        }
+    }
+
     @Override
     protected BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
@@ -135,6 +159,7 @@ public class RedshiftOutputPlugin
             throw new UnsupportedOperationException("Redshift output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
         }
         RedshiftPluginTask t = (RedshiftPluginTask) task;
+        setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
                 getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName());
     }
