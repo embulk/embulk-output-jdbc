@@ -28,7 +28,9 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **retry_limit** max retry count for database operations (integer, default: 12)
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
 - **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
-- **mode**: "insert", "insert_direct", "truncate_insert" or "replace". See below. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert" , "replace" or "merge". See below. (string, required)
+- **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
+- **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = T.foo + S.foo` (`T` means target table and `S` means source table). (string array, default: always overwrites with new values)
 - **insert_method**: see below
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
@@ -57,6 +59,10 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
   * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: No. If fails, the target table could be dropped (because SQL Server can't rollback DDL).
   * Resumable: No.
+* **merge**:
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `MERGE INTO ... WHEN MATCHED THEN UPDATE ...  WHEN NOT MATCHED THEN INSERT ...` query. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
+  * Transactional: Yes.
+  * Resumable: Yes.
 
 ### Insert methods
 
