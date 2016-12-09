@@ -4,10 +4,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
 
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.MergeConfig;
 
 public class SQLServerOutputConnection
         extends JdbcOutputConnection
@@ -113,12 +115,53 @@ public class SQLServerOutputConnection
         return super.getColumnDeclareType(convertedTypeName, col);
     }
 
-    /*
     @Override
-    public Charset getTableNameCharset() throws SQLException
+    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
     {
-        return getOracleCharset().getJavaCharset();
-    }
+        StringBuilder sb = new StringBuilder();
 
-    */
+        sb.append("MERGE INTO ");
+        sb.append(quoteIdentifierString(toTable));
+        sb.append(" AS T");
+        sb.append(" USING (SELECT ");
+        for (int i = 0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        }
+        sb.append(" FROM ");
+        sb.append(quoteIdentifierString(fromTables.get(0)));
+        sb.append(") AS F");
+        sb.append(" ON (");
+        for (int i = 0; i < mergeConfig.getMergeKeys().size(); i++) {
+            if (i != 0) { sb.append(" AND "); }
+            sb.append("T.");
+            sb.append(quoteIdentifierString(mergeConfig.getMergeKeys().get(i)));
+            sb.append(" = F.");
+            sb.append(quoteIdentifierString(mergeConfig.getMergeKeys().get(i)));
+        }
+        sb.append(")");
+        sb.append(" WHEN MATCHED THEN");
+        sb.append(" UPDATE SET ");
+        for (int i = 0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+            sb.append(" = F.");
+            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        }
+        sb.append(" WHEN NOT MATCHED THEN");
+        sb.append(" INSERT (");
+        for (int i = 0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        }
+        sb.append(") VALUES (");
+        for (int i = 0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            sb.append("F.");
+            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        }
+        sb.append(");");
+
+        return sb.toString();
+    }
 }

@@ -2,6 +2,7 @@ package org.embulk.output;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
@@ -103,7 +104,7 @@ public class SQLServerOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(128)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
             .setIgnoreMergeKeys(false);
     }
 
