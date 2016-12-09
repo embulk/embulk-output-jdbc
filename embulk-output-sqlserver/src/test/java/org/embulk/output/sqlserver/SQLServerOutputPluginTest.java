@@ -375,6 +375,31 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
 
         test("/sqlserver/yml/test-merge.yml");
 
+        assertMergedTable(table);
+    }
+
+    @Test
+    public void testMergeWithKeys() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST6b";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 INT, ITEM2 INT, ITEM3 VARCHAR(4))", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 20, 'A')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 21, 'B')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(11, 20, 'C')", table));
+
+        test("/sqlserver/yml/test-merge-keys.yml");
+
+        assertMergedTable(table);
+    }
+
+    private void assertMergedTable(String table) throws Exception
+    {
         List<List<Object>> rows = select(table);
         assertEquals(6, rows.size());
         {

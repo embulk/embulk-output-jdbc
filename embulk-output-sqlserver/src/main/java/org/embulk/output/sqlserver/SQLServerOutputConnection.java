@@ -123,13 +123,17 @@ public class SQLServerOutputConnection
         sb.append("MERGE INTO ");
         sb.append(quoteIdentifierString(toTable));
         sb.append(" AS T");
-        sb.append(" USING (SELECT ");
-        for (int i = 0; i < schema.getCount(); i++) {
-            if (i != 0) { sb.append(", "); }
-            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        sb.append(" USING (");
+        for (int i = 0; i < fromTables.size(); i++) {
+            if (i != 0) { sb.append(" UNION ALL "); }
+            sb.append(" SELECT ");
+            for (int j = 0; j < schema.getCount(); j++) {
+                if (j != 0) { sb.append(", "); }
+                sb.append(quoteIdentifierString(schema.getColumnName(j)));
+            }
+            sb.append(" FROM ");
+            sb.append(quoteIdentifierString(fromTables.get(i)));
         }
-        sb.append(" FROM ");
-        sb.append(quoteIdentifierString(fromTables.get(0)));
         sb.append(") AS F");
         sb.append(" ON (");
         for (int i = 0; i < mergeConfig.getMergeKeys().size(); i++) {
