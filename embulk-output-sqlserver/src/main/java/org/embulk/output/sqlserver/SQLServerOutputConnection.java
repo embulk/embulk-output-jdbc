@@ -127,10 +127,7 @@ public class SQLServerOutputConnection
         for (int i = 0; i < fromTables.size(); i++) {
             if (i != 0) { sb.append(" UNION ALL "); }
             sb.append(" SELECT ");
-            for (int j = 0; j < schema.getCount(); j++) {
-                if (j != 0) { sb.append(", "); }
-                sb.append(quoteIdentifierString(schema.getColumnName(j)));
-            }
+            sb.append(buildColumns(schema, ""));
             sb.append(" FROM ");
             sb.append(quoteIdentifierString(fromTables.get(i)));
         }
@@ -138,10 +135,11 @@ public class SQLServerOutputConnection
         sb.append(" ON (");
         for (int i = 0; i < mergeConfig.getMergeKeys().size(); i++) {
             if (i != 0) { sb.append(" AND "); }
+            String mergeKey = quoteIdentifierString(mergeConfig.getMergeKeys().get(i));
             sb.append("T.");
-            sb.append(quoteIdentifierString(mergeConfig.getMergeKeys().get(i)));
+            sb.append(mergeKey);
             sb.append(" = S.");
-            sb.append(quoteIdentifierString(mergeConfig.getMergeKeys().get(i)));
+            sb.append(mergeKey);
         }
         sb.append(")");
         sb.append(" WHEN MATCHED THEN");
@@ -154,25 +152,30 @@ public class SQLServerOutputConnection
         } else {
             for (int i = 0; i < schema.getCount(); i++) {
                 if (i != 0) { sb.append(", "); }
-                sb.append(quoteIdentifierString(schema.getColumnName(i)));
+                String column = quoteIdentifierString(schema.getColumnName(i));
+                sb.append(column);
                 sb.append(" = S.");
-                sb.append(quoteIdentifierString(schema.getColumnName(i)));
+                sb.append(column);
             }
         }
         sb.append(" WHEN NOT MATCHED THEN");
         sb.append(" INSERT (");
-        for (int i = 0; i < schema.getCount(); i++) {
-            if (i != 0) { sb.append(", "); }
-            sb.append(quoteIdentifierString(schema.getColumnName(i)));
-        }
+        sb.append(buildColumns(schema, ""));
         sb.append(") VALUES (");
-        for (int i = 0; i < schema.getCount(); i++) {
-            if (i != 0) { sb.append(", "); }
-            sb.append("S.");
-            sb.append(quoteIdentifierString(schema.getColumnName(i)));
-        }
+        sb.append(buildColumns(schema, "S."));
         sb.append(");");
 
+        return sb.toString();
+    }
+
+    private String buildColumns(JdbcSchema schema, String prefix)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < schema.getCount(); i++) {
+            if (i != 0) { sb.append(", "); }
+            sb.append(prefix);
+            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        }
         return sb.toString();
     }
 }
