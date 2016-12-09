@@ -1,0 +1,22 @@
+in:
+  type: file
+  path_prefix: '/sqlserver/data/test6/test6.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: ITEM1, type: long}
+    - {name: ITEM2, type: long}
+    - {name: ITEM3, type: string}
+out:
+    type: sqlserver
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
+    table: TEST6
+    mode: merge
+    merge_rule: ["ITEM3 = T.ITEM3 + S.ITEM3"]

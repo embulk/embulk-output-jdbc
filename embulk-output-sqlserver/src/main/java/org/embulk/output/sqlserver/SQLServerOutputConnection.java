@@ -134,23 +134,30 @@ public class SQLServerOutputConnection
             sb.append(" FROM ");
             sb.append(quoteIdentifierString(fromTables.get(i)));
         }
-        sb.append(") AS F");
+        sb.append(") AS S");
         sb.append(" ON (");
         for (int i = 0; i < mergeConfig.getMergeKeys().size(); i++) {
             if (i != 0) { sb.append(" AND "); }
             sb.append("T.");
             sb.append(quoteIdentifierString(mergeConfig.getMergeKeys().get(i)));
-            sb.append(" = F.");
+            sb.append(" = S.");
             sb.append(quoteIdentifierString(mergeConfig.getMergeKeys().get(i)));
         }
         sb.append(")");
         sb.append(" WHEN MATCHED THEN");
         sb.append(" UPDATE SET ");
-        for (int i = 0; i < schema.getCount(); i++) {
-            if (i != 0) { sb.append(", "); }
-            sb.append(quoteIdentifierString(schema.getColumnName(i)));
-            sb.append(" = F.");
-            sb.append(quoteIdentifierString(schema.getColumnName(i)));
+        if (mergeConfig.getMergeRule().isPresent()) {
+            for (int i = 0; i < mergeConfig.getMergeRule().get().size(); i++) {
+                if (i != 0) { sb.append(", "); }
+                sb.append(mergeConfig.getMergeRule().get().get(i));
+            }
+        } else {
+            for (int i = 0; i < schema.getCount(); i++) {
+                if (i != 0) { sb.append(", "); }
+                sb.append(quoteIdentifierString(schema.getColumnName(i)));
+                sb.append(" = S.");
+                sb.append(quoteIdentifierString(schema.getColumnName(i)));
+            }
         }
         sb.append(" WHEN NOT MATCHED THEN");
         sb.append(" INSERT (");
@@ -161,7 +168,7 @@ public class SQLServerOutputConnection
         sb.append(") VALUES (");
         for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
-            sb.append("F.");
+            sb.append("S.");
             sb.append(quoteIdentifierString(schema.getColumnName(i)));
         }
         sb.append(");");
