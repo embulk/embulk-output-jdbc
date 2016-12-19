@@ -1,6 +1,5 @@
 package org.embulk.output.jdbc;
 
-import java.util.List;
 import java.util.Calendar;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -64,7 +63,9 @@ public class StandardBatchInsert
 
     public void close() throws IOException, SQLException
     {
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     public void flush() throws IOException, SQLException
