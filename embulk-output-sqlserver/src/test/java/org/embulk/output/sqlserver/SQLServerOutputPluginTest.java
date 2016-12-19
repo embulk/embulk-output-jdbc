@@ -34,7 +34,7 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
-            System.err.println("Warning: you should put 'sqljdbc41.jar' in 'embulk-input-sqlserver/driver' directory in order to test.");
+            System.err.println("Warning: you should put 'sqljdbc41.jar' in 'embulk-output-sqlserver/driver' directory in order to test.");
             return;
         }
 
@@ -355,6 +355,145 @@ public class SQLServerOutputPluginTest extends AbstractJdbcOutputPluginTest
             assertTableJtds(1, table);
         } finally {
             useJtdsDriver = false;
+        }
+    }
+
+    @Test
+    public void testMerge() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST6";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 INT, ITEM2 INT, ITEM3 VARCHAR(4), PRIMARY KEY(ITEM1, ITEM2))", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 20, 'A')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 21, 'B')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(11, 20, 'C')", table));
+
+        test("/sqlserver/yml/test-merge.yml");
+
+        assertMergedTable(table);
+    }
+
+    @Test
+    public void testMergeWithKeys() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST6b";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 INT, ITEM2 INT, ITEM3 VARCHAR(4))", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 20, 'A')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 21, 'B')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(11, 20, 'C')", table));
+
+        test("/sqlserver/yml/test-merge-keys.yml");
+
+        assertMergedTable(table);
+    }
+
+    @Test
+    public void testMergeWithRule() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST6";
+
+        dropTable(table);
+        executeSQL(String.format("CREATE TABLE %S (ITEM1 INT, ITEM2 INT, ITEM3 VARCHAR(4), PRIMARY KEY(ITEM1, ITEM2))", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 20, 'A')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(10, 21, 'B')", table));
+        executeSQL(String.format("INSERT INTO %S VALUES(11, 20, 'C')", table));
+
+        test("/sqlserver/yml/test-merge-rule.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(6, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals(Integer.valueOf(10), row.get(0));
+            assertEquals(Integer.valueOf(20), row.get(1));
+            assertEquals("A", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals(Integer.valueOf(10), row.get(0));
+            assertEquals(Integer.valueOf(21), row.get(1));
+            assertEquals("Baa", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(2);
+            assertEquals(Integer.valueOf(10), row.get(0));
+            assertEquals(Integer.valueOf(22), row.get(1));
+            assertEquals("dd", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(3);
+            assertEquals(Integer.valueOf(11), row.get(0));
+            assertEquals(Integer.valueOf(10), row.get(1));
+            assertEquals("bb", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(4);
+            assertEquals(Integer.valueOf(11), row.get(0));
+            assertEquals(Integer.valueOf(20), row.get(1));
+            assertEquals("C", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(5);
+            assertEquals(Integer.valueOf(12), row.get(0));
+            assertEquals(Integer.valueOf(20), row.get(1));
+            assertEquals("cc", row.get(2));
+        }
+    }
+
+    private void assertMergedTable(String table) throws Exception
+    {
+        List<List<Object>> rows = select(table);
+        assertEquals(6, rows.size());
+        {
+            List<Object> row = rows.get(0);
+            assertEquals(Integer.valueOf(10), row.get(0));
+            assertEquals(Integer.valueOf(20), row.get(1));
+            assertEquals("A", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(1);
+            assertEquals(Integer.valueOf(10), row.get(0));
+            assertEquals(Integer.valueOf(21), row.get(1));
+            assertEquals("aa", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(2);
+            assertEquals(Integer.valueOf(10), row.get(0));
+            assertEquals(Integer.valueOf(22), row.get(1));
+            assertEquals("dd", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(3);
+            assertEquals(Integer.valueOf(11), row.get(0));
+            assertEquals(Integer.valueOf(10), row.get(1));
+            assertEquals("bb", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(4);
+            assertEquals(Integer.valueOf(11), row.get(0));
+            assertEquals(Integer.valueOf(20), row.get(1));
+            assertEquals("C", row.get(2));
+        }
+        {
+            List<Object> row = rows.get(5);
+            assertEquals(Integer.valueOf(12), row.get(0));
+            assertEquals(Integer.valueOf(20), row.get(1));
+            assertEquals("cc", row.get(2));
         }
     }
 
