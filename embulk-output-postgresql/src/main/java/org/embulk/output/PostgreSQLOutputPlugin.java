@@ -64,7 +64,7 @@ public class PostgreSQLOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(30)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.MERGE_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
             .setIgnoreMergeKeys(false);
     }
 
@@ -111,7 +111,7 @@ public class PostgreSQLOutputPlugin
     protected BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
         if (mergeConfig.isPresent()) {
-            throw new UnsupportedOperationException("PostgreSQL output plugin doesn't support 'merge_direct' mode. Use 'merge' mode instead.");
+            return new StandardBatchInsert(getConnector(task, true), mergeConfig);
         }
         return new PostgreSQLCopyBatchInsert(getConnector(task, true));
     }
