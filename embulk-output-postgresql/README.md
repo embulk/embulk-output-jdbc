@@ -21,7 +21,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 - **retry_limit** max retry count for database operations (integer, default: 12)
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
 - **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
-- **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert", "replace", "merge" or "merge_direct". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = foo + S.foo`. (string array, default: always overwrites with new values)
 - **ssl**: enables SSL. data will be encrypted but CA or certification will not be verified (boolean, default: false)
@@ -53,9 +53,13 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
   * Transactional: Yes.
   * Resumable: No.
 * **merge**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `with updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `WITH updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
   * Resumable: Yes.
+* **merge_direct**:
+  * Behavior: This mode inserts rows to the target table directly using `WITH S AS (SELECT ...), updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. If the target table doesn't exist, it is created automatically.
+  * Transactional: No.
+  * Resumable: No.
 
 ### Supported types
 
