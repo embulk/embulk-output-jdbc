@@ -248,7 +248,7 @@ public class RedshiftCopyBatchInsert
             return request;
         }else{
             PutObjectRequest request = new PutObjectRequest(s3BucketName, s3KeyName, file);
-            retrun request;
+            return request;
         }
       }
     }
