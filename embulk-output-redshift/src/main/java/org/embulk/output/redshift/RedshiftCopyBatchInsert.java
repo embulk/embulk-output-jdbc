@@ -55,13 +55,15 @@ public class RedshiftCopyBatchInsert
     private String copySqlBeforeFrom = null;
     private long totalRows;
     private int fileCount;
+    private boolean isApplySSE;
+      
     private List<Future<Void>> uploadAndCopyFutures;
 
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS STATUPDATE OFF COMPUPDATE OFF";
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName) throws IOException, SQLException
+            String iamReaderUserName, boolean isApplySSE) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -73,6 +75,7 @@ public class RedshiftCopyBatchInsert
         }
         this.iamReaderUserName = iamReaderUserName;
         this.credentialsProvider = credentialsProvider;
+        this.isApplySSE = isApplySSE;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newCachedThreadPool();
@@ -222,7 +225,7 @@ public class RedshiftCopyBatchInsert
 
             try {
                 long startTime = System.currentTimeMillis();
-                s3.putObject(s3BucketName, s3KeyName, file);
+                s3.putObject(createPutObject());
                 double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
 
                 logger.info(String.format("Uploaded file %s (%.2f seconds)", s3KeyName, seconds));
@@ -232,6 +235,19 @@ public class RedshiftCopyBatchInsert
 
             return null;
         }
+
+      private PutObjectRequest createPutObject(){
+        if(isApplySSE){
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+            PutObjectRequest request = new PutObjectRequest(s3BucketName, s3KeyName, file)
+              .withMetadata(metadata);
+            return request;
+        }else{
+            PutObjectRequest request = new PutObjectRequest(s3BucketName, s3KeyName, file);
+            retrun request;
+        }
+      }
     }
 
     private class CopyTask implements Callable<Void>
