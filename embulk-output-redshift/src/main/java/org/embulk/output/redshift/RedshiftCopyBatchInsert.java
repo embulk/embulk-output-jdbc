@@ -32,9 +32,9 @@ import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.Region;
-import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.PutObjectRequest
-import com.amazonaws.services.s3.model.PutObjectResult
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
