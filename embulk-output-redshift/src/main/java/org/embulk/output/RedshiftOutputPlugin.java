@@ -19,6 +19,7 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
 import org.embulk.output.redshift.Ssl;
+import org.embulk.output.redshift.Sse;
 
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -72,6 +73,14 @@ public class RedshiftOutputPlugin
         @Config("ssl")
         @ConfigDefault("\"disable\"")
         public Ssl getSsl();
+
+        @Config("SSE")
+        @ConfigDefault("disable")
+        public Sse getSSE();
+
+        @Config("encrypt_key")
+        @ConfigDefault("\"\"")
+        public String getEncryptKey();
     }
 
     @Override
@@ -161,6 +170,7 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName());
+            getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getSSE(), t.getEncryptKey());
+        
     }
 }

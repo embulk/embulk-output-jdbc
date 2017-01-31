@@ -20,6 +20,7 @@ import java.util.zip.GZIPOutputStream;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 import org.embulk.spi.Exec;
+import org.embulk.config.ConfigException;
 import org.slf4j.Logger;
 
 import com.amazonaws.AmazonClientException;
@@ -35,10 +36,13 @@ import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
+
+import org.embulk.output.redshift.Sse;
 
 public class RedshiftCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
@@ -56,9 +60,10 @@ public class RedshiftCopyBatchInsert
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
+    private String encryptKey;
     private long totalRows;
     private int fileCount;
-    private boolean isApplySSE;
+    private Sse sseOption;
       
     private List<Future<Void>> uploadAndCopyFutures;
 
@@ -66,7 +71,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName, boolean isApplySSE) throws IOException, SQLException
+            String iamReaderUserName, Sse sseOption, String encryptKey) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -78,7 +83,8 @@ public class RedshiftCopyBatchInsert
         }
         this.iamReaderUserName = iamReaderUserName;
         this.credentialsProvider = credentialsProvider;
-        this.isApplySSE = isApplySSE;
+        this.sseOption = sseOption;
+        this.encryptKey = encryptKey;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newCachedThreadPool();
@@ -239,18 +245,24 @@ public class RedshiftCopyBatchInsert
             return null;
         }
 
-      private PutObjectRequest createPutObject(){
-        if(isApplySSE){
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
-            PutObjectRequest request = new PutObjectRequest(s3BucketName, s3KeyName, file)
-              .withMetadata(metadata);
-            return request;
-        }else{
-            PutObjectRequest request = new PutObjectRequest(s3BucketName, s3KeyName, file);
-            return request;
+        private PutObjectRequest createPutObject() {
+            switch(sseOption) {
+                case SSE:
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+                    return new PutObjectRequest(s3BucketName, s3KeyName, file)
+                      .withMetadata(metadata);
+                case SSE_KMS:
+                    SSEAwsKeyManagementParams kmParams = new SSEAwsKeyManagementParams(encryptKey);
+                    return new PutObjectRequest(s3BucketName, s3KeyName, file)
+                        .withSSEAwsKeyManagementParams(kmParams);
+                case DISABLE:
+                    return new PutObjectRequest(s3BucketName, s3KeyName, file);
+                default:
+                    throw new ConfigException(String.format("Unknown SSE value. Supported values are Sse, SSE, SSE_KMS, false or disable."));
+              
+            }
         }
-      }
     }
 
     private class CopyTask implements Callable<Void>
