@@ -52,9 +52,10 @@ public class PostgreSQLOutputConnection
         sb.append("WITH S AS (");
         sb.append("SELECT ");
         for (int i = 0; i < schema.getCount(); i++) {
+            JdbcColumn column = schema.getColumn(i);
             if (i != 0) { sb.append(", "); }
-            sb.append("? AS ");
-            quoteIdentifierString(sb, schema.getColumnName(i));
+            sb.append("CAST(? AS " + column.getSimpleTypeName() + ") AS ");
+            quoteIdentifierString(sb, column.getName());
         }
         sb.append("),");
         sb.append("updated AS (");
