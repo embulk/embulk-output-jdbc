@@ -253,15 +253,17 @@ public class PostgreSQLOutputConnection
                 // but cannot create column of varchar(2147483647) .
                 return "VARCHAR";
             }
+            break;
         case "NUMERIC": // only "NUMERIC" because PostgreSQL JDBC driver will return also "NUMERIC" for the type name of decimal.
             if (c.getDataLength() > MAX_NUMERIC_PRECISION) {
                 // getDataLength for numeric without precision will return 131089 .
                 // but cannot create column of numeric(131089) .
                 return "NUMERIC";
             }
-
+            break;
         default:
-            return super.buildColumnTypeName(c);
+            break;
         }
+        return super.buildColumnTypeName(c);
     }
 }
