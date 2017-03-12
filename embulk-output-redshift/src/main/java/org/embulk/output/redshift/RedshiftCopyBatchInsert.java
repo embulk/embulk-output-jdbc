@@ -32,6 +32,7 @@ import com.amazonaws.auth.policy.Resource;
 import com.amazonaws.auth.policy.Statement;
 import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.S3Actions;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -86,14 +87,14 @@ public class RedshiftCopyBatchInsert
         this.credentialsProvider = credentialsProvider;
         this.encryptOption = encryptOption;
         this.encryptKey = encryptKey;
-        this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
+        AmazonS3Client tmpS3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newCachedThreadPool();
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
 
         String s3RegionName = null;
         try {
-            String s3Location = s3.getBucketLocation(s3BucketName);
+            String s3Location = tmpS3.getBucketLocation(s3BucketName);
             Region s3Region = Region.fromValue(s3Location);
             com.amazonaws.regions.Region region = s3Region.toAWSRegion();
             s3RegionName = region.getName();
@@ -102,7 +103,14 @@ public class RedshiftCopyBatchInsert
             logger.warn("Cannot get S3 region for bucket '" + s3BucketName + "'."
                     + " IAM user needs \"s3:GetBucketLocation\" permission if Redshift region and S3 region are different.");
         }
+ 
         this.s3RegionName = s3RegionName;
+
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setSignerOverride("AWSS3V4SignerType");            
+        this.s3 = new AmazonS3Client(credentialsProvider, clientConfiguration);
+        s3.setRegion(RegionUtils.getRegion(s3RegionName));
+
     }
 
     @Override
