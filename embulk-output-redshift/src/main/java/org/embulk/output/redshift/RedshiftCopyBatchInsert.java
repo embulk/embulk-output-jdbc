@@ -86,9 +86,7 @@ public class RedshiftCopyBatchInsert
         this.credentialsProvider = credentialsProvider;
         this.encryptOption = encryptOption;
         this.encryptKey = encryptKey;
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-        clientConfiguration.setSignerOverride("AWSS3V4SignerType");
-        this.s3 = new AmazonS3Client(credentialsProvider, clientConfiguration);  // TODO options
+        this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newCachedThreadPool();
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
