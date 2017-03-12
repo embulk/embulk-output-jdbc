@@ -24,6 +24,7 @@ import org.embulk.config.ConfigException;
 import org.slf4j.Logger;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.policy.Policy;
@@ -42,7 +43,7 @@ import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
 
-import org.embulk.output.redshift.Sse;
+import org.embulk.output.redshift.EncryptOption;
 
 public class RedshiftCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
@@ -63,7 +64,7 @@ public class RedshiftCopyBatchInsert
     private String encryptKey;
     private long totalRows;
     private int fileCount;
-    private Sse sseOption;
+    private EncryptOption encryptOption;
       
     private List<Future<Void>> uploadAndCopyFutures;
 
@@ -71,7 +72,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName, Sse sseOption, String encryptKey) throws IOException, SQLException
+            String iamReaderUserName, EncryptOption encryptOption, String encryptKey) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -83,9 +84,11 @@ public class RedshiftCopyBatchInsert
         }
         this.iamReaderUserName = iamReaderUserName;
         this.credentialsProvider = credentialsProvider;
-        this.sseOption = sseOption;
+        this.encryptOption = encryptOption;
         this.encryptKey = encryptKey;
-        this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setSignerOverride("AWSS3V4SignerType");
+        this.s3 = new AmazonS3Client(credentialsProvider, clientConfiguration);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newCachedThreadPool();
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
@@ -246,7 +249,7 @@ public class RedshiftCopyBatchInsert
         }
 
         private PutObjectRequest createPutObject() {
-            switch(sseOption) {
+            switch(encryptOption) {
                 case SSE:
                     ObjectMetadata metadata = new ObjectMetadata();
                     metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
@@ -259,7 +262,7 @@ public class RedshiftCopyBatchInsert
                 case DISABLE:
                     return new PutObjectRequest(s3BucketName, s3KeyName, file);
                 default:
-                    throw new ConfigException(String.format("Unknown SSE value. Supported values are Sse, SSE, SSE_KMS, false or disable."));
+                    throw new ConfigException(String.format("Unknown EncryptOption value. Supported values are EncryptOption, SSE, SSE_KMS, false or disable."));
               
             }
         }
