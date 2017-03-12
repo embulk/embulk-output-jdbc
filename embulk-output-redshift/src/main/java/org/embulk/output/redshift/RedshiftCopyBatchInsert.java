@@ -183,7 +183,7 @@ public class RedshiftCopyBatchInsert
         } catch (InterruptedException e) {}
 
         s3.shutdown();
-        //        closeCurrentFile().delete();
+        closeCurrentFile().delete();
         if (connection != null) {
             connection.close();
             connection = null;
@@ -248,7 +248,7 @@ public class RedshiftCopyBatchInsert
 
                 logger.info(String.format("Uploaded file %s (%.2f seconds)", s3KeyName, seconds));
             } finally {
-              //                file.delete();
+              file.delete();
             }
 
             return null;
@@ -307,7 +307,7 @@ public class RedshiftCopyBatchInsert
                     con.close();
                 }
             } finally {
-              //                s3.deleteObject(s3BucketName, s3KeyName);
+              s3.deleteObject(s3BucketName, s3KeyName);
             }
 
             return null;
