@@ -22,15 +22,15 @@ public enum EncryptOption
     public static EncryptOption fromString(String value)
     {
         switch(value) {
-        case "SSE":
+        case "sse":
             return SSE;
         case "disable":
         case "false":
             return DISABLE;
-        case "SSE_KMS":
+        case "sse_kms":
             return SSE_KMS;
         default:
-            throw new ConfigException(String.format("Unknown EncryptOption value '%s'. Supported values are EncryptOption, SSE, SSE_KMS, false or disable.", value));
+            throw new ConfigException(String.format("Unknown EncryptOption value '%s'. Supported values are EncryptOption, sse, sse_kms, false or disable.", value));
         }
     }
 }
