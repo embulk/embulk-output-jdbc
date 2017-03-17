@@ -294,7 +294,7 @@ public class JdbcOutputConnection
     }
 
     protected void collectInsert(List<String> fromTables, JdbcSchema schema, String toTable,
-            boolean truncateDestinationFirst, Optional<String> additionalSql) throws SQLException
+            boolean truncateDestinationFirst, Optional<String> preSql, Optional<String> postSql) throws SQLException
     {
         if (fromTables.isEmpty()) {
             return;
@@ -306,11 +306,18 @@ public class JdbcOutputConnection
                 String sql = buildTruncateSql(toTable);
                 executeUpdate(stmt, sql);
             }
+
+            if (preSql.isPresent()) {
+                executeUpdate(stmt, preSql.get());
+            }
+
             String sql = buildCollectInsertSql(fromTables, schema, toTable);
             executeUpdate(stmt, sql);
-            if (additionalSql.isPresent()) {
-                executeUpdate(stmt, additionalSql.get());
+
+            if (postSql.isPresent()) {
+                executeUpdate(stmt, postSql.get());
             }
+
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -356,7 +363,7 @@ public class JdbcOutputConnection
     }
 
     protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig,
-            Optional<String> additionalSql) throws SQLException
+            Optional<String> preSql, Optional<String> postSql) throws SQLException
     {
         if (fromTables.isEmpty()) {
             return;
@@ -364,11 +371,17 @@ public class JdbcOutputConnection
 
         Statement stmt = connection.createStatement();
         try {
+            if (preSql.isPresent()) {
+                executeUpdate(stmt, preSql.get());
+            }
+
             String sql = buildCollectMergeSql(fromTables, schema, toTable, mergeConfig);
             executeUpdate(stmt, sql);
-            if (additionalSql.isPresent()) {
-                executeUpdate(stmt, additionalSql.get());
+
+            if (postSql.isPresent()) {
+                executeUpdate(stmt, postSql.get());
             }
+
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -382,15 +395,18 @@ public class JdbcOutputConnection
         throw new UnsupportedOperationException("not implemented");
     }
 
-    public void replaceTable(String fromTable, JdbcSchema schema, String toTable, Optional<String> additionalSql) throws SQLException
+    public void replaceTable(String fromTable, JdbcSchema schema, String toTable, Optional<String> postSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
             dropTableIfExists(stmt, toTable);
+
             executeUpdate(stmt, buildRenameTableSql(fromTable, toTable));
-            if (additionalSql.isPresent()) {
-                executeUpdate(stmt, additionalSql.get());
+
+            if (postSql.isPresent()) {
+                executeUpdate(stmt, postSql.get());
             }
+
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
