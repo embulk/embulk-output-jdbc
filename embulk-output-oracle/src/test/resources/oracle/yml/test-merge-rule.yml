@@ -1,0 +1,23 @@
+in:
+  type: file
+  path_prefix: '/oracle/data/test4/test4.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    quote: ''
+    columns:
+    - {name: ID, type: string}
+    - {name: VARCHAR2_ITEM, type: string}
+    - {name: NUMBER_ITEM, type: string}
+out:
+    type: oracle
+    host: #host#
+    database: #database#
+    user: #user#
+    password: #password#
+    table: TEST1
+    mode: merge
+    merge_rule: ["VARCHAR2_ITEM = 'x'", "NUMBER_ITEM = T.NUMBER_ITEM + S.NUMBER_ITEM"]
+    #driver_path: driver/ojdbc7.jar
