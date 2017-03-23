@@ -1,6 +1,5 @@
 package org.embulk.output;
 
-import java.util.List;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -70,7 +69,7 @@ public class OracleOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(30)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
             .setIgnoreMergeKeys(false);
     }
 

@@ -330,6 +330,195 @@ public class OracleOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Test
+    public void testMerge() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST1";
+
+        dropTable(table);
+        executeSQL("CREATE TABLE TEST1 ("
+                + "ID              CHAR(4),"
+                + "VARCHAR2_ITEM   VARCHAR2(6),"
+                + "NUMBER_ITEM     NUMBER(10,2),"
+                + "PRIMARY KEY (ID))");
+        executeSQL("INSERT INTO TEST1 VALUES('A001', 'AAA', 12.34)");
+        executeSQL("INSERT INTO TEST1 VALUES('A003', NULL, NULL)");
+        executeSQL("INSERT INTO TEST1 VALUES('A005', 'EEE', 56.78)");
+        executeSQL("INSERT INTO TEST1 VALUES('A006', 'FFF', 0)");
+
+        test("/oracle/yml/test-merge.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(6, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals("aaa", i2.next());
+            assertEquals(new BigDecimal("99.99"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals("bbb", i2.next());
+            assertEquals(new BigDecimal("88.88"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals("ccc", i2.next());
+            assertEquals(new BigDecimal("77.77"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A004", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A005", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A006", i2.next());
+            assertEquals("FFF", i2.next());
+            assertEquals(new BigDecimal("0"), i2.next());
+        }
+    }
+
+    @Test
+    public void testMergeWithKeys() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST1";
+
+        dropTable(table);
+        executeSQL("CREATE TABLE TEST1 ("
+                + "ID              CHAR(4),"
+                + "VARCHAR2_ITEM   VARCHAR2(6),"
+                + "NUMBER_ITEM     NUMBER(10,2),"
+                + "PRIMARY KEY (ID))");
+        executeSQL("INSERT INTO TEST1 VALUES('A001', 'AAA', 11.11)");
+        executeSQL("INSERT INTO TEST1 VALUES('A002', 'BBB', 22.22)");
+        executeSQL("INSERT INTO TEST1 VALUES('A003', 'CCC', 33.33)");
+
+        test("/oracle/yml/test-merge-keys.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(5, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals("AAA", i2.next());
+            assertEquals(new BigDecimal("11.11"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A004", i2.next());
+            assertEquals("BBB", i2.next());
+            assertEquals(new BigDecimal("22.21"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A005", i2.next());
+            assertEquals("BBB", i2.next());
+            assertEquals(new BigDecimal("22.22"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A006", i2.next());
+            assertEquals("BBB", i2.next());
+            assertEquals(new BigDecimal("22.23"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A007", i2.next());
+            assertEquals("CCC", i2.next());
+            assertEquals(new BigDecimal("33.33"), i2.next());
+        }
+    }
+
+    @Test
+    public void testMergeWithRule() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "TEST1";
+
+        dropTable(table);
+        executeSQL("CREATE TABLE TEST1 ("
+                + "ID              CHAR(4),"
+                + "VARCHAR2_ITEM   VARCHAR2(6),"
+                + "NUMBER_ITEM     NUMBER(10,2),"
+                + "PRIMARY KEY (ID))");
+        executeSQL("INSERT INTO TEST1 VALUES('A002', 'BBB', 22.22)");
+        executeSQL("INSERT INTO TEST1 VALUES('A004', 'DDD', 44.44)");
+        executeSQL("INSERT INTO TEST1 VALUES('A006', 'FFF', 66.66)");
+
+        /*
+        A001,aaa,99.99
+        A002,bbb,88.88
+        A003,ccc,77.77
+        A004,,
+        A005,,
+*/
+
+        test("/oracle/yml/test-merge-rule.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(6, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals("aaa", i2.next());
+            assertEquals(new BigDecimal("99.99"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals("x", i2.next());
+            assertEquals(new BigDecimal("111.1"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals("ccc", i2.next());
+            assertEquals(new BigDecimal("77.77"), i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A004", i2.next());
+            assertEquals("x", i2.next());
+            assertEquals(null, i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A005", i2.next());
+            assertEquals(null, i2.next());
+            assertEquals(null, i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A006", i2.next());
+            assertEquals("FFF", i2.next());
+            assertEquals(new BigDecimal("66.66"), i2.next());
+        }
+    }
+
+    @Test
     public void testUrl() throws Exception
     {
         String table = "TEST1";
