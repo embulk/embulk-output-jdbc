@@ -21,7 +21,6 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **access_key_id**: deprecated. `aws_access_key_id` should be used (see "basic" in `aws_auth_method`).
 - **secret_access_key**: deprecated. `aws_secret_access_key` should be used (see "basic" in `aws_auth_method`).
 - **aws_auth_method**: name of mechanism to authenticate requests ("basic", "env", "instance", "profile", "properties", "anonymous", or "session". default: "basic")
-
   - "basic": uses `access_key_id` and `secret_access_key` to authenticate.
 
     - **aws_access_key_id**: AWS access key ID (string, required)
@@ -76,6 +75,8 @@ Redshift output plugin for Embulk loads records to Redshift.
   - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 - **after_load**: if set, this SQL will be executed after loading all records.
+- **encrypt_option** :  use encryption by sever side.(sse, sse_kms, false)
+- **encrypt_key**: kms key id(required in sse_kms mode)
 
 ### Modes
 
