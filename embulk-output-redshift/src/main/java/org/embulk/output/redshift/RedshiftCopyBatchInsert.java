@@ -72,12 +72,13 @@ public class RedshiftCopyBatchInsert
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS EMPTYASNULL";
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
-            AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
+            AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3RegionName, String s3KeyPrefix,
             String iamReaderUserName, EncryptOption encryptOption, String encryptKey) throws IOException, SQLException
     {
         super();
         this.connector = connector;
         this.s3BucketName = s3BucketName;
+        this.s3RegionName = s3RegionName;
         if (s3KeyPrefix.isEmpty() || s3KeyPrefix.endsWith("/")) {
             this.s3KeyPrefix = s3KeyPrefix;
         } else {
@@ -87,30 +88,14 @@ public class RedshiftCopyBatchInsert
         this.credentialsProvider = credentialsProvider;
         this.encryptOption = encryptOption;
         this.encryptKey = encryptKey;
-        AmazonS3Client tmpS3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newCachedThreadPool();
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
-
-        String s3RegionName = null;
-        try {
-            String s3Location = tmpS3.getBucketLocation(s3BucketName);
-            Region s3Region = Region.fromValue(s3Location);
-            com.amazonaws.regions.Region region = s3Region.toAWSRegion();
-            s3RegionName = region.getName();
-            logger.info("S3 region for bucket '" + s3BucketName + "' is '" + s3RegionName + "'.");
-        } catch (AmazonClientException | IllegalArgumentException e) {
-            logger.warn("Cannot get S3 region for bucket '" + s3BucketName + "'."
-                    + " IAM user needs \"s3:GetBucketLocation\" permission if Redshift region and S3 region are different.");
-        }
- 
-        this.s3RegionName = s3RegionName;
 
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.setSignerOverride("AWSS3V4SignerType");            
         this.s3 = new AmazonS3Client(credentialsProvider, clientConfiguration);
         s3.setRegion(RegionUtils.getRegion(s3RegionName));
-
     }
 
     @Override
