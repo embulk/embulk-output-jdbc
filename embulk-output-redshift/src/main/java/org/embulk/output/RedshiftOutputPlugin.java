@@ -65,6 +65,8 @@ public class RedshiftOutputPlugin
 
         @Config("s3_bucket")
         public String getS3Bucket();
+        @Config("s3_region")
+        public String getS3Region();
 
         @Config("s3_key_prefix")
         @ConfigDefault("\"\"")
@@ -170,7 +172,7 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-            getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getEncryptOption(), t.getEncryptKey());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3Region(), t.getS3KeyPrefix(), t.getIamUserName(), t.getEncryptOption(), t.getEncryptKey());
         
     }
 }
