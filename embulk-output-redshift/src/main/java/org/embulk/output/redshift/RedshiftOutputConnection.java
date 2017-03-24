@@ -131,6 +131,17 @@ public class RedshiftOutputConnection
     }
 
     @Override
+    protected String buildTruncateSql(String table)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("TRUNCATE ");
+        quoteIdentifierString(sb, table);
+
+        return sb.toString();
+    }
+
+    @Override
     protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
