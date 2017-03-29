@@ -69,7 +69,7 @@ public class RedshiftCopyBatchInsert
       
     private List<Future<Void>> uploadAndCopyFutures;
 
-    public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' TRUNCATECOLUMNS ACCEPTINVCHARS";
+    public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' TRUNCATECOLUMNS ACCEPTINVCHARS REMOVEQUOTES";
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3RegionName, String s3KeyPrefix,
