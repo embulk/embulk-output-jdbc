@@ -35,6 +35,235 @@ public class MySQLOutputPluginTest extends AbstractJdbcOutputPluginTest
     }
 
     @Test
+    public void testInsertDirectBeforeLoad() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-insert-direct-before-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("a", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("c", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("z", i2.next());
+        }
+    }
+
+    @Test
+    public void testInsertBeforeLoad() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-insert-before-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("a", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("c", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("z", i2.next());
+        }
+    }
+
+    @Test
+    public void testTruncateInsertBeforeLoad() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-truncate-insert-before-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("a", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("c", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("C001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("x", i2.next());
+        }
+    }
+
+    @Test
+    public void testMergeDirectBeforeLoad() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('A002', 1, 'y')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('A003', 1, 'y')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-merge-direct-before-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("a", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("c", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("z", i2.next());
+        }
+    }
+
+    @Test
+    public void testMergeBeforeLoad() throws Exception
+    {
+        if (!enabled) {
+            return;
+        }
+
+        String table = "test1";
+
+        dropTable(table);
+        createTable(table);
+        executeSQL(String.format("INSERT INTO %s VALUES('A002', 1, 'y')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('A003', 1, 'y')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B001', 0, 'z')", table));
+        executeSQL(String.format("INSERT INTO %s VALUES('B002', 9, 'z')", table));
+
+        test("/mysql/yml/test-merge-before-load.yml");
+
+        List<List<Object>> rows = select(table);
+        assertEquals(4, rows.size());
+        Iterator<List<Object>> i1 = rows.iterator();
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A001", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("a", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A002", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("b", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("A003", i2.next());
+            assertEquals(9, i2.next());
+            assertEquals("c", i2.next());
+        }
+        {
+            Iterator<Object> i2 = i1.next().iterator();
+            assertEquals("B001", i2.next());
+            assertEquals(0, i2.next());
+            assertEquals("z", i2.next());
+        }
+    }
+
+    @Test
     public void testInsertDirectAfterLoad() throws Exception
     {
         if (!enabled) {

@@ -108,6 +108,10 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("null")
         public Optional<List<String>> getMergeRule();
 
+        @Config("before_load")
+        @ConfigDefault("null")
+        public Optional<String> getBeforeLoad();
+
         @Config("after_load")
         @ConfigDefault("null")
         public Optional<String> getAfterLoad();
@@ -453,6 +457,10 @@ public abstract class AbstractJdbcOutputPlugin
         Mode mode = task.getMode();
         logger.info("Using {} mode", mode);
 
+        if (mode.commitBySwapTable() && task.getBeforeLoad().isPresent()) {
+            throw new ConfigException(String.format("%s mode does not support 'before_load' option.", mode));
+        }
+
         if (con.tableExists(task.getTable())) {
             task.setActualTable(task.getTable());
         } else {
@@ -514,6 +522,9 @@ public abstract class AbstractJdbcOutputPlugin
             }
         } else {
             task.setIntermediateTables(Optional.<List<String>>absent());
+            if (task.getBeforeLoad().isPresent()) {
+                con.executeSql(task.getBeforeLoad().get());
+            }
         }
 
         // build JdbcSchema from a table
@@ -675,7 +686,7 @@ public abstract class AbstractJdbcOutputPlugin
         switch (task.getMode()) {
         case INSERT_DIRECT:
         case MERGE_DIRECT:
-            // already done
+            // already loaded
             if (task.getAfterLoad().isPresent()) {
                 con.executeSql(task.getAfterLoad().get());
             }
@@ -686,7 +697,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false, task.getAfterLoad());
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false, task.getBeforeLoad(), task.getAfterLoad());
             break;
 
         case TRUNCATE_INSERT:
@@ -694,7 +705,7 @@ public abstract class AbstractJdbcOutputPlugin
             if (task.getNewTableSchema().isPresent()) {
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
-            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true, task.getAfterLoad());
+            con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true, task.getBeforeLoad(), task.getAfterLoad());
             break;
 
         case MERGE:
@@ -703,7 +714,7 @@ public abstract class AbstractJdbcOutputPlugin
                 con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
             }
             con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(),
-                    new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()), task.getAfterLoad());
+                    new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()), task.getBeforeLoad(), task.getAfterLoad());
             break;
 
         case REPLACE:
