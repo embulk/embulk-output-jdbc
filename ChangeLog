@@ -1,3 +1,7 @@
+Release 0.7.7 - 2017-04-13
+
+* Enabled to execute SQL before loading.
+
 Release 0.7.6 - 2017-03-23
 
 * Supported merge mode for Oracle.
