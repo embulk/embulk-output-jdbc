@@ -16,6 +16,7 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
 import org.embulk.output.redshift.Ssl;
@@ -150,6 +151,17 @@ public class RedshiftOutputPlugin
                 t.setSecretAccessKey(t.getOldSecretAccessKey());
             }
         }
+    }
+
+    @Override
+    protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
+            int suffixLength, int maxLength, LengthSemantics lengthSemantics) throws SQLException {
+        String namePrefix = super.generateIntermediateTableNamePrefix(baseTableName, con,
+                suffixLength, maxLength, lengthSemantics);
+        // Table names of Redshift are always lower cases.
+        // http://docs.aws.amazon.com/redshift/latest/dg/r_names.html
+        // says "identifiers are case-insensitive and are folded to lower case."
+        return namePrefix.toLowerCase();
     }
 
     @Override
