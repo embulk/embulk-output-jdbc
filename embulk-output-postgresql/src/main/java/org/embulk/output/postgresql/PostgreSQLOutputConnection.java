@@ -15,6 +15,8 @@ import org.embulk.output.jdbc.JdbcSchema;
 public class PostgreSQLOutputConnection
         extends JdbcOutputConnection
 {
+    private static final int MAX_NUMERIC_PRECISION = 1000;
+
     public PostgreSQLOutputConnection(Connection connection, String schemaName, boolean autoCommit)
             throws SQLException
     {
@@ -52,9 +54,10 @@ public class PostgreSQLOutputConnection
         sb.append("WITH S AS (");
         sb.append("SELECT ");
         for (int i = 0; i < schema.getCount(); i++) {
+            JdbcColumn column = schema.getColumn(i);
             if (i != 0) { sb.append(", "); }
-            sb.append("? AS ");
-            quoteIdentifierString(sb, schema.getColumnName(i));
+            sb.append("CAST(? AS " + column.getSimpleTypeName() + ") AS ");
+            quoteIdentifierString(sb, column.getName());
         }
         sb.append("),");
         sb.append("updated AS (");
@@ -250,8 +253,17 @@ public class PostgreSQLOutputConnection
                 // but cannot create column of varchar(2147483647) .
                 return "VARCHAR";
             }
+            break;
+        case "NUMERIC": // only "NUMERIC" because PostgreSQL JDBC driver will return also "NUMERIC" for the type name of decimal.
+            if (c.getDataLength() > MAX_NUMERIC_PRECISION) {
+                // getDataLength for numeric without precision will return 131089 .
+                // but cannot create column of numeric(131089) .
+                return "NUMERIC";
+            }
+            break;
         default:
-            return super.buildColumnTypeName(c);
+            break;
         }
+        return super.buildColumnTypeName(c);
     }
 }
