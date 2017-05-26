@@ -568,6 +568,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         try {
             return buildRetryExecutor(task).run(new Retryable<List<String>>() {
+                private String tableName;
                 private ImmutableList.Builder<String> intermTableNames;
 
                 @Override
@@ -578,16 +579,16 @@ public abstract class AbstractJdbcOutputPlugin
                         String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable(), con, 3,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String name = namePrefix + String.format("%03d", taskIndex);
+                            tableName = namePrefix + String.format("%03d", taskIndex);
                             // if table already exists, SQLException will be thrown
-                            con.createTable(name, newTableSchema);
-                            intermTableNames.add(name);
+                            con.createTable(tableName, newTableSchema);
+                            intermTableNames.add(tableName);
                         }
                     } else {
-                        String name = generateIntermediateTableNamePrefix(task.getActualTable(), con, 0,
+                        tableName = generateIntermediateTableNamePrefix(task.getActualTable(), con, 0,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                        con.createTable(name, newTableSchema);
-                        intermTableNames.add(name);
+                        con.createTable(tableName, newTableSchema);
+                        intermTableNames.add(tableName);
                     }
                     return intermTableNames.build();
                 }
@@ -595,7 +596,14 @@ public abstract class AbstractJdbcOutputPlugin
                 @Override
                 public boolean isRetryableException(Exception exception)
                 {
-                    return exception instanceof SQLException;
+                    if (exception instanceof SQLException) {
+                        try {
+                            // true means that creating table failed because the table already exists.
+                            return con.tableExists(tableName);
+                        } catch (SQLException e) {
+                        }
+                    }
+                    return false;
                 }
 
                 @Override
