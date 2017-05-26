@@ -200,6 +200,8 @@ public class RedshiftOutputConnection
             quoteIdentifierString(sb, fromTables.get(i));
             sb.append(" WHERE NOT EXISTS (SELECT 1 FROM ");
             quoteIdentifierString(sb, toTable);
+            sb.append(", ");
+            quoteIdentifierString(sb, fromTables.get(i));
             sb.append(" WHERE ");
 
             for (int k = 0; k < mergeKeys.size(); k++) {
