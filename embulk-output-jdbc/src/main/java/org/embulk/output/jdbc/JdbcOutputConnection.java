@@ -72,18 +72,16 @@ public class JdbcOutputConnection
         }
     }
 
-    public boolean tableExists(TableIdentifier tableId) throws SQLException
+    public boolean tableExists(TableIdentifier table) throws SQLException
     {
-        try (ResultSet rs = connection.getMetaData().getTables(null, schemaName, tableId.getTableName(), null)) {
+        try (ResultSet rs = connection.getMetaData().getTables(null, table.getSchemaName(), table.getTableName(), null)) {
             return rs.next();
         }
     }
 
     public boolean tableExists(String tableName) throws SQLException
     {
-        try (ResultSet rs = connection.getMetaData().getTables(null, schemaName, tableName, null)) {
-            return rs.next();
-        }
+        return tableExists(new TableIdentifier(schemaName, tableName));
     }
 
     public void dropTableIfExists(TableIdentifier table) throws SQLException
