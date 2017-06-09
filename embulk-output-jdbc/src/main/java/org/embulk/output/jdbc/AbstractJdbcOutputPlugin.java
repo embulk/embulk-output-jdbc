@@ -15,6 +15,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.embulk.spi.util.RetryExecutor;
+import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
 import org.slf4j.Logger;
 import org.joda.time.DateTimeZone;
 
@@ -499,28 +500,10 @@ public abstract class AbstractJdbcOutputPlugin
 
         // create intermediate tables
         if (!mode.isDirectModify()) {
-            // direct modify mode doesn't need intermediate tables.
-            ImmutableList.Builder<String> intermTableNames = ImmutableList.builder();
-            if (mode.tempTablePerTask()) {
-                String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable(), con, 3,
-                        task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                for (int i = 0; i < taskCount; i++) {
-                    intermTableNames.add(namePrefix + String.format("%03d", i));
-                }
-            } else {
-                String name = generateIntermediateTableNamePrefix(task.getActualTable(), con, 0,
-                        task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                intermTableNames.add(name);
-            }
             // create the intermediate tables here
-            task.setIntermediateTables(Optional.<List<String>>of(intermTableNames.build()));
-            for (String name : task.getIntermediateTables().get()) {
-                // DROP TABLE IF EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
-                con.dropTableIfExists(name);
-                // CREATE TABLE IF NOT EXISTS xyz__0000000054d92dee1e452158_bulk_load_temp
-                con.createTableIfNotExists(name, newTableSchema);
-            }
+            task.setIntermediateTables(Optional.<List<String>>of(createIntermediateTables(con, task, taskCount, newTableSchema)));
         } else {
+            // direct modify mode doesn't need intermediate tables.
             task.setIntermediateTables(Optional.<List<String>>absent());
             if (task.getBeforeLoad().isPresent()) {
                 con.executeSql(task.getBeforeLoad().get());
@@ -589,6 +572,84 @@ public abstract class AbstractJdbcOutputPlugin
     protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
     {
         return new ColumnSetterFactory(batch, defaultTimeZone);
+    }
+
+    private List<String> createIntermediateTables(final JdbcOutputConnection con,
+            final PluginTask task, final int taskCount, final JdbcSchema newTableSchema) throws SQLException
+    {
+        try {
+            return buildRetryExecutor(task).run(new Retryable<List<String>>() {
+                private String tableName;
+                private ImmutableList.Builder<String> intermTableNames;
+
+                @Override
+                public List<String> call() throws Exception
+                {
+                    intermTableNames = ImmutableList.builder();
+                    if (task.getMode().tempTablePerTask()) {
+                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable(), con, 3,
+                                task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
+                        for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
+                            tableName = namePrefix + String.format("%03d", taskIndex);
+                            // if table already exists, SQLException will be thrown
+                            con.createTable(tableName, newTableSchema);
+                            intermTableNames.add(tableName);
+                        }
+                    } else {
+                        tableName = generateIntermediateTableNamePrefix(task.getActualTable(), con, 0,
+                                task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
+                        con.createTable(tableName, newTableSchema);
+                        intermTableNames.add(tableName);
+                    }
+                    return intermTableNames.build();
+                }
+
+                @Override
+                public boolean isRetryableException(Exception exception)
+                {
+                    if (exception instanceof SQLException) {
+                        try {
+                            // true means that creating table failed because the table already exists.
+                            return con.tableExists(tableName);
+                        } catch (SQLException e) {
+                        }
+                    }
+                    return false;
+                }
+
+                @Override
+                public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
+                        throws RetryGiveupException
+                {
+                    logger.info("Try to create intermediate tables again because already exist");
+                    try {
+                        dropTables();
+                    } catch (SQLException e) {
+                        throw new RetryGiveupException(e);
+                    }
+                }
+
+                @Override
+                public void onGiveup(Exception firstException, Exception lastException)
+                        throws RetryGiveupException
+                {
+                    try {
+                        dropTables();
+                    } catch (SQLException e) {
+                        logger.warn("Cannot delete intermediate table", e);
+                    }
+                }
+
+                private void dropTables() throws SQLException
+                {
+                    for (String name : intermTableNames.build()) {
+                        con.dropTableIfExists(name);
+                    }
+                }
+            });
+        } catch (RetryGiveupException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
