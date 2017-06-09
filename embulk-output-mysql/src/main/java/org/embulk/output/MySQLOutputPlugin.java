@@ -3,12 +3,16 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+
 import com.google.common.base.Optional;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.mysql.MySQLOutputConnector;
 import org.embulk.output.mysql.MySQLBatchInsert;
 
@@ -34,6 +38,9 @@ public class MySQLOutputPlugin
 
         @Config("database")
         public String getDatabase();
+
+        @Config("temp_database")
+        public Optional<String> getTempDatabase();
     }
 
     @Override
@@ -101,6 +108,15 @@ public class MySQLOutputPlugin
         props.setProperty("password", t.getPassword());
 
         return new MySQLOutputConnector(url, props);
+    }
+
+    @Override
+    protected TableIdentifier buildIntermediateTableId(JdbcOutputConnection con, PluginTask task, String tableName) {
+        MySQLPluginTask t = (MySQLPluginTask) task;
+        if (t.getTempDatabase().isPresent()) {
+            return new TableIdentifier(t.getTempDatabase().get(), null, tableName);
+        }
+        return super.buildIntermediateTableId(con, task, tableName);
     }
 
     @Override

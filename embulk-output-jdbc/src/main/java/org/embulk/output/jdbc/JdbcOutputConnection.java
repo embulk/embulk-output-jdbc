@@ -74,14 +74,14 @@ public class JdbcOutputConnection
 
     public boolean tableExists(TableIdentifier table) throws SQLException
     {
-        try (ResultSet rs = connection.getMetaData().getTables(null, table.getSchemaName(), table.getTableName(), null)) {
+        try (ResultSet rs = connection.getMetaData().getTables(table.getDatabase(), table.getSchemaName(), table.getTableName(), null)) {
             return rs.next();
         }
     }
 
     public boolean tableExists(String tableName) throws SQLException
     {
-        return tableExists(new TableIdentifier(schemaName, tableName));
+        return tableExists(new TableIdentifier(null, schemaName, tableName));
     }
 
     public void dropTableIfExists(TableIdentifier table) throws SQLException
@@ -446,19 +446,29 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String quoteTableIdentifier(TableIdentifier tableId)
+    protected String quoteTableIdentifier(TableIdentifier table)
     {
-        return quoteIdentifierString(tableId.getTableName(), identifierQuoteString);
+        StringBuilder sb = new StringBuilder();
+        if (table.getDatabase() != null) {
+            sb.append(quoteIdentifierString(table.getDatabase(), identifierQuoteString));
+            sb.append(".");
+        }
+        if (table.getSchemaName() != null) {
+            sb.append(quoteIdentifierString(table.getSchemaName(), identifierQuoteString));
+            sb.append(".");
+        }
+        sb.append(quoteIdentifierString(table.getTableName(), identifierQuoteString));
+        return sb.toString();
     }
 
-    protected void quoteTableIdentifier(StringBuilder sb, TableIdentifier tableId)
+    protected void quoteTableIdentifier(StringBuilder sb, TableIdentifier table)
     {
-        sb.append(quoteIdentifierString(tableId.getTableName(), identifierQuoteString));
+        sb.append(quoteTableIdentifier(table));
     }
 
     protected void quoteIdentifierString(StringBuilder sb, String str)
     {
-        sb.append(quoteIdentifierString(str, identifierQuoteString));
+        sb.append(quoteIdentifierString(str));
     }
 
     protected String quoteIdentifierString(String str)

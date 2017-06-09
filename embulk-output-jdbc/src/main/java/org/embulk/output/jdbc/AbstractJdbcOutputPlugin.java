@@ -483,7 +483,7 @@ public abstract class AbstractJdbcOutputPlugin
                 }
             }
         }
-        task.setActualTable(new TableIdentifier(con.getSchemaName(), actualTable));
+        task.setActualTable(new TableIdentifier(null, con.getSchemaName(), actualTable));
 
         Optional<JdbcSchema> initialTargetTableSchema =
             mode.ignoreTargetTableSchema() ?
@@ -576,6 +576,11 @@ public abstract class AbstractJdbcOutputPlugin
         return new ColumnSetterFactory(batch, defaultTimeZone);
     }
 
+    protected TableIdentifier buildIntermediateTableId(final JdbcOutputConnection con, PluginTask task, String tableName)
+    {
+        return new TableIdentifier(null, con.getSchemaName(), tableName);
+    }
+
     private List<TableIdentifier> createIntermediateTables(final JdbcOutputConnection con,
             final PluginTask task, final int taskCount, final JdbcSchema newTableSchema) throws SQLException
     {
@@ -593,7 +598,7 @@ public abstract class AbstractJdbcOutputPlugin
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
                             String tableName = namePrefix + String.format("%03d", taskIndex);
-                            table = new TableIdentifier(con.getSchemaName(), tableName);
+                            table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema);
                             intermTables.add(table);
@@ -601,7 +606,7 @@ public abstract class AbstractJdbcOutputPlugin
                     } else {
                         String tableName = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 0,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                        table = new TableIdentifier(con.getSchemaName(), tableName);
+                        table = buildIntermediateTableId(con, task, tableName);
                         con.createTable(table, newTableSchema);
                         intermTables.add(table);
                     }
@@ -863,7 +868,7 @@ public abstract class AbstractJdbcOutputPlugin
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
 
-        ResultSet rs = dbm.getPrimaryKeys(null, table.getSchemaName(), table.getTableName());
+        ResultSet rs = dbm.getPrimaryKeys(table.getDatabase(), table.getSchemaName(), table.getTableName());
         ImmutableSet.Builder<String> primaryKeysBuilder = ImmutableSet.builder();
         try {
             while(rs.next()) {
@@ -875,7 +880,8 @@ public abstract class AbstractJdbcOutputPlugin
         ImmutableSet<String> primaryKeys = primaryKeysBuilder.build();
 
         ImmutableList.Builder<JdbcColumn> builder = ImmutableList.builder();
-        rs = dbm.getColumns(null,
+        rs = dbm.getColumns(
+                JdbcUtils.escapeSearchString(table.getDatabase(), escape),
                 JdbcUtils.escapeSearchString(table.getSchemaName(), escape),
                 JdbcUtils.escapeSearchString(table.getTableName(), escape),
                 null);
