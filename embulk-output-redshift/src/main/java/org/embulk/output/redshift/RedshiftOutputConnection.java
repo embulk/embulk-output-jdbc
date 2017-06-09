@@ -10,6 +10,7 @@ import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
@@ -30,11 +31,11 @@ public class RedshiftOutputConnection
     // Redshift does not support DROP TABLE IF EXISTS.
     // Here runs DROP TABLE and ignores errors.
     @Override
-    public void dropTableIfExists(String tableName) throws SQLException
+    public void dropTableIfExists(TableIdentifier table) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = String.format("DROP TABLE IF EXISTS %s", quoteIdentifierString(tableName));
+            String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -49,14 +50,14 @@ public class RedshiftOutputConnection
     // Redshift does not support DROP TABLE IF EXISTS.
     // Dropping part runs DROP TABLE and ignores errors.
     @Override
-    public void replaceTable(String fromTable, JdbcSchema schema, String toTable, Optional<String> additionalSql) throws SQLException
+    public void replaceTable(TableIdentifier fromTable, JdbcSchema schema, TableIdentifier toTable, Optional<String> additionalSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
             try {
                 StringBuilder sb = new StringBuilder();
                 sb.append("DROP TABLE ");
-                quoteIdentifierString(sb, toTable);
+                quoteTableIdentifier(sb, toTable);
                 String sql = sb.toString();
                 executeUpdate(stmt, sql);
             } catch (SQLException ex) {
@@ -69,9 +70,9 @@ public class RedshiftOutputConnection
             {
                 StringBuilder sb = new StringBuilder();
                 sb.append("ALTER TABLE ");
-                quoteIdentifierString(sb, fromTable);
+                quoteTableIdentifier(sb, fromTable);
                 sb.append(" RENAME TO ");
-                quoteIdentifierString(sb, toTable);
+                quoteTableIdentifier(sb, toTable);
                 String sql = sb.toString();
                 executeUpdate(stmt, sql);
             }
@@ -104,12 +105,12 @@ public class RedshiftOutputConnection
         }
     }
 
-    public String buildCopySQLBeforeFrom(String tableName, JdbcSchema tableSchema)
+    public String buildCopySQLBeforeFrom(TableIdentifier table, JdbcSchema tableSchema)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("COPY ");
-        quoteIdentifierString(sb, tableName);
+        quoteTableIdentifier(sb, table);
         sb.append(" (");
         for(int i=0; i < tableSchema.getCount(); i++) {
             if(i != 0) { sb.append(", "); }
@@ -131,7 +132,7 @@ public class RedshiftOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
+    protected String buildCollectMergeSql(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -148,7 +149,7 @@ public class RedshiftOutputConnection
         sb.append("BEGIN TRANSACTION;");
 
         sb.append("UPDATE ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" SET ");
         for (int i = 0; i < updateKeys.size(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -166,7 +167,7 @@ public class RedshiftOutputConnection
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
             sb.append(" FROM ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
         }
         sb.append(" ) S WHERE ");
 
@@ -175,14 +176,14 @@ public class RedshiftOutputConnection
             sb.append("S.");
             quoteIdentifierString(sb, mergeKeys.get(i));
             sb.append(" = ");
-            quoteIdentifierString(sb, toTable);
+            quoteTableIdentifier(sb, toTable);
             sb.append(".");
             quoteIdentifierString(sb, mergeKeys.get(i));
         }
         sb.append(";");
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -197,20 +198,20 @@ public class RedshiftOutputConnection
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
             sb.append(" FROM ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
             sb.append(" WHERE NOT EXISTS (SELECT 1 FROM ");
-            quoteIdentifierString(sb, toTable);
+            quoteTableIdentifier(sb, toTable);
             sb.append(", ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
             sb.append(" WHERE ");
 
             for (int k = 0; k < mergeKeys.size(); k++) {
                 if (k != 0) { sb.append(" AND "); }
-                quoteIdentifierString(sb, fromTables.get(i));
+                quoteTableIdentifier(sb, fromTables.get(i));
                 sb.append(".");
                 quoteIdentifierString(sb, mergeKeys.get(k));
                 sb.append(" = ");
-                quoteIdentifierString(sb, toTable);
+                quoteTableIdentifier(sb, toTable);
                 sb.append(".");
                 quoteIdentifierString(sb, mergeKeys.get(k));
             }

@@ -11,10 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.output.jdbc.TableIdentifier;
 
 public class OracleOutputConnection
         extends JdbcOutputConnection
@@ -63,25 +64,25 @@ public class OracleOutputConnection
     }
 
     @Override
-    public void dropTableIfExists(String tableName) throws SQLException
+    public void dropTableIfExists(TableIdentifier table) throws SQLException
     {
-        if (tableExists(tableName)) {
-            dropTable(tableName);
+        if (tableExists(table)) {
+            dropTable(table);
         }
     }
 
     @Override
-    protected void dropTableIfExists(Statement stmt, String tableName) throws SQLException {
-        if (tableExists(tableName)) {
-            dropTable(stmt, tableName);
+    protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException {
+        if (tableExists(table)) {
+            dropTable(stmt, table);
         }
     }
 
     @Override
-    public void createTableIfNotExists(String tableName, JdbcSchema schema) throws SQLException
+    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema) throws SQLException
     {
-        if (!tableExists(tableName)) {
-            createTable(tableName, schema);
+        if (!tableExists(table)) {
+            createTable(table, schema);
         }
     }
 
@@ -100,7 +101,7 @@ public class OracleOutputConnection
     }
 
     @Override
-    protected String buildPreparedInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedInsertSql(TableIdentifier toTable, JdbcSchema toTableSchema) throws SQLException
     {
         String sql = super.buildPreparedInsertSql(toTable, toTableSchema);
         if (direct) {
@@ -175,12 +176,12 @@ public class OracleOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
+    protected String buildCollectMergeSql(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("MERGE INTO ");
-        sb.append(quoteIdentifierString(toTable));
+        sb.append(quoteTableIdentifier(toTable));
         sb.append(" T");
         sb.append(" USING (");
         for (int i = 0; i < fromTables.size(); i++) {
@@ -188,7 +189,7 @@ public class OracleOutputConnection
             sb.append(" SELECT ");
             sb.append(buildColumns(schema, ""));
             sb.append(" FROM ");
-            sb.append(quoteIdentifierString(fromTables.get(i)));
+            sb.append(quoteTableIdentifier(fromTables.get(i)));
         }
         sb.append(") S");
         sb.append(" ON (");

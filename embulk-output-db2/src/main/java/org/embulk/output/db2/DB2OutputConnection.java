@@ -7,6 +7,7 @@ import java.sql.Statement;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.TableIdentifier;
 
 import static java.util.Locale.ENGLISH;
 
@@ -21,13 +22,13 @@ public class DB2OutputConnection
     }
 
     @Override
-    protected String buildRenameTableSql(String fromTable, String toTable)
+    protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
     {
         StringBuilder sb = new StringBuilder();
         sb.append("RENAME TABLE ");
-        sb.append(quoteIdentifierString(fromTable));
+        sb.append(quoteTableIdentifier(fromTable));
         sb.append(" TO ");
-        sb.append(quoteIdentifierString(toTable));
+        sb.append(quoteTableIdentifier(toTable));
         return sb.toString();
     }
 
@@ -38,15 +39,15 @@ public class DB2OutputConnection
     }
 
     @Override
-    public void dropTableIfExists(String tableName) throws SQLException
+    public void dropTableIfExists(TableIdentifier table) throws SQLException
     {
-        if (tableExists(tableName)) {
-            dropTable(tableName);
+        if (tableExists(table)) {
+            dropTable(table);
         }
     }
 
     @Override
-    protected void dropTableIfExists(Statement stmt, String tableName) throws SQLException
+    protected void dropTableIfExists(Statement stmt, TableIdentifier tableName) throws SQLException
     {
         if (tableExists(tableName)) {
             dropTable(stmt, tableName);
@@ -54,18 +55,19 @@ public class DB2OutputConnection
     }
 
     @Override
-    public void createTableIfNotExists(String tableName, JdbcSchema schema) throws SQLException
+    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema) throws SQLException
     {
-        if (!tableExists(tableName)) {
-            createTable(tableName, schema);
+        if (!tableExists(table)) {
+            createTable(table, schema);
         }
     }
 
-    public void createTable(String tableName, JdbcSchema schema) throws SQLException
+    @Override
+    public void createTable(TableIdentifier table, JdbcSchema schema) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = buildCreateTableSql(tableName, schema);
+            String sql = buildCreateTableSql(table, schema);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -75,12 +77,13 @@ public class DB2OutputConnection
         }
     }
 
-    protected String buildCreateTableSql(String name, JdbcSchema schema)
+    @Override
+    protected String buildCreateTableSql(TableIdentifier table, JdbcSchema schema)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("CREATE TABLE ");
-        quoteIdentifierString(sb, name);
+        quoteTableIdentifier(sb, table);
         sb.append(buildCreateTableSchemaSql(schema));
         return sb.toString();
     }

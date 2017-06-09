@@ -14,6 +14,7 @@ import java.util.List;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.TimestampFormat;
 import org.embulk.output.oracle.oci.ColumnDefinition;
 import org.embulk.output.oracle.oci.OCI;
@@ -54,7 +55,7 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
 
         /*
@@ -141,8 +142,8 @@ public class DirectBatchInsert implements BatchInsert
 
         }
 
-        TableDefinition tableDefinition = new TableDefinition(schema, loadTable, columns);
-        ociKey = Arrays.asList(database, user, loadTable);
+        TableDefinition tableDefinition = new TableDefinition(schema, loadTable.getTableName(), columns);
+        ociKey = Arrays.asList(database, user, loadTable.getTableName());
         OCIWrapper oci = ociManager.open(ociKey, database, user, password, tableDefinition, batchSize);
 
         buffer = new RowBuffer(oci, tableDefinition);

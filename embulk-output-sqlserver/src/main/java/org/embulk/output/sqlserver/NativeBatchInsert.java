@@ -12,6 +12,7 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.StandardBatchInsert;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.TimestampFormat;
 import org.embulk.output.sqlserver.nativeclient.NativeClientWrapper;
 import org.embulk.spi.Exec;
@@ -58,10 +59,10 @@ public class NativeBatchInsert implements BatchInsert
 
 
     @Override
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         columnCount = insertSchema.getCount();
-        client.open(server, port, instance, database, user, password, loadTable);
+        client.open(server, port, instance, database, user, password, loadTable.getTableName());
 
         formats = new DateFormat[insertSchema.getCount()];
         for (int i = 0; i < insertSchema.getCount(); i++) {

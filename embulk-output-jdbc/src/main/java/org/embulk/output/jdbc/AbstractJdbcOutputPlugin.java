@@ -117,8 +117,8 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("null")
         public Optional<String> getAfterLoad();
 
-        public void setActualTable(String actualTable);
-        public String getActualTable();
+        public void setActualTable(TableIdentifier actualTable);
+        public TableIdentifier getActualTable();
 
         public void setMergeKeys(Optional<List<String>> keys);
 
@@ -131,8 +131,8 @@ public abstract class AbstractJdbcOutputPlugin
         public JdbcSchema getTargetTableSchema();
         public void setTargetTableSchema(JdbcSchema schema);
 
-        public Optional<List<String>> getIntermediateTables();
-        public void setIntermediateTables(Optional<List<String>> names);
+        public Optional<List<TableIdentifier>> getIntermediateTables();
+        public void setIntermediateTables(Optional<List<TableIdentifier>> names);
     }
 
     public static enum LengthSemantics
@@ -462,8 +462,9 @@ public abstract class AbstractJdbcOutputPlugin
             throw new ConfigException(String.format("%s mode does not support 'before_load' option.", mode));
         }
 
+        String actualTable;
         if (con.tableExists(task.getTable())) {
-            task.setActualTable(task.getTable());
+            actualTable = task.getTable();
         } else {
             String upperTable = task.getTable().toUpperCase();
             String lowerTable = task.getTable().toLowerCase();
@@ -472,16 +473,17 @@ public abstract class AbstractJdbcOutputPlugin
                     throw new ConfigException(String.format("Cannot specify table '%s' because both '%s' and '%s' exist.",
                             task.getTable(), upperTable, lowerTable));
                 } else {
-                    task.setActualTable(upperTable);
+                    actualTable = upperTable;
                 }
             } else {
                 if (con.tableExists(lowerTable)) {
-                    task.setActualTable(lowerTable);
+                    actualTable = lowerTable;
                 } else {
-                    task.setActualTable(task.getTable());
+                    actualTable = task.getTable();
                 }
             }
         }
+        task.setActualTable(new TableIdentifier(actualTable));
 
         Optional<JdbcSchema> initialTargetTableSchema =
             mode.ignoreTargetTableSchema() ?
@@ -501,10 +503,10 @@ public abstract class AbstractJdbcOutputPlugin
         // create intermediate tables
         if (!mode.isDirectModify()) {
             // create the intermediate tables here
-            task.setIntermediateTables(Optional.<List<String>>of(createIntermediateTables(con, task, taskCount, newTableSchema)));
+            task.setIntermediateTables(Optional.<List<TableIdentifier>>of(createIntermediateTables(con, task, taskCount, newTableSchema)));
         } else {
             // direct modify mode doesn't need intermediate tables.
-            task.setIntermediateTables(Optional.<List<String>>absent());
+            task.setIntermediateTables(Optional.<List<TableIdentifier>>absent());
             if (task.getBeforeLoad().isPresent()) {
                 con.executeSql(task.getBeforeLoad().get());
             }
@@ -516,7 +518,7 @@ public abstract class AbstractJdbcOutputPlugin
             targetTableSchema = initialTargetTableSchema.get();
             task.setNewTableSchema(Optional.<JdbcSchema>absent());
         } else if (task.getIntermediateTables().isPresent() && !task.getIntermediateTables().get().isEmpty()) {
-            String firstItermTable = task.getIntermediateTables().get().get(0);
+            TableIdentifier firstItermTable = task.getIntermediateTables().get().get(0);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
             task.setNewTableSchema(Optional.of(newTableSchema));
         } else {
@@ -574,34 +576,36 @@ public abstract class AbstractJdbcOutputPlugin
         return new ColumnSetterFactory(batch, defaultTimeZone);
     }
 
-    private List<String> createIntermediateTables(final JdbcOutputConnection con,
+    private List<TableIdentifier> createIntermediateTables(final JdbcOutputConnection con,
             final PluginTask task, final int taskCount, final JdbcSchema newTableSchema) throws SQLException
     {
         try {
-            return buildRetryExecutor(task).run(new Retryable<List<String>>() {
-                private String tableName;
-                private ImmutableList.Builder<String> intermTableNames;
+            return buildRetryExecutor(task).run(new Retryable<List<TableIdentifier>>() {
+                private TableIdentifier table;
+                private ImmutableList.Builder<TableIdentifier> intermTables;
 
                 @Override
-                public List<String> call() throws Exception
+                public List<TableIdentifier> call() throws Exception
                 {
-                    intermTableNames = ImmutableList.builder();
+                    intermTables = ImmutableList.builder();
                     if (task.getMode().tempTablePerTask()) {
-                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable(), con, 3,
+                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 3,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            tableName = namePrefix + String.format("%03d", taskIndex);
+                            String tableName = namePrefix + String.format("%03d", taskIndex);
+                            table = new TableIdentifier(tableName);
                             // if table already exists, SQLException will be thrown
-                            con.createTable(tableName, newTableSchema);
-                            intermTableNames.add(tableName);
+                            con.createTable(table, newTableSchema);
+                            intermTables.add(table);
                         }
                     } else {
-                        tableName = generateIntermediateTableNamePrefix(task.getActualTable(), con, 0,
+                        String tableName = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 0,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                        con.createTable(tableName, newTableSchema);
-                        intermTableNames.add(tableName);
+                        table = new TableIdentifier(tableName);
+                        con.createTable(table, newTableSchema);
+                        intermTables.add(table);
                     }
-                    return intermTableNames.build();
+                    return intermTables.build();
                 }
 
                 @Override
@@ -610,7 +614,7 @@ public abstract class AbstractJdbcOutputPlugin
                     if (exception instanceof SQLException) {
                         try {
                             // true means that creating table failed because the table already exists.
-                            return con.tableExists(tableName);
+                            return con.tableExists(table);
                         } catch (SQLException e) {
                         }
                     }
@@ -642,8 +646,8 @@ public abstract class AbstractJdbcOutputPlugin
 
                 private void dropTables() throws SQLException
                 {
-                    for (String name : intermTableNames.build()) {
-                        con.dropTableIfExists(name);
+                    for (TableIdentifier table : intermTables.build()) {
+                        con.dropTableIfExists(table);
                     }
                 }
             });
@@ -790,7 +794,7 @@ public abstract class AbstractJdbcOutputPlugin
         throws SQLException
     {
         if (task.getIntermediateTables().isPresent()) {
-            for (String intermTable : task.getIntermediateTables().get()) {
+            for (TableIdentifier intermTable : task.getIntermediateTables().get()) {
                 con.dropTableIfExists(intermTable);
             }
         }
@@ -849,9 +853,9 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     public Optional<JdbcSchema> newJdbcSchemaFromTableIfExists(JdbcOutputConnection connection,
-            String tableName) throws SQLException
+            TableIdentifier table) throws SQLException
     {
-        if (!connection.tableExists(tableName)) {
+        if (!connection.tableExists(table)) {
             // DatabaseMetaData.getPrimaryKeys fails if table does not exist
             return Optional.absent();
         }
@@ -859,7 +863,7 @@ public abstract class AbstractJdbcOutputPlugin
         DatabaseMetaData dbm = connection.getMetaData();
         String escape = dbm.getSearchStringEscape();
 
-        ResultSet rs = dbm.getPrimaryKeys(null, connection.getSchemaName(), tableName);
+        ResultSet rs = dbm.getPrimaryKeys(null, connection.getSchemaName(), table.getTableName());
         ImmutableSet.Builder<String> primaryKeysBuilder = ImmutableSet.builder();
         try {
             while(rs.next()) {
@@ -873,7 +877,7 @@ public abstract class AbstractJdbcOutputPlugin
         ImmutableList.Builder<JdbcColumn> builder = ImmutableList.builder();
         rs = dbm.getColumns(null,
                 JdbcUtils.escapeSearchString(connection.getSchemaName(), escape),
-                JdbcUtils.escapeSearchString(tableName, escape),
+                JdbcUtils.escapeSearchString(table.getTableName(), escape),
                 null);
         try {
             while (rs.next()) {
@@ -948,7 +952,7 @@ public abstract class AbstractJdbcOutputPlugin
             }
 
             // configure BatchInsert -> an intermediate table (!isDirectModify) or the target table (isDirectModify)
-            String destTable;
+            TableIdentifier destTable;
             if (mode.tempTablePerTask()) {
                 destTable = task.getIntermediateTables().get().get(taskIndex);
             } else if (mode.isDirectModify()) {

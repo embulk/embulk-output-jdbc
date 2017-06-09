@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
@@ -93,7 +94,7 @@ public class RedshiftCopyBatchInsert
     }
 
     @Override
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         this.connection = connector.connect(true);
         this.copySqlBeforeFrom = connection.buildCopySQLBeforeFrom(loadTable, insertSchema);

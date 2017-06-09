@@ -33,7 +33,7 @@ public class StandardBatchInsert
         this.mergeConfig = mergeConfig;
     }
 
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         this.connection = connector.connect(true);
         this.index = 1;  // PreparedStatement index begings from 1
@@ -43,7 +43,7 @@ public class StandardBatchInsert
         batch.clearBatch();
     }
 
-    protected PreparedStatement prepareStatement(String loadTable, JdbcSchema insertSchema) throws SQLException
+    protected PreparedStatement prepareStatement(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         return connection.prepareBatchInsertStatement(loadTable, insertSchema, mergeConfig);
     }

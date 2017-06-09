@@ -1,13 +1,15 @@
 package org.embulk.output.postgresql;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.SQLException;
-import org.slf4j.Logger;
-import org.postgresql.copy.CopyManager;
-import org.embulk.spi.Exec;
+
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.TableIdentifier;
+import org.embulk.spi.Exec;
+import org.postgresql.copy.CopyManager;
+import org.slf4j.Logger;
 
 public class PostgreSQLCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
@@ -27,7 +29,7 @@ public class PostgreSQLCopyBatchInsert
     }
 
     @Override
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         this.connection = connector.connect(true);
         this.copySql = connection.buildCopySql(loadTable, insertSchema);
