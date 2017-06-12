@@ -48,6 +48,10 @@ public class PostgreSQLOutputPlugin
         @ConfigDefault("\"public\"")
         public String getSchema();
 
+        @Config("temp_schema")
+        @ConfigDefault("null")
+        public Optional<String> getTempSchema();
+
         @Config("ssl")
         @ConfigDefault("false")
         public boolean getSsl();
@@ -105,6 +109,16 @@ public class PostgreSQLOutputPlugin
         props.setProperty("password", t.getPassword());
 
         return new PostgreSQLOutputConnector(url, props, t.getSchema());
+    }
+
+    @Override
+    protected TableIdentifier buildIntermediateTableId(JdbcOutputConnection con, PluginTask task, String tableName) {
+        PostgreSQLPluginTask t = (PostgreSQLPluginTask) task;
+        // replace mode doesn't support temp_schema because ALTER TABLE cannot change schema of table
+        if (t.getTempSchema().isPresent() && t.getMode() != Mode.REPLACE) {
+            return new TableIdentifier(null, t.getTempSchema().get(), tableName);
+        }
+        return super.buildIntermediateTableId(con, task, tableName);
     }
 
     @Override
