@@ -40,6 +40,7 @@ public class MySQLOutputPlugin
         public String getDatabase();
 
         @Config("temp_database")
+        @ConfigDefault("null")
         public Optional<String> getTempDatabase();
     }
 
