@@ -15,7 +15,7 @@ MySQL output plugin for Embulk loads records to MySQL.
 - **user**: database login user name (string, required)
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required)
-- **temp_database**: database name for intermediate tables. by default, intermediate tables will be created in the database specified by `database`. (string)
+- **temp_database**: database name for intermediate tables. by default, intermediate tables will be created in the database specified by `database`. (string, optional)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit** max retry count for database operations (integer, default: 12)
