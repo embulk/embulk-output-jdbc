@@ -4,7 +4,6 @@ import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -17,6 +16,8 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
 import org.embulk.output.redshift.Ssl;
@@ -48,6 +49,10 @@ public class RedshiftOutputPlugin
         @Config("schema")
         @ConfigDefault("\"public\"")
         public String getSchema();
+
+        @Config("temp_schema")
+        @ConfigDefault("null")
+        public Optional<String> getTempSchema();
 
         // for backward compatibility
         @Config("access_key_id")
@@ -151,6 +156,16 @@ public class RedshiftOutputPlugin
                 t.setSecretAccessKey(t.getOldSecretAccessKey());
             }
         }
+    }
+
+    @Override
+    protected TableIdentifier buildIntermediateTableId(JdbcOutputConnection con, PluginTask task, String tableName) {
+        RedshiftPluginTask t = (RedshiftPluginTask) task;
+        // replace mode doesn't support temp_schema because ALTER TABLE cannot change schema of table
+        if (t.getTempSchema().isPresent() && t.getMode() != Mode.REPLACE) {
+            return new TableIdentifier(null, t.getTempSchema().get(), tableName);
+        }
+        return super.buildIntermediateTableId(con, task, tableName);
     }
 
     @Override
