@@ -1,16 +1,17 @@
 package org.embulk.output.postgresql;
 
-import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
+import org.embulk.output.jdbc.JdbcColumn;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
-import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcColumn;
-import org.embulk.output.jdbc.JdbcSchema;
 
 public class PostgreSQLOutputConnection
         extends JdbcOutputConnection
@@ -24,12 +25,12 @@ public class PostgreSQLOutputConnection
         connection.setAutoCommit(autoCommit);
     }
 
-    public String buildCopySql(String toTable, JdbcSchema toTableSchema)
+    public String buildCopySql(TableIdentifier toTable, JdbcSchema toTableSchema)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("COPY ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i = 0; i < toTableSchema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -47,7 +48,7 @@ public class PostgreSQLOutputConnection
     }
 
     @Override
-    protected String buildPreparedMergeSql(String toTable, JdbcSchema schema, MergeConfig mergeConfig) throws SQLException
+    protected String buildPreparedMergeSql(TableIdentifier toTable, JdbcSchema schema, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
@@ -62,7 +63,7 @@ public class PostgreSQLOutputConnection
         sb.append("),");
         sb.append("updated AS (");
         sb.append("UPDATE ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" SET ");
         if (mergeConfig.getMergeRule().isPresent()) {
             List<String> rule = mergeConfig.getMergeRule().get();
@@ -83,7 +84,7 @@ public class PostgreSQLOutputConnection
         List<String> mergeKeys = mergeConfig.getMergeKeys();
         for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
-            quoteIdentifierString(sb, toTable);
+            quoteTableIdentifier(sb, toTable);
             sb.append(".");
             quoteIdentifierString(sb, mergeKeys.get(i));
             sb.append(" = ");
@@ -99,7 +100,7 @@ public class PostgreSQLOutputConnection
         sb.append(") ");
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -128,13 +129,13 @@ public class PostgreSQLOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
+    protected String buildCollectMergeSql(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("WITH updated AS (");
         sb.append("UPDATE ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" SET ");
         if (mergeConfig.getMergeRule().isPresent()) {
             List<String> rule = mergeConfig.getMergeRule().get();
@@ -163,14 +164,14 @@ public class PostgreSQLOutputConnection
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
             sb.append(" FROM ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
         }
         sb.append(") S");
         sb.append(" WHERE ");
         List<String> mergeKeys = mergeConfig.getMergeKeys();
         for (int i = 0; i < mergeKeys.size(); i++) {
             if (i != 0) { sb.append(" AND "); }
-            quoteIdentifierString(sb, toTable);
+            quoteTableIdentifier(sb, toTable);
             sb.append(".");
             quoteIdentifierString(sb, mergeKeys.get(i));
             sb.append(" = ");
@@ -186,7 +187,7 @@ public class PostgreSQLOutputConnection
         sb.append(") ");
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -207,7 +208,7 @@ public class PostgreSQLOutputConnection
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
             sb.append(" FROM ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
         }
         sb.append(") S ");
         sb.append("WHERE NOT EXISTS (");
@@ -225,7 +226,7 @@ public class PostgreSQLOutputConnection
         return sb.toString();
     }
 
-    protected void collectReplaceView(List<String> fromTables, JdbcSchema schema, String toTable) throws SQLException
+    protected void collectReplaceView(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {

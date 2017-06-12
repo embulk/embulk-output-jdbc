@@ -14,6 +14,7 @@ import java.util.List;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.TimestampFormat;
 import org.embulk.output.oracle.oci.ColumnDefinition;
 import org.embulk.output.oracle.oci.OCI;
@@ -31,7 +32,6 @@ public class DirectBatchInsert implements BatchInsert
     private final String database;
     private final String user;
     private final String password;
-    private final String schema;
     private final OracleCharset charset;
     private final OracleCharset nationalCharset;
     private final int batchSize;
@@ -41,20 +41,19 @@ public class DirectBatchInsert implements BatchInsert
     private DateFormat[] formats;
 
 
-    public DirectBatchInsert(String database, String user, String password, String schema,
+    public DirectBatchInsert(String database, String user, String password,
             OracleCharset charset, OracleCharset nationalCharset, int batchSize)
     {
         this.database = database;
         this.user = user;
         this.password = password;
-        this.schema = schema;
         this.charset = charset;
         this.nationalCharset = nationalCharset;
         this.batchSize = batchSize;
     }
 
     @Override
-    public void prepare(String loadTable, JdbcSchema insertSchema) throws SQLException
+    public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
 
         /*
@@ -141,8 +140,8 @@ public class DirectBatchInsert implements BatchInsert
 
         }
 
-        TableDefinition tableDefinition = new TableDefinition(schema, loadTable, columns);
-        ociKey = Arrays.asList(database, user, loadTable);
+        TableDefinition tableDefinition = new TableDefinition(loadTable.getSchemaName(), loadTable.getTableName(), columns);
+        ociKey = Arrays.asList(database, user, loadTable.getTableName());
         OCIWrapper oci = ociManager.open(ociKey, database, user, password, tableDefinition, batchSize);
 
         buffer = new RowBuffer(oci, tableDefinition);

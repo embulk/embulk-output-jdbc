@@ -8,6 +8,7 @@ import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.output.jdbc.TableIdentifier;
 
 public class MySQLOutputConnection
         extends JdbcOutputConnection
@@ -20,12 +21,12 @@ public class MySQLOutputConnection
     }
 
     @Override
-    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema, MergeConfig mergeConfig) throws SQLException
+    protected String buildPreparedMergeSql(TableIdentifier toTable, JdbcSchema toTableSchema, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i = 0; i < toTableSchema.getCount(); i++) {
             if(i != 0) { sb.append(", "); }
@@ -58,12 +59,12 @@ public class MySQLOutputConnection
     }
 
     @Override
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
+    protected String buildCollectMergeSql(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable, MergeConfig mergeConfig) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -78,7 +79,7 @@ public class MySQLOutputConnection
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
             sb.append(" FROM ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
         }
         sb.append(" ON DUPLICATE KEY UPDATE ");
         if (mergeConfig.getMergeRule().isPresent()) {

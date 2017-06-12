@@ -72,18 +72,23 @@ public class JdbcOutputConnection
         }
     }
 
-    public boolean tableExists(String tableName) throws SQLException
+    public boolean tableExists(TableIdentifier table) throws SQLException
     {
-        try (ResultSet rs = connection.getMetaData().getTables(null, schemaName, tableName, null)) {
+        try (ResultSet rs = connection.getMetaData().getTables(table.getDatabase(), table.getSchemaName(), table.getTableName(), null)) {
             return rs.next();
         }
     }
 
-    public void dropTableIfExists(String tableName) throws SQLException
+    public boolean tableExists(String tableName) throws SQLException
+    {
+        return tableExists(new TableIdentifier(null, schemaName, tableName));
+    }
+
+    public void dropTableIfExists(TableIdentifier table) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            dropTableIfExists(stmt, tableName);
+            dropTableIfExists(stmt, table);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -92,17 +97,17 @@ public class JdbcOutputConnection
         }
     }
 
-    protected void dropTableIfExists(Statement stmt, String tableName) throws SQLException
+    protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException
     {
-        String sql = String.format("DROP TABLE IF EXISTS %s", quoteIdentifierString(tableName));
+        String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
         executeUpdate(stmt, sql);
     }
 
-    public void dropTable(String tableName) throws SQLException
+    public void dropTable(TableIdentifier table) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            dropTable(stmt, tableName);
+            dropTable(stmt, table);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -111,17 +116,17 @@ public class JdbcOutputConnection
         }
     }
 
-    protected void dropTable(Statement stmt, String tableName) throws SQLException
+    protected void dropTable(Statement stmt, TableIdentifier table) throws SQLException
     {
-        String sql = String.format("DROP TABLE %s", quoteIdentifierString(tableName));
+        String sql = String.format("DROP TABLE %s", quoteTableIdentifier(table));
         executeUpdate(stmt, sql);
     }
 
-    public void createTableIfNotExists(String tableName, JdbcSchema schema) throws SQLException
+    public void createTableIfNotExists(TableIdentifier targetTable, JdbcSchema schema) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = buildCreateTableIfNotExistsSql(tableName, schema);
+            String sql = buildCreateTableIfNotExistsSql(targetTable, schema);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -131,21 +136,21 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildCreateTableIfNotExistsSql(String name, JdbcSchema schema)
+    protected String buildCreateTableIfNotExistsSql(TableIdentifier table, JdbcSchema schema)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("CREATE TABLE IF NOT EXISTS ");
-        quoteIdentifierString(sb, name);
+        quoteTableIdentifier(sb, table);
         sb.append(buildCreateTableSchemaSql(schema));
         return sb.toString();
     }
 
-    public void createTable(String tableName, JdbcSchema schema) throws SQLException
+    public void createTable(TableIdentifier table, JdbcSchema schema) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = buildCreateTableSql(tableName, schema);
+            String sql = buildCreateTableSql(table, schema);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -155,12 +160,12 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildCreateTableSql(String name, JdbcSchema schema)
+    protected String buildCreateTableSql(TableIdentifier table, JdbcSchema schema)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("CREATE TABLE ");
-        quoteIdentifierString(sb, name);
+        quoteTableIdentifier(sb, table);
         sb.append(buildCreateTableSchemaSql(schema));
         return sb.toString();
     }
@@ -182,13 +187,13 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected String buildRenameTableSql(String fromTable, String toTable)
+    protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
     {
         StringBuilder sb = new StringBuilder();
         sb.append("ALTER TABLE ");
-        quoteIdentifierString(sb, fromTable);
+        quoteTableIdentifier(sb, fromTable);
         sb.append(" RENAME TO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         return sb.toString();
     }
 
@@ -267,7 +272,7 @@ public class JdbcOutputConnection
         return ColumnDeclareType.SIMPLE;
     }
 
-    public PreparedStatement prepareBatchInsertStatement(String toTable, JdbcSchema toTableSchema, Optional<MergeConfig> mergeConfig) throws SQLException
+    public PreparedStatement prepareBatchInsertStatement(TableIdentifier toTable, JdbcSchema toTableSchema, Optional<MergeConfig> mergeConfig) throws SQLException
     {
         String sql;
         if (mergeConfig.isPresent()) {
@@ -279,12 +284,12 @@ public class JdbcOutputConnection
         return connection.prepareStatement(sql);
     }
 
-    protected String buildPreparedInsertSql(String toTable, JdbcSchema toTableSchema) throws SQLException
+    protected String buildPreparedInsertSql(TableIdentifier toTable, JdbcSchema toTableSchema) throws SQLException
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
 
         sb.append(" (");
         for (int i=0; i < toTableSchema.getCount(); i++) {
@@ -301,7 +306,7 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
-    protected String buildPreparedMergeSql(String toTable, JdbcSchema toTableSchema, MergeConfig mergeConfig) throws SQLException
+    protected String buildPreparedMergeSql(TableIdentifier toTable, JdbcSchema toTableSchema, MergeConfig mergeConfig) throws SQLException
     {
         throw new UnsupportedOperationException("not implemented");
     }
@@ -319,7 +324,7 @@ public class JdbcOutputConnection
         }
     }
 
-    protected void collectInsert(List<String> fromTables, JdbcSchema schema, String toTable,
+    protected void collectInsert(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable,
             boolean truncateDestinationFirst, Optional<String> preSql, Optional<String> postSql) throws SQLException
     {
         if (fromTables.isEmpty()) {
@@ -352,22 +357,22 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildTruncateSql(String table)
+    protected String buildTruncateSql(TableIdentifier table)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("DELETE FROM ");
-        quoteIdentifierString(sb, table);
+        quoteTableIdentifier(sb, table);
 
         return sb.toString();
     }
 
-    protected String buildCollectInsertSql(List<String> fromTables, JdbcSchema schema, String toTable)
+    protected String buildCollectInsertSql(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
-        quoteIdentifierString(sb, toTable);
+        quoteTableIdentifier(sb, toTable);
         sb.append(" (");
         for (int i=0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
@@ -382,13 +387,13 @@ public class JdbcOutputConnection
                 quoteIdentifierString(sb, schema.getColumnName(j));
             }
             sb.append(" FROM ");
-            quoteIdentifierString(sb, fromTables.get(i));
+            quoteTableIdentifier(sb, fromTables.get(i));
         }
 
         return sb.toString();
     }
 
-    protected void collectMerge(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig,
+    protected void collectMerge(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable, MergeConfig mergeConfig,
             Optional<String> preSql, Optional<String> postSql) throws SQLException
     {
         if (fromTables.isEmpty()) {
@@ -416,12 +421,12 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildCollectMergeSql(List<String> fromTables, JdbcSchema schema, String toTable, MergeConfig mergeConfig) throws SQLException
+    protected String buildCollectMergeSql(List<TableIdentifier> fromTables, JdbcSchema schema, TableIdentifier toTable, MergeConfig mergeConfig) throws SQLException
     {
         throw new UnsupportedOperationException("not implemented");
     }
 
-    public void replaceTable(String fromTable, JdbcSchema schema, String toTable, Optional<String> postSql) throws SQLException
+    public void replaceTable(TableIdentifier fromTable, JdbcSchema schema, TableIdentifier toTable, Optional<String> postSql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
@@ -441,9 +446,29 @@ public class JdbcOutputConnection
         }
     }
 
+    protected String quoteTableIdentifier(TableIdentifier table)
+    {
+        StringBuilder sb = new StringBuilder();
+        if (table.getDatabase() != null) {
+            sb.append(quoteIdentifierString(table.getDatabase(), identifierQuoteString));
+            sb.append(".");
+        }
+        if (table.getSchemaName() != null) {
+            sb.append(quoteIdentifierString(table.getSchemaName(), identifierQuoteString));
+            sb.append(".");
+        }
+        sb.append(quoteIdentifierString(table.getTableName(), identifierQuoteString));
+        return sb.toString();
+    }
+
+    protected void quoteTableIdentifier(StringBuilder sb, TableIdentifier table)
+    {
+        sb.append(quoteTableIdentifier(table));
+    }
+
     protected void quoteIdentifierString(StringBuilder sb, String str)
     {
-        sb.append(quoteIdentifierString(str, identifierQuoteString));
+        sb.append(quoteIdentifierString(str));
     }
 
     protected String quoteIdentifierString(String str)
