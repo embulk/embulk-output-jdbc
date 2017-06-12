@@ -25,11 +25,16 @@ public class SQLServerOutputConnection
     @Override
     protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
     {
+        // sp_rename cannot change schema of table
         StringBuilder sb = new StringBuilder();
         sb.append("EXEC sp_rename ");
-        sb.append(quoteTableIdentifier(fromTable));
+        if (fromTable.getSchemaName() == null) {
+            sb.append(quoteIdentifierString(fromTable.getTableName()));
+        } else {
+            sb.append(quoteIdentifierString(fromTable.getSchemaName() + "." + fromTable.getTableName()));
+        }
         sb.append(", ");
-        sb.append(quoteTableIdentifier(toTable));
+        sb.append(quoteIdentifierString(toTable.getTableName()));
         sb.append(", 'OBJECT'");
         return sb.toString();
     }
