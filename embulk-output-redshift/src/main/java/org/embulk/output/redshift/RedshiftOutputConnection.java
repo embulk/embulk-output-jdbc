@@ -68,11 +68,12 @@ public class RedshiftOutputConnection
             }
 
             {
+                // ALTER TABLE cannot change schema of table
                 StringBuilder sb = new StringBuilder();
                 sb.append("ALTER TABLE ");
                 quoteTableIdentifier(sb, fromTable);
                 sb.append(" RENAME TO ");
-                quoteTableIdentifier(sb, toTable);
+                quoteIdentifierString(sb, toTable.getTableName());
                 String sql = sb.toString();
                 executeUpdate(stmt, sql);
             }
