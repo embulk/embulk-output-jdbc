@@ -67,6 +67,10 @@ public class SQLServerOutputPlugin
         @ConfigDefault("\"\"")
         public Optional<String> getPassword();
 
+        @Config("schema")
+        @ConfigDefault("null")
+        public Optional<String> getSchema();
+
         @Config("insert_method")
         @ConfigDefault("\"normal\"")
         public InsertMethod getInsertMethod();
@@ -139,7 +143,7 @@ public class SQLServerOutputPlugin
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
         logger.info("Connecting to {} options {}", urlProps.getUrl(), getPropsWithMaskedSecret(urlProps));
-        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), null);
+        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orNull());
     }
 
     private UrlAndProperties getUrlAndProperties(SQLServerPluginTask sqlServerTask, boolean useJtdsDriver)
