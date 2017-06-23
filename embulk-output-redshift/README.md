@@ -17,6 +17,7 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required)
 - **schema**: destination schema name (string, default: "public")
+- **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the schema specified by `schema`. replace mode doesn't support temp_schema. (string, optional)
 - **table**: destination table name (string, required)
 - **access_key_id**: deprecated. `aws_access_key_id` should be used (see "basic" in `aws_auth_method`).
 - **secret_access_key**: deprecated. `aws_secret_access_key` should be used (see "basic" in `aws_auth_method`).
