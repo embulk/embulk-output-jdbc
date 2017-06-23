@@ -101,6 +101,18 @@ public class OracleOutputConnection
     }
 
     @Override
+    protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
+    {
+        // ALTER TABLE doesn't support schema
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE ");
+        quoteIdentifierString(sb, fromTable.getTableName());
+        sb.append(" RENAME TO ");
+        quoteIdentifierString(sb, toTable.getTableName());
+        return sb.toString();
+    }
+
+    @Override
     protected String buildPreparedInsertSql(TableIdentifier toTable, JdbcSchema toTableSchema) throws SQLException
     {
         String sql = super.buildPreparedInsertSql(toTable, toTableSchema);

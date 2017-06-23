@@ -42,6 +42,10 @@ public class OracleOutputPlugin
         @ConfigDefault("null")
         public Optional<String> getSchema();
 
+        @Config("temp_schema")
+        @ConfigDefault("null")
+        public Optional<String> getTempSchema();
+
         @Config("url")
         @ConfigDefault("null")
         public Optional<String> getUrl();
@@ -120,6 +124,16 @@ public class OracleOutputPlugin
         props.setProperty("password", oracleTask.getPassword());
 
         return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct);
+    }
+
+    @Override
+    protected TableIdentifier buildIntermediateTableId(JdbcOutputConnection con, PluginTask task, String tableName) {
+        OraclePluginTask oracleTask = (OraclePluginTask) task;
+        // replace mode doesn't support temp_schema because ALTER TABLE doesn't support schema.
+        if (oracleTask.getTempSchema().isPresent() && oracleTask.getMode() != Mode.REPLACE) {
+            return new TableIdentifier(null, oracleTask.getTempSchema().get(), tableName);
+        }
+        return super.buildIntermediateTableId(con, task, tableName);
     }
 
     @Override

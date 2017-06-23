@@ -16,6 +16,8 @@ Oracle output plugin for Embulk loads records to Oracle.
 - **user**: database login user name (string, required)
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required if url is not set or insert_method is "oci")
+- **schema** destination schema name (string, optional)
+- **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the same schema as destination table. replace mode doesn't support temp_schema. (string, optional)
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
