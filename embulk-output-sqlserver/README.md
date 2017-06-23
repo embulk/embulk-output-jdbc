@@ -22,6 +22,8 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **password**: database login password (string, default: "")
 - **instance**: destination instance name (string, default: use the default instance)
 - **database**: destination database name (string, default: use the default database)
+- **schema**: destination schema name (string, optional)
+- **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the same schema as destination table. (string, optional)
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})

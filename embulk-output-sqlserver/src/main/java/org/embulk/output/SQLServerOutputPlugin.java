@@ -8,8 +8,10 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.StandardBatchInsert;
+import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.sqlserver.InsertMethod;
 import org.embulk.output.sqlserver.NativeBatchInsert;
@@ -66,6 +68,14 @@ public class SQLServerOutputPlugin
         @Config("password")
         @ConfigDefault("\"\"")
         public Optional<String> getPassword();
+
+        @Config("schema")
+        @ConfigDefault("null")
+        public Optional<String> getSchema();
+
+        @Config("temp_schema")
+        @ConfigDefault("null")
+        public Optional<String> getTempSchema();
 
         @Config("insert_method")
         @ConfigDefault("\"normal\"")
@@ -139,7 +149,7 @@ public class SQLServerOutputPlugin
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
         logger.info("Connecting to {} options {}", urlProps.getUrl(), getPropsWithMaskedSecret(urlProps));
-        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), null);
+        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orNull());
     }
 
     private UrlAndProperties getUrlAndProperties(SQLServerPluginTask sqlServerTask, boolean useJtdsDriver)
@@ -231,6 +241,15 @@ public class SQLServerOutputPlugin
         return new UrlAndProperties(url, props);
     }
 
+    @Override
+    protected TableIdentifier buildIntermediateTableId(JdbcOutputConnection con, PluginTask task, String tableName) {
+        SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
+        // replace mode doesn't support temp_schema because sp_rename cannot change schema of table
+        if (sqlServerTask.getTempSchema().isPresent() && sqlServerTask.getMode() != Mode.REPLACE) {
+            return new TableIdentifier(null, sqlServerTask.getTempSchema().get(), tableName);
+        }
+        return super.buildIntermediateTableId(con, task, tableName);
+    }
 
     @Override
     protected BatchInsert newBatchInsert(PluginTask task, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
