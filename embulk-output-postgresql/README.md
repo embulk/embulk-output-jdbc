@@ -16,6 +16,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 - **password**: database login password (string, default: "")
 - **database**: destination database name (string, required)
 - **schema**: destination schema name (string, default: "public")
+- **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the schema specified by `schema`. replace mode doesn't support temp_schema. (string, optional)
 - **table**: destination table name (string, required)
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit** max retry count for database operations (integer, default: 12)

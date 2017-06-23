@@ -267,4 +267,17 @@ public class PostgreSQLOutputConnection
         }
         return super.buildColumnTypeName(c);
     }
+
+    @Override
+    protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
+    {
+        // ALTER TABLE cannot change schema of table
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE ");
+        quoteTableIdentifier(sb, fromTable);
+        sb.append(" RENAME TO ");
+        quoteIdentifierString(sb, toTable.getTableName());
+        return sb.toString();
+    }
+
 }
