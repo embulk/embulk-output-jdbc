@@ -13,8 +13,10 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.TableIdentifier;
+import org.embulk.output.mysql.MySQLOutputConnection;
 import org.embulk.output.mysql.MySQLOutputConnector;
 import org.embulk.output.mysql.MySQLBatchInsert;
+import org.embulk.spi.Schema;
 
 public class MySQLOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -138,5 +140,14 @@ public class MySQLOutputPlugin
             default:
                 return false;
         }
+    }
+
+    @Override
+    protected void doBegin(JdbcOutputConnection con,
+                           PluginTask task, final Schema schema, int taskCount) throws SQLException
+    {
+        MySQLOutputConnection mySQLCon = (MySQLOutputConnection)con;
+        mySQLCon.compareTimeZone();
+        super.doBegin(con,task,schema,taskCount);
     }
 }

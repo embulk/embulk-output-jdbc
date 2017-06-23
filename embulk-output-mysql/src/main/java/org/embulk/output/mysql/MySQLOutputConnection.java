@@ -4,6 +4,7 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.embulk.output.MySQLTimeZoneComparison;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -111,4 +112,11 @@ public class MySQLOutputConnection
             return super.buildColumnTypeName(c);
         }
     }
+
+    public void compareTimeZone() throws SQLException
+    {
+        MySQLTimeZoneComparison timeZoneComparison = new MySQLTimeZoneComparison(connection);
+        timeZoneComparison.compareTimeZone();
+    }
+
 }
