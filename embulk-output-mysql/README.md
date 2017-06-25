@@ -14,6 +14,7 @@ MySQL output plugin for Embulk loads records to MySQL.
 - **port**: database port number (integer, default: 3306)
 - **user**: database login user name (string, required)
 - **password**: database login password (string, default: "")
+- **ssl**: use SSL to connect to the database (string, default: `disable`. `enable` uses SSL without server-side validation and `verify` checks the certificate. For compatibility reasons, `true` behaves as `enable` and `false` behaves as `disable`.)
 - **database**: destination database name (string, required)
 - **temp_database**: database name for intermediate tables. by default, intermediate tables will be created in the database specified by `database`. (string, optional)
 - **table**: destination table name (string, required)

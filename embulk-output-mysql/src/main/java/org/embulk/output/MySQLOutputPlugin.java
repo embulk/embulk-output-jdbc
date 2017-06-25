@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
+import org.embulk.output.jdbc.Ssl;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.MergeConfig;
@@ -44,6 +45,11 @@ public class MySQLOutputPlugin
         @Config("temp_database")
         @ConfigDefault("null")
         public Optional<String> getTempDatabase();
+
+        @Config("ssl")
+        @ConfigDefault("\"disable\"") // backward compatibility
+        public Ssl getSsl();
+
     }
 
     @Override
@@ -80,21 +86,21 @@ public class MySQLOutputPlugin
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
         props.setProperty("tcpKeepAlive", "true");
 
-        // TODO
-        //switch t.getSssl() {
-        //when "disable":
-        //    break;
-        //when "enable":
-        //    props.setProperty("useSSL", "true");
-        //    props.setProperty("requireSSL", "false");
-        //    props.setProperty("verifyServerCertificate", "false");
-        //    break;
-        //when "verify":
-        //    props.setProperty("useSSL", "true");
-        //    props.setProperty("requireSSL", "true");
-        //    props.setProperty("verifyServerCertificate", "true");
-        //    break;
-        //}
+        switch (t.getSsl()) {
+            case DISABLE:
+                props.setProperty("useSSL", "false");
+                break;
+            case ENABLE:
+                props.setProperty("useSSL", "true");
+                props.setProperty("requireSSL", "true");
+                props.setProperty("verifyServerCertificate", "false");
+                break;
+            case VERIFY:
+                props.setProperty("useSSL", "true");
+                props.setProperty("requireSSL", "true");
+                props.setProperty("verifyServerCertificate", "true");
+                break;
+        }
 
         if (!retryableMetadataOperation) {
             // non-retryable batch operation uses longer timeout
