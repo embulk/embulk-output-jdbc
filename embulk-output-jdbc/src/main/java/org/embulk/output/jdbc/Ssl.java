@@ -1,4 +1,4 @@
-package org.embulk.output.redshift;
+package org.embulk.output.jdbc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
