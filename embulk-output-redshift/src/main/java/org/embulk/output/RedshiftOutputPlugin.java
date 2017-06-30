@@ -18,9 +18,9 @@ import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.TableIdentifier;
+import org.embulk.output.jdbc.Ssl;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
-import org.embulk.output.redshift.Ssl;
 
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
