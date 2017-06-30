@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 
@@ -19,7 +20,7 @@ import org.embulk.spi.Exec;
 public class JdbcOutputConnection
         implements AutoCloseable
 {
-    private final Logger logger = Exec.getLogger(JdbcOutputConnection.class);
+    protected final Logger logger = Exec.getLogger(JdbcOutputConnection.class);
     protected final Connection connection;
     protected final String schemaName;
     protected final DatabaseMetaData databaseMetaData;
@@ -593,4 +594,9 @@ public class JdbcOutputConnection
             return ex;
         }
     }
+    public void showDriverVersion() throws SQLException {
+        DatabaseMetaData meta = connection.getMetaData();
+        logger.info(String.format(Locale.ENGLISH,"Using JDBC Driver %s",meta.getDriverVersion()));
+    }
+
 }

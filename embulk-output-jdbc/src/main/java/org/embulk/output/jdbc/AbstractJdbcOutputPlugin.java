@@ -387,6 +387,7 @@ public abstract class AbstractJdbcOutputPlugin
                 public void run() throws SQLException
                 {
                     JdbcOutputConnection con = newConnection(task, true, false);
+                    con.showDriverVersion();
                     try {
                         doBegin(con, task, schema, taskCount);
                     } finally {
