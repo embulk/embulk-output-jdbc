@@ -82,8 +82,48 @@ public class AfterLoadTest
         execute("insert into test1 values('B002', 9, 'z')");
 
         Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_after_load.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(readResource("test_replace_after_load_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testReplaceAfterLoad() throws Exception
+    {
+        execute("insert into test1 values('B001', 0, 'z')");
+        execute("insert into test1 values('B002', 9, 'z')");
+
+        Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert_after_load.yml")), in1);
         assertThat(selectRecords(embulk, "test1"), is(readResource("test_truncate_insert_after_load_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMergeAfterLoad() throws Exception
+    {
+        execute("insert into test1 values('A002', 1, 'y')");
+        execute("insert into test1 values('A003', 1, 'y')");
+        execute("insert into test1 values('B001', 0, 'z')");
+        execute("insert into test1 values('B002', 9, 'z')");
+
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_after_load.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(readResource("test_merge_after_load_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMergeDirectAfterLoad() throws Exception
+    {
+        execute("insert into test1 values('A002', 1, 'y')");
+        execute("insert into test1 values('A003', 1, 'y')");
+        execute("insert into test1 values('B001', 0, 'z')");
+        execute("insert into test1 values('B002', 9, 'z')");
+
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_direct_after_load.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(readResource("test_merge_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
