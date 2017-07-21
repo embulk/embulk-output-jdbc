@@ -1,11 +1,15 @@
 package org.embulk.output.mysql;
 
 import static java.util.Locale.ENGLISH;
+import static org.embulk.test.EmbulkTests.readSortedFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
+import org.embulk.test.TestingEmbulk;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -52,5 +56,14 @@ public class MySQLTests
             throw new RuntimeException(String.format(ENGLISH,
                     "Command finished with non-zero exit code. Exit code is %d.", code));
         }
+    }
+
+    public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
+    {
+        Path temp = embulk.createTempFile("txt");
+        Files.delete(temp);
+        // test user needs FILE privilege
+        execute("select * from " + tableName + " into outfile '" + temp.toString().replace("\\", "\\\\") + "' fields terminated by ','");
+        return readSortedFile(temp);
     }
 }
