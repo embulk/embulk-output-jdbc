@@ -1,13 +1,16 @@
 package org.embulk.output.mysql;
 
 import static org.embulk.output.mysql.MySQLTests.execute;
+import static org.embulk.test.EmbulkTests.readSortedFile;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.embulk.config.ConfigDiff;
@@ -36,8 +39,9 @@ public class BeforeAfterLoadTest
         return EmbulkTests.readResource(BASIC_RESOURCE_PATH + fileName);
     }
 
-    private Path toPath(String name) throws URISyntaxException {
-        URL url = Resources.getResource(BASIC_RESOURCE_PATH + name);
+    private Path toPath(String fileName) throws URISyntaxException
+    {
+        URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
@@ -61,11 +65,19 @@ public class BeforeAfterLoadTest
         execute("insert into test1 values('B001', 0, 'z')");
         execute("insert into test1 values('B002', 9, 'z')");
 
-
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_after_load.yml")), in1);
-        //assertThat(readSortedFile(out1), is(readResource("test_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_insert_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    private String selectRecords() throws IOException
+    {
+        Path temp = embulk.createTempFile("txt");
+        Files.delete(temp);
+        // test user needs FILE privilege
+        execute("select * from test1 into outfile '" + temp.toString().replace("\\", "\\\\") + "' fields terminated by ','");
+        return readSortedFile(temp);
     }
 
 }
