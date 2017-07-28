@@ -120,3 +120,19 @@ out:
 ```
 $ ./gradlew gem
 ```
+
+Running tests:
+
+You need to create mysql.yml
+```
+type: mysql
+host: localhost
+port: 3306
+database: database
+user: user
+password: pass
+```
+
+```
+$ EMBULK_OUTPUT_MYSQL_TEST_CONFIG=mysql.yml ./gradlew :embulk-output-mysql:check --info
+```
