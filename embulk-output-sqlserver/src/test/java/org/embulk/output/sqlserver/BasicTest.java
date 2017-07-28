@@ -132,6 +132,41 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testMerge() throws Exception
+    {
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MERGE1", in1), is(readResource("test_merge_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMergeWithKeys() throws Exception
+    {
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_keys.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MERGE2", in1), is(readResource("test_merge_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMergeWithRule() throws Exception
+    {
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_rule.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MERGE1", in1), is(readResource("test_merge_rule_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testNativeInsertDirect() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_native_insert_direct.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
 
     private Path toPath(String fileName) throws URISyntaxException
     {

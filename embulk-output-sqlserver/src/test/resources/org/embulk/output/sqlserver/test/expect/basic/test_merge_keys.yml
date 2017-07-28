@@ -1,0 +1,3 @@
+table: TEST_MERGE2
+mode: merge
+merge_keys: [ITEM1,ITEM2]
