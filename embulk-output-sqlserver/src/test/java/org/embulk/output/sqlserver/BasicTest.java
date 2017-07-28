@@ -54,8 +54,6 @@ public class BasicTest
     @Test
     public void testInsert() throws Exception
     {
-        execute("INSERT INTO TEST1(ID) VALUES('9999')");
-
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
@@ -76,8 +74,6 @@ public class BasicTest
     @Test
     public void testInsertDirect() throws Exception
     {
-        execute("INSERT INTO TEST1(ID) VALUES('9999')");
-
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
@@ -98,13 +94,44 @@ public class BasicTest
     @Test
     public void testTruncateInsert() throws Exception
     {
-        execute("INSERT INTO TEST1(ID) VALUES('9999')");
-
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_truncate_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
+
+    @Test
+    public void testReplace() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testReplaceCreate() throws Exception
+    {
+        execute("DROP TABLE TEST1");
+
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testReplaceLongName() throws Exception
+    {
+        String tableName = "TEST___Ａ１２３４５６７８９Ｂ１２３４５６７８９Ｃ１２３４５６７８９Ｄ１２３４５６７８９Ｅ１２３４５６７８９Ｆ１２３４５６７８９Ｇ１２３４５６７８９Ｈ１２３４５６７８９Ｉ１２３４５６７８９Ｊ１２３４５６７８９Ｋ１２３４５６７８９Ｌ１２３４５６７８９";
+        assertThat(tableName.length(), is(127));
+
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_longname.yml")), in1);
+        assertThat(selectRecords(embulk, tableName, in1), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
 
     private Path toPath(String fileName) throws URISyntaxException
     {
