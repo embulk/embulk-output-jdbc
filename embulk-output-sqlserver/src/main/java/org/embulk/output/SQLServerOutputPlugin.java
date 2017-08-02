@@ -151,7 +151,6 @@ public class SQLServerOutputPlugin
                     Class.forName("net.sourceforge.jtds.jdbc.Driver");
                 } catch (Exception e) {
                     throw new ConfigException("'driver_path' doesn't set and can't find jTDS driver", e);
-
                 }
                 useJtdsDriver = true;
             }
