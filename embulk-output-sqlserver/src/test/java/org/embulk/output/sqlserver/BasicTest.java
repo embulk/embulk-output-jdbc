@@ -168,6 +168,15 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testStringToTimestamp() throws Exception
+    {
+        Path in1 = toPath("test_string_timestamp.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string_timestamp.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_string_timestamp_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);

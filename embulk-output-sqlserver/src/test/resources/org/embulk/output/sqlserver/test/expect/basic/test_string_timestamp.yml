@@ -1,0 +1,5 @@
+table: TEST1
+mode: insert_direct
+column_options:
+  DATETIME2_ITEM: {value_type: pass}
+  TIME_ITEM: {value_type: pass}
