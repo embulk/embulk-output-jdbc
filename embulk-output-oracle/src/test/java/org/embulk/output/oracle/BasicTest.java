@@ -331,6 +331,42 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testLowerTable() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_lower_table.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testLowerColumn() throws Exception
+    {
+        Path in1 = toPath("test_lower_column.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_lower_column.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testLowerColumnOptions() throws Exception
+    {
+        Path in1 = toPath("test_lower_column_options.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_lower_column_options.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testStringToTimestamp() throws Exception
+    {
+        Path in1 = toPath("test_string_timestamp.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string_timestamp.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     /*
     @Test
     public void testInsertDirectCreate() throws Exception
