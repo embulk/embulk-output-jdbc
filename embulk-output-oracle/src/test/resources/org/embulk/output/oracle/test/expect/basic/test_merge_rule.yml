@@ -1,0 +1,3 @@
+table: TEST_MERGE1
+mode: merge
+merge_rule: ["VARCHAR2_ITEM = 'x'", "NUMBER_ITEM = T.NUMBER_ITEM + S.NUMBER_ITEM"]

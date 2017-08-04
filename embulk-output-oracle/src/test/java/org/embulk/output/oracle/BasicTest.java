@@ -291,6 +291,46 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testMerge() throws Exception
+    {
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A001', 'AAA', 12.34);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A003', NULL, NULL);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A005', 'EEE', 56.78);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A006', 'FFF', 0);" + System.lineSeparator() + "EXIT;");
+
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MERGE1"), is(readResource("test_merge_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMergeWithKeys() throws Exception
+    {
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A001', 'AAA', 11.11);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A002', 'BBB', 22.22);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A003', 'CCC', 33.33);" + System.lineSeparator() + "EXIT;");
+
+        Path in1 = toPath("test_merge_keys.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_keys.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MERGE1"), is(readResource("test_merge_keys_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMergeRule() throws Exception
+    {
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A002', 'BBB', 22.22);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A004', 'DDD', 44.44);" + System.lineSeparator() + "EXIT;");
+        execute(embulk, "INSERT INTO TEST_MERGE1 VALUES('A006', 'FFF', 66.66);" + System.lineSeparator() + "EXIT;");
+
+        Path in1 = toPath("test_merge_rule.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_rule.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MERGE1"), is(readResource("test_merge_rule_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     /*
     @Test
     public void testInsertDirectCreate() throws Exception
