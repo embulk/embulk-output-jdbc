@@ -81,6 +81,25 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    // insert_method: direct
+    @Test
+    public void testInsertDirectDirect() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_direct.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testInsertDirectOCI() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_oci.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     @Test
     public void testInsertDirectCreate() throws Exception
     {
@@ -97,6 +116,15 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_truncate_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testTruncateInsertOCI() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert_oci.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_truncate_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
