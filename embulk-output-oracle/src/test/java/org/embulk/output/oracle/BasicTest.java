@@ -73,6 +73,15 @@ public class BasicTest
     }
 
     @Test
+    public void testInsertMultibyteTable() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_multibyte_table.yml")), in1);
+        assertThat(selectRecords(embulk, "ＴＥＳＴ１"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
     public void testInsertDirect() throws Exception
     {
         Path in1 = toPath("test1.csv");
@@ -108,6 +117,24 @@ public class BasicTest
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testInsertDirectMultibyteTable() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_multibyte_table.yml")), in1);
+        assertThat(selectRecords(embulk, "ＴＥＳＴ１"), is(readResource("test_insert_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testInsertDirectOCIMultibyteTable() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_oci_multibyte_table.yml")), in1);
+        assertThat(selectRecords(embulk, "ＴＥＳＴ１"), is(readResource("test_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
