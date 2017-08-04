@@ -367,118 +367,29 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
-    /*
     @Test
-    public void testInsertDirectCreate() throws Exception
-    {
-        execute("DROP TABLE TEST1");
-
-        Path in1 = toPath("test1.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testTruncateInsert() throws Exception
+    public void testJdbcUrl() throws Exception
     {
         Path in1 = toPath("test1.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_truncate_insert_expected.csv")));
+
+        String host = baseConfig.get(String.class, "host");
+        String port = baseConfig.get(String.class, "port", "1521");
+        String user = baseConfig.get(String.class, "user");
+        String password = baseConfig.get(String.class, "password");
+        String database = baseConfig.get(String.class, "database");
+
+        ConfigSource config = embulk.newConfig();
+        config.set("type", "oracle");
+        config.set("url", "jdbc:oracle:thin:@" + host + ":" + port + ":" + database);
+        config.set("user", user);
+        config.set("password", password);
+
+        TestingEmbulk.RunResult result1 = embulk.runOutput(config.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
-    @Test
-    public void testReplace() throws Exception
-    {
-        Path in1 = toPath("test1.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
 
-    @Test
-    public void testReplaceCreate() throws Exception
-    {
-        execute("DROP TABLE TEST1");
-
-        Path in1 = toPath("test1.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testReplaceLongName() throws Exception
-    {
-        String tableName = "TEST___Ａ１２３４５６７８９Ｂ１２３４５６７８９Ｃ１２３４５６７８９Ｄ１２３４５６７８９Ｅ１２３４５６７８９Ｆ１２３４５６７８９Ｇ１２３４５６７８９Ｈ１２３４５６７８９Ｉ１２３４５６７８９Ｊ１２３４５６７８９Ｋ１２３４５６７８９Ｌ１２３４５６７８９";
-        assertThat(tableName.length(), is(127));
-
-        Path in1 = toPath("test1.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_longname.yml")), in1);
-        assertThat(selectRecords(embulk, tableName, in1), is(readResource("test_insert_create_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testMerge() throws Exception
-    {
-        Path in1 = toPath("test_merge.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_MERGE1", in1), is(readResource("test_merge_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testMergeWithKeys() throws Exception
-    {
-        Path in1 = toPath("test_merge.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_keys.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_MERGE2", in1), is(readResource("test_merge_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testMergeWithRule() throws Exception
-    {
-        Path in1 = toPath("test_merge.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_rule.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_MERGE1", in1), is(readResource("test_merge_rule_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testNativeInsertDirect() throws Exception
-    {
-        Path in1 = toPath("test1.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_native_insert_direct.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testStringToTimestamp() throws Exception
-    {
-        Path in1 = toPath("test_string_timestamp.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string_timestamp.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_string_timestamp_expected.csv")));
-        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testJtds() throws Exception
-    {
-        SQLServerOutputPlugin.preferMicrosoftDriver = false;
-        try {
-            Path in1 = toPath("test1.csv");
-            TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
-            assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
-            //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-        } finally {
-            SQLServerOutputPlugin.preferMicrosoftDriver = true;
-        }
-    }
-*/
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
