@@ -248,6 +248,23 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testReplaceLongNameTable() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_longname.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST12345678901234567890123456"), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testReplaceLongNameMultibyteTable() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_longname_multibyte.yml")), in1);
+        assertThat(selectRecords(embulk, "ＴＥＳＴ123456789012345678"), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
 
     /*
     @Test
