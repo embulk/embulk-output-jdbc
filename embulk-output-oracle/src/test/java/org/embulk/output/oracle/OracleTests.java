@@ -12,8 +12,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import static java.util.Locale.ENGLISH;
 
@@ -62,7 +60,7 @@ public class OracleTests
         }
     }
 
-    public static String selectRecords(TestingEmbulk embulk, String tableName, Path inputPath) throws IOException
+    public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
     {
         Path temp = embulk.createTempFile("txt");
         Files.delete(temp);
@@ -86,14 +84,5 @@ public class OracleTests
         execute(embulk, sql.toString());
 
         return EmbulkTests.readSortedFile(temp);
-/*
-        List<String> lines = Files.readAllLines(temp, Charset.forName("MS932"));
-        Collections.sort(lines);
-        StringBuilder sb = new StringBuilder();
-        for (String line : lines) {
-            sb.append(line);
-            sb.append("\n");
-        }
-        return sb.toString();*/
     }
 }
