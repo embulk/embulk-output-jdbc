@@ -51,6 +51,11 @@ public class BasicTest
     {
         baseConfig = OracleTests.baseConfig();
         execute(embulk, readResource("setup.sql")); // setup rows
+
+        if (System.getProperty("path.separator").equals(";")) {
+            // for Windows (because encoding will be set to UTF8 when executed by Eclipse)
+            System.setProperty("file.encoding", "MS932");
+        }
     }
 
     @Test
@@ -179,6 +184,26 @@ public class BasicTest
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    // Multiple output tasks will be executed.
+    @Test
+    public void testInsertDirectLarge() throws Exception
+    {
+        Path in1 = toPath("test_large.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_large.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_large_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    // Multiple output tasks will be executed.
+    @Test
+    public void testInsertDirectOCILarge() throws Exception
+    {
+        Path in1 = toPath("test_large.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_oci_large.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_large_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
     @Test

@@ -68,6 +68,8 @@ public class OracleTests
         StringBuilder sql = new StringBuilder();
         sql.append("SPOOL " + temp.toString());
         sql.append(System.lineSeparator());
+        sql.append("SET FEEDBACK OFF");
+        sql.append(System.lineSeparator());
         sql.append("SET HEADING OFF");
         sql.append(System.lineSeparator());
         sql.append("SET PAGESIZE 0");
