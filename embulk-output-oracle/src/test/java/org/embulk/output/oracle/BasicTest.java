@@ -4,6 +4,7 @@ import static org.embulk.output.oracle.OracleTests.execute;
 import static org.embulk.output.oracle.OracleTests.selectRecords;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,6 +140,48 @@ public class BasicTest
     }
 
     @Test
+    public void testInsertDirectDuplicate() throws Exception
+    {
+        execute(embulk, "INSERT INTO TEST1(ID) VALUES('A002');" + System.lineSeparator() + "EXIT;");
+
+        Path in1 = toPath("test1.csv");
+        try {
+            embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
+            fail("Exception expected.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    @Test
+    public void testInsertDirectOCIDuplicate() throws Exception
+    {
+        execute(embulk, "INSERT INTO TEST1(ID) VALUES('A002');" + System.lineSeparator() + "EXIT;");
+
+        Path in1 = toPath("test1.csv");
+        try {
+            embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_oci.yml")), in1);
+            fail("Exception expected.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    @Test
+    public void testInsertDirectOCIMultibyteTableDuplicate() throws Exception
+    {
+        execute(embulk, "INSERT INTO ＴＥＳＴ１(ID) VALUES('A002');" + System.lineSeparator() + "EXIT;");
+
+        Path in1 = toPath("test1.csv");
+        try {
+            embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_oci_multibyte_table.yml")), in1);
+            fail("Exception expected.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    @Test
     public void testTruncateInsert() throws Exception
     {
         Path in1 = toPath("test1.csv");
@@ -170,6 +213,17 @@ public class BasicTest
     @Test
     public void testReplace() throws Exception
     {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testReplaceCreate() throws Exception
+    {
+        execute(embulk, "DROP TABLE TEST1;" + System.lineSeparator() + "EXIT;");
+
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
