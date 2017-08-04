@@ -136,6 +136,22 @@ out:
 $ ./gradlew gem
 ```
 
+Running tests:
+
+You need to put 'ojdbc7.jar' into 'embulk-output-oracle/driver' directory and create 'oracle.yml' as follows.
+```
+type: oracle
+host: localhost
+port: 1521
+database: database
+user: user
+password: pass
+```
+
+```
+$ EMBULK_OUTPUT_ORACLE_TEST_CONFIG=oracle.yml ./gradlew :embulk-output-oracle:check --info
+```
+
 #### Build environment for native library
 
 For Windows (x64)
