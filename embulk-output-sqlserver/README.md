@@ -147,3 +147,19 @@ out:
 ```
 $ ./gradlew gem
 ```
+
+Running tests:
+
+You need to put 'sqljdbc41.jar' into 'embulk-output-sqlserver/driver' directory and create 'sqlserver.yml' as follows.
+```
+type: sqlserver
+host: localhost
+port: 1433
+database: database
+user: user
+password: pass
+```
+
+```
+$ EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG=sqlserver.yml ./gradlew :embulk-output-sqlserver:check --info
+```

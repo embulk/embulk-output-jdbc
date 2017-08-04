@@ -123,7 +123,7 @@ $ ./gradlew gem
 
 Running tests:
 
-You need to create mysql.yml
+You need to create 'mysql.yml' as follows.
 ```
 type: mysql
 host: localhost

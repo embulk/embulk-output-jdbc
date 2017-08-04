@@ -28,6 +28,9 @@ import static java.util.Locale.ENGLISH;
 public class SQLServerOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
+    // for test
+    public static boolean preferMicrosoftDriver = true;
+
     private static int DEFAULT_PORT = 1433;
 
     public interface SQLServerPluginTask
@@ -128,20 +131,26 @@ public class SQLServerOutputPlugin
             loadDriverJar(sqlServerTask.getDriverPath().get());
             try {
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            } catch(Exception e) {
+            } catch (Exception e) {
                 throw new ConfigException("Driver set at field 'driver_path' doesn't include Microsoft SQLServerDriver", e);
             }
         } else {
-            // prefer Microsoft SQLServerDriver if it is in classpath
-            try {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            } catch(Exception e) {
+            boolean useMicrosoftDriver = false;
+            if (preferMicrosoftDriver) {
+                // prefer Microsoft SQLServerDriver if it is in classpath
+                try {
+                    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                    useMicrosoftDriver = true;
+                } catch (Exception e) {
+                }
+            }
+
+            if (!useMicrosoftDriver) {
                 logger.info("Using jTDS Driver");
                 try {
                     Class.forName("net.sourceforge.jtds.jdbc.Driver");
-                } catch(Exception e2) {
-                    throw new ConfigException("'driver_path' doesn't set and can't found jTDS driver", e2);
-
+                } catch (Exception e) {
+                    throw new ConfigException("'driver_path' doesn't set and can't find jTDS driver", e);
                 }
                 useJtdsDriver = true;
             }
