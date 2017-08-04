@@ -60,7 +60,7 @@ public class SQLServerTests
         }
     }
 
-    public static String selectRecords(TestingEmbulk embulk, String tableName, Path inputPath) throws IOException
+    public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
     {
         Path temp = embulk.createTempFile("txt");
         Files.delete(temp);
