@@ -88,6 +88,15 @@ public class BasicTest
     }
 
     @Test
+    public void testInsertEmpty() throws Exception
+    {
+        Path in1 = getEmptyDir();
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_empty_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
     public void testInsertDirect() throws Exception
     {
         Path in1 = toPath("test1.csv");
@@ -207,6 +216,15 @@ public class BasicTest
     }
 
     @Test
+    public void testInsertDirectEmpty() throws Exception
+    {
+        Path in1 = getEmptyDir();
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_empty_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
     public void testTruncateInsert() throws Exception
     {
         Path in1 = toPath("test1.csv");
@@ -288,6 +306,15 @@ public class BasicTest
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_longname_multibyte.yml")), in1);
         assertThat(selectRecords(embulk, "ＴＥＳＴ123456789012345678"), is(readResource("test_insert_create_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testReplaceEmpty() throws Exception
+    {
+        Path in1 = getEmptyDir();
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST1"), is(""));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -394,6 +421,17 @@ public class BasicTest
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
+    }
+
+    private Path getEmptyDir() throws URISyntaxException
+    {
+        URL url = Resources.getResource(BASIC_RESOURCE_PATH + "test1.csv");
+        File dir = new File(new File(url.toURI()).getParentFile(), "empty.csv");
+        dir.mkdir();
+        Path path = FileSystems.getDefault().getPath(dir.getAbsolutePath());
+        // TestingEmbulk will throw exception when it can't open input file.
+        // DummyFileSystemProvider will open InputStream no matter whether file exists or not.
+        return new DummyPath(path, "id:string");
     }
 
 }
