@@ -1,3 +1,9 @@
+Release 0.7.10 - 2017-07-14
+
+* Added ssl option for embulk-output-mysql (@hiroyuki-sato++).
+* Logging JDBC driver version (@hiroyuki-sato++).
+* MySQL Connector/J version will be upgrade from 5.1.35 to 5.1.42 or higher in the near future.
+
 Release 0.7.9 - 2017-06-23
 
 * Enabled to specify database or schema of intermediate tables.

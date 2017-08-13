@@ -2,7 +2,7 @@ dependencies {
     compile project(':embulk-output-jdbc')
     compile 'net.sourceforge.jtds:jtds:1.3.1'
 
-    testCompile 'org.embulk:embulk-standards:0.8.8'
+    testCompile 'org.embulk:embulk-standards:0.8.22'
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
     testCompile files('driver/sqljdbc41.jar')
 }

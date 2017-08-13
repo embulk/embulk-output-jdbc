@@ -1,0 +1,3 @@
+table: TEST_MERGE1
+mode: merge
+merge_rule: ["ITEM3 = T.ITEM3 + S.ITEM3"]

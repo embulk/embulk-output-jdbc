@@ -1,0 +1,3 @@
+table: test1
+mode: replace
+after_load: "update test1 set varchar_item = 'x' where int_item = 9"

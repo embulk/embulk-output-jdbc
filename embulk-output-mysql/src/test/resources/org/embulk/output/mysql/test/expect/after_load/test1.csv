@@ -1,0 +1,4 @@
+id:string,int_item:long,varchar_item:string
+A001,9,a
+A002,0,b
+A003,9,c
