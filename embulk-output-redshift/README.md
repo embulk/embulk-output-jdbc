@@ -98,7 +98,7 @@ Redshift output plugin for Embulk loads records to Redshift.
   * Transactional: Yes.
   * Resumable: No.
 * **merge**:
-  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, inserts records from intermediate tables after deleting records whose keys exist in intermediate tables. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
+  * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, inserts new records from intermediate tables after updating records whose keys exist in intermediate tables. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
   * Resumable: Yes.
 
