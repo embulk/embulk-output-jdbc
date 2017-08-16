@@ -56,7 +56,7 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -67,7 +67,7 @@ public class BasicTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -76,7 +76,7 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -87,7 +87,7 @@ public class BasicTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -96,7 +96,7 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_truncate_insert_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_truncate_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -105,7 +105,7 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -116,7 +116,7 @@ public class BasicTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_create_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_create_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -128,7 +128,7 @@ public class BasicTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_longname.yml")), in1);
-        assertThat(selectRecords(embulk, tableName, in1), is(readResource("test_insert_create_expected.csv")));
+        assertThat(selectRecords(embulk, tableName), is(readResource("test_insert_create_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -137,7 +137,7 @@ public class BasicTest
     {
         Path in1 = toPath("test_merge.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_MERGE1", in1), is(readResource("test_merge_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST_MERGE1"), is(readResource("test_merge_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -146,7 +146,7 @@ public class BasicTest
     {
         Path in1 = toPath("test_merge.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_keys.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_MERGE2", in1), is(readResource("test_merge_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST_MERGE2"), is(readResource("test_merge_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -155,7 +155,7 @@ public class BasicTest
     {
         Path in1 = toPath("test_merge.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_rule.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_MERGE1", in1), is(readResource("test_merge_rule_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST_MERGE1"), is(readResource("test_merge_rule_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -164,7 +164,7 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_native_insert_direct.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -173,7 +173,7 @@ public class BasicTest
     {
         Path in1 = toPath("test_string_timestamp.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string_timestamp.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_string_timestamp_expected.csv")));
+        assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_string_timestamp_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -184,7 +184,7 @@ public class BasicTest
         try {
             Path in1 = toPath("test1.csv");
             TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
-            assertThat(selectRecords(embulk, "TEST1", in1), is(readResource("test_insert_expected.csv")));
+            assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
             //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
         } finally {
             SQLServerOutputPlugin.preferMicrosoftDriver = true;
