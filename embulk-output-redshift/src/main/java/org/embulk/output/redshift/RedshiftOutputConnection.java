@@ -200,22 +200,23 @@ public class RedshiftOutputConnection
             }
             sb.append(" FROM ");
             quoteTableIdentifier(sb, fromTables.get(i));
-            sb.append(" WHERE NOT EXISTS (SELECT 1 FROM ");
-            quoteTableIdentifier(sb, toTable);
-            sb.append(", ");
-            quoteTableIdentifier(sb, fromTables.get(i));
-            sb.append(" WHERE ");
 
+            sb.append(" WHERE (");
             for (int k = 0; k < mergeKeys.size(); k++) {
-                if (k != 0) { sb.append(" AND "); }
+                if (k != 0) { sb.append(", "); }
                 quoteTableIdentifier(sb, fromTables.get(i));
                 sb.append(".");
                 quoteIdentifierString(sb, mergeKeys.get(k));
-                sb.append(" = ");
+            }
+            sb.append(") NOT IN (SELECT ");
+            for (int k = 0; k < mergeKeys.size(); k++) {
+                if (k != 0) { sb.append(", "); }
                 quoteTableIdentifier(sb, toTable);
                 sb.append(".");
                 quoteIdentifierString(sb, mergeKeys.get(k));
             }
+            sb.append(" FROM ");
+            quoteTableIdentifier(sb, toTable);
             sb.append(")) ");
         }
         sb.append(";");
