@@ -9,7 +9,7 @@ import com.github.jrubygradle.JRubyExec
 
 allprojects {
     group = 'org.embulk.output.jdbc'
-    version = '0.7.10'
+    version = '0.7.11'
 }
 
 subprojects {
