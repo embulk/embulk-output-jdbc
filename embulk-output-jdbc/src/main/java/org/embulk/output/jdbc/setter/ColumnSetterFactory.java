@@ -76,7 +76,6 @@ public class ColumnSetterFactory
     protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
         return new TimestampFormatter(
-                option.getJRuby(),
                 option.getTimestampFormat().getFormat(),
                 getTimeZone(option));
     }
