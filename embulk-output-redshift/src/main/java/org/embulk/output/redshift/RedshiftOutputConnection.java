@@ -47,17 +47,15 @@ public class RedshiftOutputConnection
         Statement stmt = connection.createStatement();
         try {
             StringBuilder sb = new StringBuilder();
+            sb.append("BEGIN TRANSACTION;");
             sb.append("DROP TABLE IF EXISTS ");
             quoteTableIdentifier(sb, toTable);
-            String sql = sb.toString();
-            executeUpdate(stmt, sql);
-
-            sb = new StringBuilder();
             sb.append("ALTER TABLE ");
             quoteTableIdentifier(sb, fromTable);
             sb.append(" RENAME TO ");
             quoteIdentifierString(sb, toTable.getTableName());
-            sql = sb.toString();
+            sb.append("END TRANSACTION;");
+            String sql = sb.toString();
             executeUpdate(stmt, sql);
 
             if (additionalSql.isPresent()) {
