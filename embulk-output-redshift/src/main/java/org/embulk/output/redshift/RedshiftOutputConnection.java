@@ -29,48 +29,6 @@ public class RedshiftOutputConnection
     }
 
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } finally {
-            stmt.close();
-        }
-    }
-
-    @Override
-    public void replaceTable(TableIdentifier fromTable, JdbcSchema schema, TableIdentifier toTable, Optional<String> additionalSql) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("BEGIN TRANSACTION;");
-            sb.append("DROP TABLE IF EXISTS ");
-            quoteTableIdentifier(sb, toTable);
-            sb.append("ALTER TABLE ");
-            quoteTableIdentifier(sb, fromTable);
-            sb.append(" RENAME TO ");
-            quoteIdentifierString(sb, toTable.getTableName());
-            sb.append("END TRANSACTION;");
-            String sql = sb.toString();
-            executeUpdate(stmt, sql);
-
-            if (additionalSql.isPresent()) {
-                executeUpdate(stmt, additionalSql.get());
-            }
-
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            throw safeRollback(connection, ex);
-        } finally {
-            stmt.close();
-        }
-    }
-
-    @Override
     protected String buildColumnTypeName(JdbcColumn c)
     {
         // Redshift does not support TEXT type.
