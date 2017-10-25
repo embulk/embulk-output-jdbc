@@ -28,6 +28,23 @@ public class RedshiftOutputConnection
         connection.setAutoCommit(autoCommit);
     }
 
+    // ALTER TABLE cannot change the schema of a table
+    //
+    // Standard JDBC:
+    //     ALTER TABLE "public"."source" RENAME TO "public"."target"
+    // Redshift:
+    //     ALTER TABLE "public"."source" RENAME TO "target"
+    @Override
+    protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE ");
+        quoteTableIdentifier(sb, fromTable);
+        sb.append(" RENAME TO ");
+        quoteIdentifierString(sb, toTable.getTableName());
+        return sb.toString();
+    }
+
     @Override
     protected String buildColumnTypeName(JdbcColumn c)
     {
