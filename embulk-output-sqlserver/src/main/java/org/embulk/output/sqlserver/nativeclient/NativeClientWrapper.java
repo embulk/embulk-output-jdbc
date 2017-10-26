@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jnr.ffi.LibraryLoader;
+import jnr.ffi.Platform;
 import jnr.ffi.Pointer;
 import jnr.ffi.Runtime;
 import jnr.ffi.provider.jffi.ArrayMemoryIO;
@@ -33,32 +34,43 @@ public class NativeClientWrapper
 
     public NativeClientWrapper()
     {
+        Platform platform = Platform.getPlatform();
+        Platform.OS os = platform.getOS();
+        String odbcLibName;
+        String nativeClientLibName;
+        if (os == Platform.OS.WINDOWS) {
+          odbcLibName = "odbc32";
+          nativeClientLibName = "sqlncli11";
+        } else {
+          odbcLibName = "odbc";
+          nativeClientLibName = "msodbcsql";
+        }
         synchronized (NativeClientWrapper.class) {
             if (odbc == null) {
-                logger.info("Loading SQL Server Native Client library (odbc32).");
+                logger.info(String.format("Loading SQL Server Native Client library (%s).", odbcLibName));
                 try {
-                    odbc = LibraryLoader.create(ODBC.class).failImmediately().load("odbc32");
+                    odbc = LibraryLoader.create(ODBC.class).failImmediately().load(odbcLibName);
                 } catch (UnsatisfiedLinkError e) {
-                    throw new RuntimeException("odbc32.dll not found.", e);
+                    throw new RuntimeException(platform.mapLibraryName(odbcLibName) + " not found.", e);
                 }
             }
             if (client == null) {
-                logger.info("Loading SQL Server Native Client library (sqlncli11).");
+                logger.info(String.format("Loading SQL Server Native Client library (%s).", nativeClientLibName));
                 try {
-                    client = LibraryLoader.create(NativeClient.class).failImmediately().load("sqlncli11");
+                    client = LibraryLoader.create(NativeClient.class).failImmediately().load(nativeClientLibName);
                 } catch (UnsatisfiedLinkError e) {
-                    throw new RuntimeException("sqlncli11.dll not found.", e);
+                    throw new RuntimeException(platform.mapLibraryName(nativeClientLibName) + " not found.", e);
                 }
             }
         }
 
-        charset = Charset.forName("MS932");
+        charset = Charset.forName("UTF-8");
         wideCharset = Charset.forName("UTF-16LE");
     }
 
     public void open(String server, int port, Optional<String> instance,
             String database, Optional<String> user, Optional<String> password,
-            String table)
+            String table, Optional<String> nativeDriverName)
                     throws SQLException
     {
         // environment handle
@@ -92,7 +104,11 @@ public class NativeClientWrapper
                 ODBC.SQL_IS_INTEGER));
 
         StringBuilder connectionString = new StringBuilder();
-        connectionString.append("Driver={SQL Server Native Client 11.0};");
+        if (nativeDriverName.isPresent()) {
+            connectionString.append(String.format("Driver=%s;", nativeDriverName.get()));
+        } else {
+            connectionString.append("Driver={SQL Server Native Client 11.0};");
+        }
         if (instance.isPresent()) {
             connectionString.append(String.format("Server=%s,%d\\%s;", server, port, instance.get()));
         } else {
@@ -153,7 +169,10 @@ public class NativeClientWrapper
     {
         ByteBuffer bytes = charset.encode(value);
         Pointer pointer = prepareBuffer(columnIndex, bytes.remaining());
-        pointer.put(0, bytes.array(), 0, bytes.remaining());
+        ByteBuffer bytesPadded = ByteBuffer.allocate((int)pointer.size());
+        bytesPadded.put(bytes);
+        bytesPadded.position(0);
+        pointer.put(0, bytesPadded.array(), 0, bytesPadded.remaining());
 
         checkBCPResult("bcp_bind", client.bcp_bind(
                 odbcHandle,
