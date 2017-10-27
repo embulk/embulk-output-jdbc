@@ -28,66 +28,21 @@ public class RedshiftOutputConnection
         connection.setAutoCommit(autoCommit);
     }
 
-    // Redshift does not support DROP TABLE IF EXISTS.
-    // Here runs DROP TABLE and ignores errors.
+    // ALTER TABLE cannot change the schema of a table
+    //
+    // Standard JDBC:
+    //     ALTER TABLE "public"."source" RENAME TO "public"."target"
+    // Redshift:
+    //     ALTER TABLE "public"."source" RENAME TO "target"
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
+    protected String buildRenameTableSql(TableIdentifier fromTable, TableIdentifier toTable)
     {
-        Statement stmt = connection.createStatement();
-        try {
-            String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            // ignore errors.
-            // TODO here should ignore only 'table "XXX" does not exist' errors.
-            SQLException ignored = safeRollback(connection, ex);
-        } finally {
-            stmt.close();
-        }
-    }
-
-    // Redshift does not support DROP TABLE IF EXISTS.
-    // Dropping part runs DROP TABLE and ignores errors.
-    @Override
-    public void replaceTable(TableIdentifier fromTable, JdbcSchema schema, TableIdentifier toTable, Optional<String> additionalSql) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            try {
-                StringBuilder sb = new StringBuilder();
-                sb.append("DROP TABLE ");
-                quoteTableIdentifier(sb, toTable);
-                String sql = sb.toString();
-                executeUpdate(stmt, sql);
-            } catch (SQLException ex) {
-                // ignore errors.
-                // TODO here should ignore only 'table "XXX" does not exist' errors.
-                // rollback or comimt is required to recover failed transaction
-                SQLException ignored = safeRollback(connection, ex);
-            }
-
-            {
-                // ALTER TABLE cannot change schema of table
-                StringBuilder sb = new StringBuilder();
-                sb.append("ALTER TABLE ");
-                quoteTableIdentifier(sb, fromTable);
-                sb.append(" RENAME TO ");
-                quoteIdentifierString(sb, toTable.getTableName());
-                String sql = sb.toString();
-                executeUpdate(stmt, sql);
-            }
-
-            if (additionalSql.isPresent()) {
-                executeUpdate(stmt, additionalSql.get());
-            }
-
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            throw safeRollback(connection, ex);
-        } finally {
-            stmt.close();
-        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE ");
+        quoteTableIdentifier(sb, fromTable);
+        sb.append(" RENAME TO ");
+        quoteIdentifierString(sb, toTable.getTableName());
+        return sb.toString();
     }
 
     @Override
