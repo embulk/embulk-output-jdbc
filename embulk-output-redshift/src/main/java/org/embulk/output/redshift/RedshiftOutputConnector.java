@@ -10,17 +10,18 @@ import org.embulk.output.jdbc.JdbcOutputConnection;
 public class RedshiftOutputConnector
         implements JdbcOutputConnector
 {
-    private static final Driver driver = new org.postgresql.Driver();
+    private final Driver driver;
 
     private final String url;
     private final Properties properties;
     private final String schemaName;
 
-    public RedshiftOutputConnector(String url, Properties properties, String schemaName)
+    public RedshiftOutputConnector(String url, Properties properties, String schemaName, String driverClass) throws ClassNotFoundException, InstantiationException, IllegalAccessException
     {
         this.url = url;
         this.properties = properties;
         this.schemaName = schemaName;
+        this.driver = (Driver)Class.forName(driverClass).newInstance();
     }
 
     @Override
