@@ -10,8 +10,9 @@ Redshift output plugin for Embulk loads records to Redshift.
 
 ## Configuration
 
-- **host**: database host name (string, required)
-- **port**: database port number (integer, default: 5439)
+- **url**: jdbc connecting url (string, required)
+- **driver_path**: path to the jar file of the JDBC driver (e.g. 'sqlite-jdbc-3.8.7.jar') (string, optional)
+- **driver_class**: class name of the JDBC driver (e.g. 'org.sqlite.JDBC') (string, required)
 - **user**: database login user name (string, required)
 - **ssl**: use SSL to connect to the database (string, default: "disable". "enable" uses SSL without server-side validation and "verify" checks the certificate. For compatibility reasons, "true" behaves as "enable" and "false" behaves as "disable".)
 - **password**: database login password (string, default: "")
