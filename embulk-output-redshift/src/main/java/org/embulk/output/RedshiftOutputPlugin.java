@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.google.common.base.Throwables;
 import org.embulk.output.jdbc.MergeConfig;
 import org.slf4j.Logger;
 import com.google.common.base.Optional;
@@ -147,12 +148,7 @@ public class RedshiftOutputPlugin
         props.setProperty("user", t.getUser());
         logger.info("Connecting to {} options {}", url, props);
         props.setProperty("password", t.getPassword());
-        try {
-            return new RedshiftOutputConnector(url, props, t.getSchema(), driverClass);
-        }catch (ClassNotFoundException | InstantiationException | IllegalAccessException e){
-            e.printStackTrace();
-        }
-        return null;
+        return new RedshiftOutputConnector(url, props, t.getSchema(), driverClass);
     }
 
     private static AWSCredentialsProvider getAWSCredentialsProvider(RedshiftPluginTask task)
