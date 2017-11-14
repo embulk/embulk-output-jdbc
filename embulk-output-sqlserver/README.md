@@ -34,6 +34,8 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = T.foo + S.foo` (`T` means target table and `S` means source table). (string array, default: always overwrites with new values)
 - **insert_method**: see below
+- **native_driver**: driver name when using `insert_method: native`. (string, default: `{SQL Server Native Client 11.0}`)
+- **database_encoding**: database encoding when using `insert_method: native`. (string, default: `MS932`)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
@@ -74,7 +76,9 @@ insert_method supports three options.
 "normal" means normal insert (default). It requires SQL Server JDBC driver.
 
 "native" means bulk insert using native client. It is faster than "normal".
-It requires both SQL Server JDBC driver and SQL Server Native Client (11.0).
+It requires both SQL Server JDBC driver and SQL Server Native Client (or newer version of Microsoft ODBC Driver).
+
+If you embulk use on Linux, you needed to [install mssql-tools](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server).
 
 ### Supported types
 
