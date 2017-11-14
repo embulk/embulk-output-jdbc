@@ -88,6 +88,9 @@ public class SQLServerOutputPlugin
         @ConfigDefault("null")
         public Optional<String> getNativeDriverName();
 
+        @Config("database_encoding")
+        @ConfigDefault("\"MS932\"")
+        public Optional<String> getDatabaseEncoding();
     }
 
     private static class UrlAndProperties {
@@ -270,8 +273,10 @@ public class SQLServerOutputPlugin
     {
         SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
         if (sqlServerTask.getInsertMethod() == InsertMethod.NATIVE) {
-            return new NativeBatchInsert(sqlServerTask.getHost().get(), sqlServerTask.getPort(), sqlServerTask.getInstance(),
-                    sqlServerTask.getDatabase().get(), sqlServerTask.getUser(), sqlServerTask.getPassword(), sqlServerTask.getNativeDriverName());
+            return new NativeBatchInsert(
+                    sqlServerTask.getHost().get(), sqlServerTask.getPort(), sqlServerTask.getInstance(),
+                    sqlServerTask.getDatabase().get(), sqlServerTask.getUser(), sqlServerTask.getPassword(),
+                    sqlServerTask.getNativeDriverName(), sqlServerTask.getDatabaseEncoding());
         }
         return new StandardBatchInsert(getConnector(task, true), mergeConfig);
     }

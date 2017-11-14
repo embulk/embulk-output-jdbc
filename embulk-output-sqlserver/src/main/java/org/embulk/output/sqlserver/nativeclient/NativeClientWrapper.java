@@ -64,8 +64,12 @@ public class NativeClientWrapper
             }
         }
 
-        charset = Charset.forName("UTF-8");
+        charset = Charset.forName("MS932");
         wideCharset = Charset.forName("UTF-16LE");
+    }
+
+    public void setDatabaseCharset(String charsetStr) {
+        charset = Charset.forName(charsetStr);
     }
 
     public void open(String server, int port, Optional<String> instance,
