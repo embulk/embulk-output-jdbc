@@ -1,9 +1,13 @@
 package org.embulk.output.jdbc.setter;
 
+import com.google.common.base.Optional;
 import java.util.Calendar;
 import java.util.Locale;
 import java.sql.Types;
 import org.joda.time.DateTimeZone;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
+import org.embulk.spi.Exec;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -73,12 +77,19 @@ public class ColumnSetterFactory
         }
     }
 
+    private static interface FormatterIntlTask extends Task, TimestampFormatter.Task {}
+    private static interface FormatterIntlColumnOption extends Task, TimestampFormatter.TimestampColumnOption {}
+
     protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
+        // TODO: Switch to a newer TimestampFormatter constructor after a reasonable interval.
+        // Traditional constructor is used here for compatibility.
+        final ConfigSource configSource = Exec.newConfigSource();
+        configSource.set("format", option.getTimestampFormat().getFormat());
+        configSource.set("timezone", getTimeZone(option));
         return new TimestampFormatter(
-                option.getJRuby(),
-                option.getTimestampFormat().getFormat(),
-                getTimeZone(option));
+            Exec.newConfigSource().loadConfig(FormatterIntlTask.class),
+            Optional.fromNullable(configSource.loadConfig(FormatterIntlColumnOption.class)));
     }
 
     protected Calendar newCalendar(JdbcColumnOption option)

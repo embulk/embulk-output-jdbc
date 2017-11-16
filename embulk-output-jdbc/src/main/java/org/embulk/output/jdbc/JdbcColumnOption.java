@@ -2,7 +2,6 @@ package org.embulk.output.jdbc;
 
 import com.google.common.base.Optional;
 import org.joda.time.DateTimeZone;
-import org.jruby.embed.ScriptingContainer;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -27,8 +26,4 @@ public interface JdbcColumnOption
     @Config("timezone")
     @ConfigDefault("null")
     public Optional<DateTimeZone> getTimeZone();
-
-    // required by TimestampFormatter
-    @ConfigInject
-    public ScriptingContainer getJRuby();
 }
