@@ -90,7 +90,7 @@ public class SQLServerOutputPlugin
 
         @Config("database_encoding")
         @ConfigDefault("\"MS932\"")
-        public Optional<String> getDatabaseEncoding();
+        public String getDatabaseEncoding();
     }
 
     private static class UrlAndProperties {
