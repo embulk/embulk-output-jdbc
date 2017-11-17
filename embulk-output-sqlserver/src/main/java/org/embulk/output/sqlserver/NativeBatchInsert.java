@@ -66,8 +66,7 @@ public class NativeBatchInsert implements BatchInsert
     public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         columnCount = insertSchema.getCount();
-        client.open(server, port, instance, database, user, password, loadTable.getTableName(), nativeDriverName);
-        client.setDatabaseCharset(databaseEncoding);
+        client.open(server, port, instance, database, user, password, loadTable.getTableName(), nativeDriverName, databaseEncoding);
         formats = new DateFormat[insertSchema.getCount()];
         for (int i = 0; i < insertSchema.getCount(); i++) {
             JdbcColumn column = insertSchema.getColumn(i);

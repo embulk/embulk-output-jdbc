@@ -63,21 +63,17 @@ public class NativeClientWrapper
                 }
             }
         }
-
-        charset = Charset.forName("MS932");
-        wideCharset = Charset.forName("UTF-16LE");
-    }
-
-    public void setDatabaseCharset(String charsetStr) {
-        charset = Charset.forName(charsetStr);
     }
 
     public void open(String server, int port, Optional<String> instance,
             String database, Optional<String> user, Optional<String> password,
-            String table, Optional<String> nativeDriverName)
+            String table, Optional<String> nativeDriverName,
+            String databaseEncoding)
                     throws SQLException
     {
         // environment handle
+        charset = Charset.forName(databaseEncoding);
+        wideCharset = Charset.forName("UTF-16LE");
         Pointer envHandlePointer = createPointerPointer();
         checkSQLResult("SQLAllocHandle(SQL_HANDLE_ENV)", odbc.SQLAllocHandle(
                 ODBC.SQL_HANDLE_ENV,
