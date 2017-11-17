@@ -33,6 +33,8 @@ public class NativeBatchInsert implements BatchInsert
     private final String database;
     private final Optional<String> user;
     private final Optional<String> password;
+    private final Optional<String> nativeDriverName;
+    private final String databaseEncoding;
 
     private int batchWeight;
     private int batchRows;
@@ -45,7 +47,8 @@ public class NativeBatchInsert implements BatchInsert
 
 
     public NativeBatchInsert(String server, int port, Optional<String> instance,
-            String database, Optional<String> user, Optional<String> password)
+            String database, Optional<String> user, Optional<String> password,
+            Optional<String> nativeDriverName, String databaseEncoding)
     {
         this.server = server;
         this.port = port;
@@ -53,7 +56,8 @@ public class NativeBatchInsert implements BatchInsert
         this.database = database;
         this.user = user;
         this.password = password;
-
+        this.nativeDriverName = nativeDriverName;
+        this.databaseEncoding = databaseEncoding;
         lastColumnIndex = 0;
     }
 
@@ -62,8 +66,7 @@ public class NativeBatchInsert implements BatchInsert
     public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
         columnCount = insertSchema.getCount();
-        client.open(server, port, instance, database, user, password, loadTable.getTableName());
-
+        client.open(server, port, instance, database, user, password, loadTable.getTableName(), nativeDriverName, databaseEncoding);
         formats = new DateFormat[insertSchema.getCount()];
         for (int i = 0; i < insertSchema.getCount(); i++) {
             JdbcColumn column = insertSchema.getColumn(i);
