@@ -169,10 +169,7 @@ public class NativeClientWrapper
     {
         ByteBuffer bytes = charset.encode(value);
         Pointer pointer = prepareBuffer(columnIndex, bytes.remaining());
-        ByteBuffer bytesPadded = ByteBuffer.allocate((int)pointer.size());
-        bytesPadded.put(bytes);
-        bytesPadded.position(0);
-        pointer.put(0, bytesPadded.array(), 0, bytesPadded.remaining());
+        pointer.put(0, bytes.array(), 0, bytes.remaining());
 
         checkBCPResult("bcp_bind", client.bcp_bind(
                 odbcHandle,
@@ -308,11 +305,9 @@ public class NativeClientWrapper
     private Pointer prepareBuffer(int columnIndex, int size)
     {
         Pointer pointer = boundPointers.get(columnIndex);
-        if (pointer == null || pointer.size() < size) {
-            Runtime runtime = Runtime.getSystemRuntime();
-            pointer = Pointer.wrap(runtime, ByteBuffer.allocateDirect(size).order(runtime.byteOrder()));
-            boundPointers.put(columnIndex, pointer);
-        }
+        Runtime runtime = Runtime.getSystemRuntime();
+        pointer = Pointer.wrap(runtime, ByteBuffer.allocateDirect(size).order(runtime.byteOrder()));
+        boundPointers.put(columnIndex, pointer);
         return pointer;
     }
 
