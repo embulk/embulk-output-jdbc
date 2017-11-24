@@ -1,3 +1,9 @@
+Release 0.7.12 - 2017-11-24
+
+* Fixed a bug where embulk-output-redshift ignores an exception thrown by `DROP TABLE` statement (@mjalkio++).
+* embulk-output-sqlserver native client mode supported Mac OS and Linux (@kitsuyui++).
+* Avoided using deprecated TimestampFormatter constructors.
+
 Release 0.7.11 - 2017-08-16
 * Fixed a bug where embulk-output-redshift merge mode doesn't insert new records (@mjalkio++).
 
