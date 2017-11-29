@@ -75,6 +75,10 @@ public class RedshiftOutputPlugin
         @ConfigDefault("\"\"")
         public String getS3KeyPrefix();
 
+        @Config("delete_s3_temp_file")
+        @ConfigDefault("true")
+        public boolean getDeleteS3TempFile();
+
         @Config("ssl")
         @ConfigDefault("\"disable\"")
         public Ssl getSsl();
@@ -188,6 +192,6 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile());
     }
 }
