@@ -1,17 +1,18 @@
 package org.embulk.output.jdbc;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Types;
 import java.sql.ResultSet;
@@ -63,8 +64,6 @@ import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
 {
-    private final static Set<String> loadedJarGlobs = new HashSet<String>();
-
     protected final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
@@ -221,15 +220,51 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected void loadDriverJar(String glob)
+    protected void addDriverJarToClasspath(String glob)
     {
-        synchronized (loadedJarGlobs) {
-            if (!loadedJarGlobs.contains(glob)) {
-                // TODO match glob
-                PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
-                loader.addPath(Paths.get(glob));
-                loadedJarGlobs.add(glob);
+        // TODO match glob
+        PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
+        Path path = Paths.get(glob);
+        if (!path.toFile().exists()) {
+             throw new ConfigException("The specified driver jar doesn't exist: " + glob);
+        }
+        loader.addPath(Paths.get(glob));
+    }
+
+    protected void loadDriver(String className, Optional<String> driverPath)
+    {
+        if (driverPath.isPresent()) {
+            addDriverJarToClasspath(driverPath.get());
+        } else {
+            try {
+                // Gradle test task will add JDBC driver to classpath
+                Class.forName(className);
+
+            } catch (ClassNotFoundException ex) {
+                File root = findPluginRoot(getClass());
+                File driverLib = new File(root, "default_jdbc_driver");
+                File[] files = driverLib.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        return file.isFile() && file.getName().endsWith(".jar");
+                    }
+                });
+                if (files == null || files.length == 0) {
+                    throw new RuntimeException("Cannot find JDBC driver in '" + root.getAbsolutePath() + "'.");
+                } else {
+                    for (File file : files) {
+                        logger.info("JDBC Driver = " + file.getAbsolutePath());
+                        addDriverJarToClasspath(file.getAbsolutePath());
+                    }
+                }
             }
+        }
+
+        // Load JDBC Driver
+        try {
+            Class.forName(className);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

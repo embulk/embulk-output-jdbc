@@ -136,7 +136,7 @@ public class SQLServerOutputPlugin
         boolean useJtdsDriver = false;
 
         if (sqlServerTask.getDriverPath().isPresent()) {
-            loadDriverJar(sqlServerTask.getDriverPath().get());
+            addDriverJarToClasspath(sqlServerTask.getDriverPath().get());
             try {
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             } catch (Exception e) {

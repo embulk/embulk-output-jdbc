@@ -27,7 +27,7 @@ public class OracleTests
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("You should put 'ojdbc7.jar' in 'embulk-output-oracle/driver' directory in order to test.");
+            throw new RuntimeException("You should put 'ojdbc7.jar' in 'embulk-output-oracle/test_jdbc_driver' directory in order to test.");
         }
 
         Path sqlFile = embulk.createTempFile("sql");

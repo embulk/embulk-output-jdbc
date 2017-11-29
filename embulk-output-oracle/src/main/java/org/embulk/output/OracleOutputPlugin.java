@@ -83,7 +83,7 @@ public class OracleOutputPlugin
         OraclePluginTask oracleTask = (OraclePluginTask) task;
 
         if (oracleTask.getDriverPath().isPresent()) {
-            loadDriverJar(oracleTask.getDriverPath().get());
+            addDriverJarToClasspath(oracleTask.getDriverPath().get());
         }
 
         String url;
