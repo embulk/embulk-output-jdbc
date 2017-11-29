@@ -6,10 +6,7 @@ import java.sql.Statement;
 
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
-
-import com.google.common.base.Optional;
 
 import static java.util.Locale.ENGLISH;
 
@@ -57,12 +54,9 @@ public class DB2OutputConnection
     }
 
     @Override
-    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema,
-            Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
+    protected boolean supportsCreateTableIfNotExists()
     {
-        if (!tableExists(table)) {
-            createTable(table, schema, tableConstraint, tableOption);
-        }
+        return false;
     }
 
     @Override

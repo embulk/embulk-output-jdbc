@@ -123,18 +123,29 @@ public class JdbcOutputConnection
         executeUpdate(stmt, sql);
     }
 
-    public void createTableIfNotExists(TableIdentifier targetTable, JdbcSchema schema,
+    protected boolean supportsCreateTableIfNotExists()
+    {
+        return true;
+    }
+
+    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema,
             Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
     {
-        Statement stmt = connection.createStatement();
-        try {
-            String sql = buildCreateTableIfNotExistsSql(targetTable, schema, tableConstraint, tableOption);
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            throw safeRollback(connection, ex);
-        } finally {
-            stmt.close();
+        if (supportsCreateTableIfNotExists()) {
+            Statement stmt = connection.createStatement();
+            try {
+                String sql = buildCreateTableIfNotExistsSql(table, schema, tableConstraint, tableOption);
+                executeUpdate(stmt, sql);
+                commitIfNecessary(connection);
+            } catch (SQLException ex) {
+                throw safeRollback(connection, ex);
+            } finally {
+                stmt.close();
+            }
+        } else {
+            if (!tableExists(table)) {
+                createTable(table, schema, tableConstraint, tableOption);
+            }
         }
     }
 
