@@ -85,6 +85,11 @@ public class JdbcOutputConnection
         return tableExists(new TableIdentifier(null, schemaName, tableName));
     }
 
+    protected boolean supportsTableIfExistsClause()
+    {
+        return true;
+    }
+
     public void dropTableIfExists(TableIdentifier table) throws SQLException
     {
         Statement stmt = connection.createStatement();
@@ -100,8 +105,14 @@ public class JdbcOutputConnection
 
     protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException
     {
-        String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
-        executeUpdate(stmt, sql);
+        if (supportsTableIfExistsClause()) {
+            String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
+            executeUpdate(stmt, sql);
+        } else {
+            if (tableExists(table)) {
+                dropTable(stmt, table);
+            }
+        }
     }
 
     public void dropTable(TableIdentifier table) throws SQLException
@@ -123,15 +134,10 @@ public class JdbcOutputConnection
         executeUpdate(stmt, sql);
     }
 
-    protected boolean supportsCreateTableIfNotExists()
-    {
-        return true;
-    }
-
     public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema,
             Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
     {
-        if (supportsCreateTableIfNotExists()) {
+        if (supportsTableIfExistsClause()) {
             Statement stmt = connection.createStatement();
             try {
                 String sql = buildCreateTableIfNotExistsSql(table, schema, tableConstraint, tableOption);

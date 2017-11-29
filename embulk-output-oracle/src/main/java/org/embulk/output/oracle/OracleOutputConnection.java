@@ -64,22 +64,7 @@ public class OracleOutputConnection
     }
 
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
-    {
-        if (tableExists(table)) {
-            dropTable(table);
-        }
-    }
-
-    @Override
-    protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException {
-        if (tableExists(table)) {
-            dropTable(stmt, table);
-        }
-    }
-
-    @Override
-    protected boolean supportsCreateTableIfNotExists()
+    protected boolean supportsTableIfExistsClause()
     {
         return false;
     }

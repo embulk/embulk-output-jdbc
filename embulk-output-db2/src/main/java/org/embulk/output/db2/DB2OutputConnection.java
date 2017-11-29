@@ -2,7 +2,6 @@ package org.embulk.output.db2;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -38,23 +37,7 @@ public class DB2OutputConnection
     }
 
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
-    {
-        if (tableExists(table)) {
-            dropTable(table);
-        }
-    }
-
-    @Override
-    protected void dropTableIfExists(Statement stmt, TableIdentifier tableName) throws SQLException
-    {
-        if (tableExists(tableName)) {
-            dropTable(stmt, tableName);
-        }
-    }
-
-    @Override
-    protected boolean supportsCreateTableIfNotExists()
+    protected boolean supportsTableIfExistsClause()
     {
         return false;
     }

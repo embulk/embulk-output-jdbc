@@ -2,7 +2,6 @@ package org.embulk.output.sqlserver;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,23 +60,7 @@ public class SQLServerOutputConnection
     }
 
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
-    {
-        if (tableExists(table)) {
-            dropTable(table);
-        }
-    }
-
-    @Override
-    protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException
-    {
-        if (tableExists(table)) {
-            dropTable(stmt, table);
-        }
-    }
-
-    @Override
-    protected boolean supportsCreateTableIfNotExists()
+    protected boolean supportsTableIfExistsClause()
     {
         return false;
     }
