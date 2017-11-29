@@ -12,6 +12,8 @@ import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.TableIdentifier;
 
+import com.google.common.base.Optional;
+
 public class SQLServerOutputConnection
         extends JdbcOutputConnection
 {
@@ -77,10 +79,11 @@ public class SQLServerOutputConnection
     }
 
     @Override
-    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema) throws SQLException
+    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema,
+            Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
     {
         if (!tableExists(table)) {
-            createTable(table, schema);
+            createTable(table, schema, tableConstraint, tableOption);
         }
     }
 

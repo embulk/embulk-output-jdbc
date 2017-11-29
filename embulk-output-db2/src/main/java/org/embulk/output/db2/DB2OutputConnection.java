@@ -9,6 +9,8 @@ import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
 
+import com.google.common.base.Optional;
+
 import static java.util.Locale.ENGLISH;
 
 public class DB2OutputConnection
@@ -55,37 +57,12 @@ public class DB2OutputConnection
     }
 
     @Override
-    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema) throws SQLException
+    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema,
+            Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
     {
         if (!tableExists(table)) {
-            createTable(table, schema);
+            createTable(table, schema, tableConstraint, tableOption);
         }
-    }
-
-    @Override
-    public void createTable(TableIdentifier table, JdbcSchema schema) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            String sql = buildCreateTableSql(table, schema);
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            throw safeRollback(connection, ex);
-        } finally {
-            stmt.close();
-        }
-    }
-
-    @Override
-    protected String buildCreateTableSql(TableIdentifier table, JdbcSchema schema)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("CREATE TABLE ");
-        quoteTableIdentifier(sb, table);
-        sb.append(buildCreateTableSchemaSql(schema));
-        return sb.toString();
     }
 
     @Override

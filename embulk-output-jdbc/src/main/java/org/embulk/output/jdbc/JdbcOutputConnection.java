@@ -123,11 +123,12 @@ public class JdbcOutputConnection
         executeUpdate(stmt, sql);
     }
 
-    public void createTableIfNotExists(TableIdentifier targetTable, JdbcSchema schema) throws SQLException
+    public void createTableIfNotExists(TableIdentifier targetTable, JdbcSchema schema,
+            Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = buildCreateTableIfNotExistsSql(targetTable, schema);
+            String sql = buildCreateTableIfNotExistsSql(targetTable, schema, tableConstraint, tableOption);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -137,21 +138,27 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildCreateTableIfNotExistsSql(TableIdentifier table, JdbcSchema schema)
+    protected String buildCreateTableIfNotExistsSql(TableIdentifier table, JdbcSchema schema,
+            Optional<String> tableConstraint, Optional<String> tableOption)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("CREATE TABLE IF NOT EXISTS ");
         quoteTableIdentifier(sb, table);
-        sb.append(buildCreateTableSchemaSql(schema));
+        sb.append(buildCreateTableSchemaSql(schema, tableConstraint));
+        if (tableOption.isPresent()) {
+            sb.append(" ");
+            sb.append(tableOption.get());
+        }
         return sb.toString();
     }
 
-    public void createTable(TableIdentifier table, JdbcSchema schema) throws SQLException
+    public void createTable(TableIdentifier table, JdbcSchema schema,
+            Optional<String> tableConstraint, Optional<String> tableOption) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = buildCreateTableSql(table, schema);
+            String sql = buildCreateTableSql(table, schema, tableConstraint, tableOption);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
@@ -161,27 +168,36 @@ public class JdbcOutputConnection
         }
     }
 
-    protected String buildCreateTableSql(TableIdentifier table, JdbcSchema schema)
+    protected String buildCreateTableSql(TableIdentifier table, JdbcSchema schema,
+            Optional<String> tableConstraint, Optional<String> tableOption)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append("CREATE TABLE ");
         quoteTableIdentifier(sb, table);
-        sb.append(buildCreateTableSchemaSql(schema));
+        sb.append(buildCreateTableSchemaSql(schema, tableConstraint));
+        if (tableOption.isPresent()) {
+            sb.append(" ");
+            sb.append(tableOption.get());
+        }
         return sb.toString();
     }
 
-    protected String buildCreateTableSchemaSql(JdbcSchema schema)
+    protected String buildCreateTableSchemaSql(JdbcSchema schema, Optional<String> tableConstraint)
     {
         StringBuilder sb = new StringBuilder();
 
         sb.append(" (");
-        for (int i=0; i < schema.getCount(); i++) {
+        for (int i = 0; i < schema.getCount(); i++) {
             if (i != 0) { sb.append(", "); }
             quoteIdentifierString(sb, schema.getColumnName(i));
             sb.append(" ");
             String typeName = getCreateTableTypeName(schema.getColumn(i));
             sb.append(typeName);
+        }
+        if (tableConstraint.isPresent()) {
+            sb.append(", ");
+            sb.append(tableConstraint.get());
         }
         sb.append(")");
 
