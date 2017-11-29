@@ -6,7 +6,11 @@ import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.sql.Types;
@@ -984,6 +988,29 @@ public abstract class AbstractJdbcOutputPlugin
                     throw new RuntimeException(ex);
                 }
             }
+        }
+    }
+
+    public static File findPluginRoot(Class<?> cls)
+    {
+        try {
+            URL url = cls.getResource("/" + cls.getName().replace('.', '/') + ".class");
+            if (url.toString().startsWith("jar:")) {
+                url = new URL(url.toString().replaceAll("^jar:", "").replaceAll("![^!]*$", ""));
+            }
+
+            File folder = new File(url.toURI()).getParentFile();
+            for (;; folder = folder.getParentFile()) {
+                if (folder == null) {
+                    throw new RuntimeException("Cannot find 'embulk-output-xxx' folder.");
+                }
+
+                if (folder.getName().startsWith("embulk-output-")) {
+                    return folder;
+                }
+            }
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
