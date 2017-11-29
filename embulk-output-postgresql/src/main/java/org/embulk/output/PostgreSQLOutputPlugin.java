@@ -27,6 +27,10 @@ public class PostgreSQLOutputPlugin
     public interface PostgreSQLPluginTask
             extends PluginTask
     {
+        @Config("driver_path")
+        @ConfigDefault("null")
+        public Optional<String> getDriverPath();
+
         @Config("host")
         public String getHost();
 
@@ -76,6 +80,8 @@ public class PostgreSQLOutputPlugin
     protected PostgreSQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         PostgreSQLPluginTask t = (PostgreSQLPluginTask) task;
+
+        loadDriver("org.postgresql.Driver", t.getDriverPath());
 
         String url = String.format("jdbc:postgresql://%s:%d/%s",
                 t.getHost(), t.getPort(), t.getDatabase());
