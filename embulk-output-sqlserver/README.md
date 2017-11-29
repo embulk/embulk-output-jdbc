@@ -26,6 +26,8 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the same schema as destination table. (string, optional)
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
+- **create_table_constraint** table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_option** table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit** max retry count for database operations (integer, default: 12)
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))

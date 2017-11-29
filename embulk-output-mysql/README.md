@@ -18,6 +18,8 @@ MySQL output plugin for Embulk loads records to MySQL.
 - **database**: destination database name (string, required)
 - **temp_database**: database name for intermediate tables. by default, intermediate tables will be created in the database specified by `database`. (string, optional)
 - **table**: destination table name (string, required)
+- **create_table_constraint** table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_option** table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit** max retry count for database operations (integer, default: 12)
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
