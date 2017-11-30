@@ -90,7 +90,7 @@ public class RedshiftOutputPlugin
     protected Features getFeatures(PluginTask task)
     {
         return new Features()
-            .setMaxTableNameLength(30)
+            .setMaxTableNameLength(127)
             .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE, Mode.MERGE))
             .setIgnoreMergeKeys(false);
     }
