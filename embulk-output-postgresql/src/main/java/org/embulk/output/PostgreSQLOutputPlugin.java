@@ -67,7 +67,7 @@ public class PostgreSQLOutputPlugin
     protected Features getFeatures(PluginTask task)
     {
         return new Features()
-            .setMaxTableNameLength(30)
+            .setMaxTableNameLength(63)
             .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.MERGE_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
             .setIgnoreMergeKeys(false);
     }

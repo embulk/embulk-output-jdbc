@@ -47,7 +47,6 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
@@ -372,13 +371,6 @@ public abstract class AbstractJdbcOutputPlugin
         return commit(task, schema, taskCount);
     }
 
-    protected String getTransactionUniqueName()
-    {
-        // TODO use uuid?
-        Timestamp t = Exec.session().getTransactionTime();
-        return String.format("%016x%08x", t.getEpochSecond(), t.getNano());
-    }
-
     private PluginTask begin(final PluginTask task,
             final Schema schema, final int taskCount)
     {
@@ -598,7 +590,7 @@ public abstract class AbstractJdbcOutputPlugin
                         String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 3,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + String.format("%03d", taskIndex);
+                            String tableName = namePrefix + String.format("%03d", taskIndex % 1000);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema);
@@ -667,8 +659,8 @@ public abstract class AbstractJdbcOutputPlugin
     {
         Charset tableNameCharset = con.getTableNameCharset();
         String tableName = baseTableName;
-        String suffix = "_bl_tmp";
-        String uniqueSuffix = getTransactionUniqueName() + suffix;
+        String suffix = "_embulk";
+        String uniqueSuffix = String.format("%016x", System.currentTimeMillis()) + suffix;
 
         // way to count length of table name varies by DBMSs (bytes or characters),
         // so truncate swap table name by one character.
