@@ -4,5 +4,5 @@ dependencies {
 
     testCompile 'org.embulk:embulk-standards:0.8.22'
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
-    testCompile files('driver/sqljdbc41.jar')
+    testCompile files('test_jdbc_driver/sqljdbc41.jar')
 }

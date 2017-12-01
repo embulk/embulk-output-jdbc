@@ -65,7 +65,7 @@ public class DB2OutputPlugin
         DB2PluginTask db2Task = (DB2PluginTask) task;
 
         if (db2Task.getDriverPath().isPresent()) {
-            loadDriverJar(db2Task.getDriverPath().get());
+            addDriverJarToClasspath(db2Task.getDriverPath().get());
         }
 
         String url = String.format(ENGLISH, "jdbc:db2://%s:%d/%s",
