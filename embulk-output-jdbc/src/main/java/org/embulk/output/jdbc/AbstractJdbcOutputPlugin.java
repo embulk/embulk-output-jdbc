@@ -91,6 +91,14 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("{}")
         public Map<String, JdbcColumnOption> getColumnOptions();
 
+        @Config("create_table_constraint")
+        @ConfigDefault("null")
+        public Optional<String> getCreateTableConstraint();
+
+        @Config("create_table_option")
+        @ConfigDefault("null")
+        public Optional<String> getCreateTableOption();
+
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
         public DateTimeZone getDefaultTimeZone();
@@ -556,7 +564,7 @@ public abstract class AbstractJdbcOutputPlugin
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
-            con.createTableIfNotExists(task.getActualTable(), newTableSchema);
+            con.createTableIfNotExists(task.getActualTable(), newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getActualTable()).get();
             task.setNewTableSchema(Optional.<JdbcSchema>absent());
         }
@@ -632,14 +640,14 @@ public abstract class AbstractJdbcOutputPlugin
                             String tableName = namePrefix + String.format("%03d", taskIndex % 1000);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
-                            con.createTable(table, newTableSchema);
+                            con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
                             intermTables.add(table);
                         }
                     } else {
                         String tableName = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 0,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         table = buildIntermediateTableId(con, task, tableName);
-                        con.createTable(table, newTableSchema);
+                        con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
                         intermTables.add(table);
                     }
                     return intermTables.build();
@@ -797,7 +805,8 @@ public abstract class AbstractJdbcOutputPlugin
         case INSERT:
             // aggregate insert into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get(),
+                        task.getCreateTableConstraint(), task.getCreateTableOption());
             }
             con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false, task.getBeforeLoad(), task.getAfterLoad());
             break;
@@ -805,7 +814,8 @@ public abstract class AbstractJdbcOutputPlugin
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get(),
+                        task.getCreateTableConstraint(), task.getCreateTableOption());
             }
             con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true, task.getBeforeLoad(), task.getAfterLoad());
             break;
@@ -813,7 +823,8 @@ public abstract class AbstractJdbcOutputPlugin
         case MERGE:
             // aggregate merge into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get(),
+                        task.getCreateTableConstraint(), task.getCreateTableOption());
             }
             con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(),
                     new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()), task.getBeforeLoad(), task.getAfterLoad());
