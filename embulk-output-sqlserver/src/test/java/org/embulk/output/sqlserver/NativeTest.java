@@ -204,6 +204,51 @@ public class NativeTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testDateNull() throws Exception
+    {
+        Path in1 = toPath("test_timestamp_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_date_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DATE"), is(readResource("test_date_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testDateTimeNull() throws Exception
+    {
+        Path in1 = toPath("test_timestamp_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_datetime_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DATETIME"), is(readResource("test_datetime_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testDateTime2Null() throws Exception
+    {
+        Path in1 = toPath("test_timestamp_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_datetime2_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DATETIME2"), is(readResource("test_datetime2_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testSmallDateTimeNull() throws Exception
+    {
+        Path in1 = toPath("test_timestamp_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_smalldatetime_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_SMALLDATETIME"), is(readResource("test_smalldatetime_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testTimeNull() throws Exception
+    {
+        Path in1 = toPath("test_timestamp_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_time_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_TIME"), is(readResource("test_time_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);

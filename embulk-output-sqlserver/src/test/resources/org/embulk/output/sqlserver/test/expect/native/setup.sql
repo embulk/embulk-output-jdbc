@@ -123,3 +123,38 @@ CREATE TABLE TEST_NTEXT (
     VALUE               NTEXT,
     PRIMARY KEY (ID)
 );
+
+DROP TABLE TEST_DATE;
+CREATE TABLE TEST_DATE (
+    ID                  INT,
+    VALUE               DATE,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_DATETIME;
+CREATE TABLE TEST_DATETIME (
+    ID                  INT,
+    VALUE               DATETIME,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_DATETIME2;
+CREATE TABLE TEST_DATETIME2 (
+    ID                  INT,
+    VALUE               DATETIME2,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_SMALLDATETIME;
+CREATE TABLE TEST_SMALLDATETIME (
+    ID                  INT,
+    VALUE               SMALLDATETIME,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_TIME;
+CREATE TABLE TEST_TIME (
+    ID                  INT,
+    VALUE               TIME,
+    PRIMARY KEY (ID)
+);
