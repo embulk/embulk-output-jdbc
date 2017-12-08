@@ -82,3 +82,44 @@ CREATE TABLE TEST_FLOAT (
     PRIMARY KEY (ID)
 );
 
+DROP TABLE TEST_CHAR;
+CREATE TABLE TEST_CHAR (
+    ID                  INT,
+    VALUE               CHAR(4),
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_VARCHAR;
+CREATE TABLE TEST_VARCHAR (
+    ID                  INT,
+    VALUE               VARCHAR(4),
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_TEXT;
+CREATE TABLE TEST_TEXT (
+    ID                  INT,
+    VALUE               TEXT,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_NCHAR;
+CREATE TABLE TEST_NCHAR (
+    ID                  INT,
+    VALUE               NCHAR(4),
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_NVARCHAR;
+CREATE TABLE TEST_NVARCHAR (
+    ID                  INT,
+    VALUE               NVARCHAR(4),
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_NTEXT;
+CREATE TABLE TEST_NTEXT (
+    ID                  INT,
+    VALUE               NTEXT,
+    PRIMARY KEY (ID)
+);

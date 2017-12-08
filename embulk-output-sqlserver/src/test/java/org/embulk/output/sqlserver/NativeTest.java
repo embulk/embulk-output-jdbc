@@ -150,6 +150,60 @@ public class NativeTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testCharNull() throws Exception
+    {
+        Path in1 = toPath("test_char_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_char_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_CHAR"), is(readResource("test_char_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testVarCharNull() throws Exception
+    {
+        Path in1 = toPath("test_varchar_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_varchar_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_VARCHAR"), is(readResource("test_varchar_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testTextNull() throws Exception
+    {
+        Path in1 = toPath("test_varchar_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_text_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_TEXT"), is(readResource("test_varchar_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testNCharNull() throws Exception
+    {
+        Path in1 = toPath("test_char_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_nchar_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_NCHAR"), is(readResource("test_char_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testNVarCharNull() throws Exception
+    {
+        Path in1 = toPath("test_varchar_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_nvarchar_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_NVARCHAR"), is(readResource("test_varchar_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testNTextNull() throws Exception
+    {
+        Path in1 = toPath("test_varchar_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_ntext_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_NTEXT"), is(readResource("test_varchar_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
