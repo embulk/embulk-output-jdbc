@@ -61,3 +61,24 @@ CREATE TABLE TEST_MONEY (
     PRIMARY KEY (ID)
 );
 
+DROP TABLE TEST_BIT;
+CREATE TABLE TEST_BIT (
+    ID                  CHAR(4),
+    VALUE               BIT,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_REAL;
+CREATE TABLE TEST_REAL (
+    ID                  CHAR(4),
+    VALUE               REAL,
+    PRIMARY KEY (ID)
+);
+
+DROP TABLE TEST_FLOAT;
+CREATE TABLE TEST_FLOAT (
+    ID                  CHAR(4),
+    VALUE               FLOAT,
+    PRIMARY KEY (ID)
+);
+

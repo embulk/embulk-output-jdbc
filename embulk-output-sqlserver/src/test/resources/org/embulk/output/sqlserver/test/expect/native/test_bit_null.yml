@@ -1,0 +1,3 @@
+table: TEST_BIT
+mode: insert_direct
+insert_method: native

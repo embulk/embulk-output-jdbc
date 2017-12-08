@@ -169,6 +169,10 @@ public class NativeClientWrapper
     private int jdbcTypeToNativeClientType(int sqlType)
     {
         switch (sqlType) {
+        case Types.BIT:
+        case Types.BOOLEAN:
+            return NativeClient.SQLBIT;
+
         case Types.TINYINT: // SQL Server TINYINT needs 2 bytes because it is unsigned.
         case Types.SMALLINT:
             return NativeClient.SQLINT2;
@@ -178,6 +182,13 @@ public class NativeClientWrapper
 
         case Types.BIGINT:
             return NativeClient.SQLINT8;
+
+        case Types.REAL:
+            return NativeClient.SQLFLT4;
+
+        case Types.FLOAT:
+        case Types.DOUBLE:
+            return NativeClient.SQLFLT8;
 
         default:
             return NativeClient.SQLCHARACTER;

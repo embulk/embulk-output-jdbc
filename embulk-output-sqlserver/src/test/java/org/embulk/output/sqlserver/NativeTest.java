@@ -123,6 +123,33 @@ public class NativeTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testBitNull() throws Exception
+    {
+        Path in1 = toPath("test_bit_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_bit_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_BIT"), is(readResource("test_bit_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testRealNull() throws Exception
+    {
+        Path in1 = toPath("test_float_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_real_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_REAL"), is(readResource("test_float_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testFloatNull() throws Exception
+    {
+        Path in1 = toPath("test_float_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_float_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_FLOAT"), is(readResource("test_float_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
