@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -150,7 +151,7 @@ public class NativeClientWrapper
                 NativeClient.DB_IN));
     }
 
-    public int bindNull(int columnIndex) throws SQLException
+    public int bindNull(int columnIndex, int sqlType) throws SQLException
     {
         Pointer pointer = prepareBuffer(columnIndex, 0);
         checkBCPResult("bcp_bind", client.bcp_bind(
@@ -160,9 +161,27 @@ public class NativeClientWrapper
                 NativeClient.SQL_NULL_DATA,
                 null,
                 0,
-                NativeClient.SQLCHARACTER,
+                jdbcTypeToNativeClientType(sqlType),
                 columnIndex));
         return (int)pointer.size();
+    }
+
+    private int jdbcTypeToNativeClientType(int sqlType)
+    {
+        switch (sqlType) {
+        case Types.TINYINT: // SQL Server TINYINT needs 2 bytes because it is unsigned.
+        case Types.SMALLINT:
+            return NativeClient.SQLINT2;
+
+        case Types.INTEGER:
+            return NativeClient.SQLINT4;
+
+        case Types.BIGINT:
+            return NativeClient.SQLINT8;
+
+        default:
+            return NativeClient.SQLCHARACTER;
+        }
     }
 
     public int bindValue(int columnIndex, String value) throws SQLException

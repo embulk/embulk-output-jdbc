@@ -52,14 +52,40 @@ public class NativeTest
     }
 
     @Test
-    public void testBigIntNull() throws Exception
+    public void testTinyIntNull() throws Exception
     {
-        Path in1 = toPath("test_bigint_null.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_bigint_null.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_BIGINT"), is(readResource("test_bigint_null_expected.csv")));
+        Path in1 = toPath("test_integer_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_tinyint_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_TINYINT"), is(readResource("test_integer_null_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testSmallIntNull() throws Exception
+    {
+        Path in1 = toPath("test_integer_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_smallint_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_SMALLINT"), is(readResource("test_integer_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testIntNull() throws Exception
+    {
+        Path in1 = toPath("test_integer_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_int_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_INT"), is(readResource("test_integer_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testBigIntNull() throws Exception
+    {
+        Path in1 = toPath("test_integer_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_bigint_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_BIGINT"), is(readResource("test_integer_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
 
     private Path toPath(String fileName) throws URISyntaxException
     {
