@@ -1,3 +1,11 @@
+Release 0.7.13 - 2017-12-08
+
+* When retrying to create temporary table for table name duplication, generates another temporary table name.
+* Enabled to change MySQL/PostgreSQL JDBC driver.
+* Added option (delete_s3_temp_file) not to delete embulk-output-redshift temporary files on S3.
+* Fixed access violation in embulk-output-sqlserver native client when inserting NULL values of numeric types.
+* Added options (create_table_constraint, create_table_option) to customize CREATE TABLE statement.
+
 Release 0.7.12 - 2017-11-24
 
 * Fixed a bug where embulk-output-redshift ignores an exception thrown by `DROP TABLE` statement (@mjalkio++).
