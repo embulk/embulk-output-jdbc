@@ -1,0 +1,3 @@
+table: TEST_BIGINT
+mode: insert_direct
+insert_method: native

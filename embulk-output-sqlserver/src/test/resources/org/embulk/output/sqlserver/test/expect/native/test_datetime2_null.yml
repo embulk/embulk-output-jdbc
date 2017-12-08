@@ -1,0 +1,3 @@
+table: TEST_DATETIME2
+mode: insert_direct
+insert_method: native

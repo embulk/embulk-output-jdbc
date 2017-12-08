@@ -1,0 +1,3 @@
+table: TEST_NVARCHAR
+mode: insert_direct
+insert_method: native

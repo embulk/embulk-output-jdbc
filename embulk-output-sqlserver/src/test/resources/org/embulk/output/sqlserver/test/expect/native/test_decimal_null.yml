@@ -1,0 +1,3 @@
+table: TEST_DECIMAL
+mode: insert_direct
+insert_method: native
