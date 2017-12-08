@@ -87,6 +87,42 @@ public class NativeTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testDecimalNull() throws Exception
+    {
+        Path in1 = toPath("test_decimal_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_decimal_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DECIMAL"), is(readResource("test_decimal_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testNumericNull() throws Exception
+    {
+        Path in1 = toPath("test_decimal_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_numeric_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_NUMERIC"), is(readResource("test_decimal_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMoneyNull() throws Exception
+    {
+        Path in1 = toPath("test_decimal_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_money_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_MONEY"), is(readResource("test_decimal_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testSmallMoneyNull() throws Exception
+    {
+        Path in1 = toPath("test_decimal_null.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_smallmoney_null.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_SMALLMONEY"), is(readResource("test_decimal_null_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);

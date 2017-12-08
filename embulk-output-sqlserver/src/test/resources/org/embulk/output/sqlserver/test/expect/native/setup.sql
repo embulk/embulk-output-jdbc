@@ -36,14 +36,14 @@ CREATE TABLE TEST_BIT (
 DROP TABLE TEST_DECIMAL;
 CREATE TABLE TEST_DECIMAL (
     ID                  CHAR(4),
-    VALUE               DECIMAL(12,2),
+    VALUE               DECIMAL(12,4),
     PRIMARY KEY (ID)
 );
 
 DROP TABLE TEST_NUMERIC;
 CREATE TABLE TEST_NUMERIC (
     ID                  CHAR(4),
-    VALUE               NUMERIC(5,3),
+    VALUE               NUMERIC(12,4),
     PRIMARY KEY (ID)
 );
 
