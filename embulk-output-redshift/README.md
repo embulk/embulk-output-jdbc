@@ -19,6 +19,8 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **schema**: destination schema name (string, default: "public")
 - **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the schema specified by `schema`. replace mode doesn't support temp_schema. (string, optional)
 - **table**: destination table name (string, required)
+- **create_table_constraint** table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_option** table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **access_key_id**: deprecated. `aws_access_key_id` should be used (see "basic" in `aws_auth_method`).
 - **secret_access_key**: deprecated. `aws_secret_access_key` should be used (see "basic" in `aws_auth_method`).
 - **aws_auth_method**: name of mechanism to authenticate requests ("basic", "env", "instance", "profile", "properties", "anonymous", or "session". default: "basic")
@@ -62,7 +64,8 @@ Redshift output plugin for Embulk loads records to Redshift.
 
 - **iam_user_name**: IAM user name for uploading temporary files to S3. The user should have permissions of `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket` and `sts:GetFederationToken`. And furthermore, the user should have permission of `s3:GetBucketLocation` if Redshift region and S3 bucket region are different. (string, default: "", but we strongly recommend that you use IAM user for security reasons. see below.)
 - **s3_bucket**: S3 bucket name for temporary files
-- **s3_key_prefix**: S3 key prefix for temporary files (string, default:"")
+- **s3_key_prefix**: S3 key prefix for temporary files (string, default: "")
+- **delete_s3_temp_file**: whether to delete temporary files uploaded on S3 (boolean, default: true)
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit** max retry count for database operations (integer, default: 12)
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))

@@ -122,7 +122,7 @@ public class NativeBatchInsert implements BatchInsert
     @Override
     public void setNull(int sqlType) throws IOException, SQLException
     {
-        batchWeight += client.bindNull(nextColumnIndex());
+        batchWeight += client.bindNull(nextColumnIndex(), sqlType);
     }
 
     @Override

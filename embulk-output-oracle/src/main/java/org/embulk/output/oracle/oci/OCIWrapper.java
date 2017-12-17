@@ -1,9 +1,6 @@
 package org.embulk.output.oracle.oci;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
@@ -15,14 +12,13 @@ import jnr.ffi.Runtime;
 import jnr.ffi.provider.jffi.ArrayMemoryIO;
 import jnr.ffi.provider.jffi.ByteBufferMemoryIO;
 
+import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
 
 public class OCIWrapper
 {
-    private static final String PLUGIN_NAME = "embulk-output-oracle";
-
     private static OCI oci;
     private static BulkOCI bulkOci;
 
@@ -88,7 +84,7 @@ public class OCIWrapper
 
         Platform platform = Platform.getNativePlatform();
 
-        File folder = getPluginRoot();
+        File folder = AbstractJdbcOutputPlugin.findPluginRoot(getClass());
         folder = new File(new File(new File(new File(folder ,"lib"), "embulk"), "native"), platform.getName());
 
         File file = new File(folder, System.mapLibraryName(libraryName));
@@ -99,30 +95,6 @@ public class OCIWrapper
 
         logger.info("OCI : Library '" + file.getAbsolutePath() + "' is found.");
         return LibraryLoader.create(BulkOCI.class).search(folder.getAbsolutePath()).failImmediately().load(libraryName);
-    }
-
-    private File getPluginRoot()
-    {
-        try {
-            URL url = getClass().getResource("/" + getClass().getName().replace('.', '/') + ".class");
-            if (url.toString().startsWith("jar:")) {
-                url = new URL(url.toString().replaceAll("^jar:", "").replaceAll("![^!]*$", ""));
-            }
-
-            File folder = new File(url.toURI()).getParentFile();
-            for (;; folder = folder.getParentFile()) {
-                if (folder == null) {
-                    String message = String.format("OCI : %s folder not found.", PLUGIN_NAME);
-                    throw new RuntimeException(message);
-                }
-
-                if (folder.getName().startsWith(PLUGIN_NAME)) {
-                    return folder;
-                }
-            }
-        } catch (MalformedURLException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void open(String dbName, String userName, String password) throws SQLException

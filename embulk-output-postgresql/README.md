@@ -10,6 +10,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 
 ## Configuration
 
+- **driver_path**: path to the jar file of the PostgreSQL JDBC driver. If not set, the bundled JDBC driver (PostgreSQL JDBC Driver 9.4-1205) will be used. (string)
 - **host**: database host name (string, required)
 - **port**: database port number (integer, default: 5432)
 - **user**: database login user name (string, required)
@@ -18,6 +19,8 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 - **schema**: destination schema name (string, default: "public")
 - **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the schema specified by `schema`. replace mode doesn't support temp_schema. (string, optional)
 - **table**: destination table name (string, required)
+- **create_table_constraint** table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_option** table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit** max retry count for database operations (integer, default: 12)
 - **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))

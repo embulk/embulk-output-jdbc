@@ -46,6 +46,7 @@ public class RedshiftCopyBatchInsert
     private final String s3BucketName;
     private final String s3KeyPrefix;
     private final String iamReaderUserName;
+    private final boolean deleteS3TempFile;
     private final AWSCredentialsProvider credentialsProvider;
     private final AmazonS3Client s3;
     private final String s3RegionName;
@@ -62,7 +63,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName) throws IOException, SQLException
+            String iamReaderUserName, boolean deleteS3TempFile) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -73,6 +74,7 @@ public class RedshiftCopyBatchInsert
             this.s3KeyPrefix = s3KeyPrefix + "/";
         }
         this.iamReaderUserName = iamReaderUserName;
+        this.deleteS3TempFile = deleteS3TempFile;
         this.credentialsProvider = credentialsProvider;
         this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
@@ -268,7 +270,9 @@ public class RedshiftCopyBatchInsert
                     con.close();
                 }
             } finally {
-                s3.deleteObject(s3BucketName, s3KeyName);
+                if (deleteS3TempFile) {
+                    s3.deleteObject(s3BucketName, s3KeyName);
+                }
             }
 
             return null;

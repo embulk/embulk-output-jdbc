@@ -2,11 +2,9 @@ package org.embulk.output.db2;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
 
 import static java.util.Locale.ENGLISH;
@@ -39,53 +37,9 @@ public class DB2OutputConnection
     }
 
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
+    protected boolean supportsTableIfExistsClause()
     {
-        if (tableExists(table)) {
-            dropTable(table);
-        }
-    }
-
-    @Override
-    protected void dropTableIfExists(Statement stmt, TableIdentifier tableName) throws SQLException
-    {
-        if (tableExists(tableName)) {
-            dropTable(stmt, tableName);
-        }
-    }
-
-    @Override
-    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema) throws SQLException
-    {
-        if (!tableExists(table)) {
-            createTable(table, schema);
-        }
-    }
-
-    @Override
-    public void createTable(TableIdentifier table, JdbcSchema schema) throws SQLException
-    {
-        Statement stmt = connection.createStatement();
-        try {
-            String sql = buildCreateTableSql(table, schema);
-            executeUpdate(stmt, sql);
-            commitIfNecessary(connection);
-        } catch (SQLException ex) {
-            throw safeRollback(connection, ex);
-        } finally {
-            stmt.close();
-        }
-    }
-
-    @Override
-    protected String buildCreateTableSql(TableIdentifier table, JdbcSchema schema)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("CREATE TABLE ");
-        quoteTableIdentifier(sb, table);
-        sb.append(buildCreateTableSchemaSql(schema));
-        return sb.toString();
+        return false;
     }
 
     @Override

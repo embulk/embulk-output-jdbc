@@ -1,0 +1,5 @@
+table: test1
+mode: insert
+create_table_option: 'auto_increment=100'
+column_options:
+  id: {type: 'int auto_increment primary key'}

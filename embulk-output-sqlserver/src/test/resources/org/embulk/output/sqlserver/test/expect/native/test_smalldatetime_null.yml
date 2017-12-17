@@ -1,0 +1,3 @@
+table: TEST_SMALLDATETIME
+mode: insert_direct
+insert_method: native

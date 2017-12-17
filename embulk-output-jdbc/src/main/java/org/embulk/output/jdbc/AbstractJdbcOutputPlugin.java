@@ -1,13 +1,18 @@
 package org.embulk.output.jdbc;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Types;
 import java.sql.ResultSet;
@@ -47,7 +52,6 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
@@ -59,8 +63,6 @@ import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
 {
-    private final static Set<String> loadedJarGlobs = new HashSet<String>();
-
     protected final Logger logger = Exec.getLogger(getClass());
 
     public interface PluginTask
@@ -88,6 +90,14 @@ public abstract class AbstractJdbcOutputPlugin
         @Config("column_options")
         @ConfigDefault("{}")
         public Map<String, JdbcColumnOption> getColumnOptions();
+
+        @Config("create_table_constraint")
+        @ConfigDefault("null")
+        public Optional<String> getCreateTableConstraint();
+
+        @Config("create_table_option")
+        @ConfigDefault("null")
+        public Optional<String> getCreateTableOption();
 
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
@@ -217,15 +227,51 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected void loadDriverJar(String glob)
+    protected void addDriverJarToClasspath(String glob)
     {
-        synchronized (loadedJarGlobs) {
-            if (!loadedJarGlobs.contains(glob)) {
-                // TODO match glob
-                PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
-                loader.addPath(Paths.get(glob));
-                loadedJarGlobs.add(glob);
+        // TODO match glob
+        PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
+        Path path = Paths.get(glob);
+        if (!path.toFile().exists()) {
+             throw new ConfigException("The specified driver jar doesn't exist: " + glob);
+        }
+        loader.addPath(Paths.get(glob));
+    }
+
+    protected void loadDriver(String className, Optional<String> driverPath)
+    {
+        if (driverPath.isPresent()) {
+            addDriverJarToClasspath(driverPath.get());
+        } else {
+            try {
+                // Gradle test task will add JDBC driver to classpath
+                Class.forName(className);
+
+            } catch (ClassNotFoundException ex) {
+                File root = findPluginRoot(getClass());
+                File driverLib = new File(root, "default_jdbc_driver");
+                File[] files = driverLib.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        return file.isFile() && file.getName().endsWith(".jar");
+                    }
+                });
+                if (files == null || files.length == 0) {
+                    throw new RuntimeException("Cannot find JDBC driver in '" + root.getAbsolutePath() + "'.");
+                } else {
+                    for (File file : files) {
+                        logger.info("JDBC Driver = " + file.getAbsolutePath());
+                        addDriverJarToClasspath(file.getAbsolutePath());
+                    }
+                }
             }
+        }
+
+        // Load JDBC Driver
+        try {
+            Class.forName(className);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -370,13 +416,6 @@ public abstract class AbstractJdbcOutputPlugin
         task = begin(task, schema, taskCount);
         control.run(task.dump());
         return commit(task, schema, taskCount);
-    }
-
-    protected String getTransactionUniqueName()
-    {
-        // TODO use uuid?
-        Timestamp t = Exec.session().getTransactionTime();
-        return String.format("%016x%08x", t.getEpochSecond(), t.getNano());
     }
 
     private PluginTask begin(final PluginTask task,
@@ -525,7 +564,7 @@ public abstract class AbstractJdbcOutputPlugin
         } else {
             // also create the target table if not exists
             // CREATE TABLE IF NOT EXISTS xyz
-            con.createTableIfNotExists(task.getActualTable(), newTableSchema);
+            con.createTableIfNotExists(task.getActualTable(), newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getActualTable()).get();
             task.setNewTableSchema(Optional.<JdbcSchema>absent());
         }
@@ -598,17 +637,17 @@ public abstract class AbstractJdbcOutputPlugin
                         String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 3,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + String.format("%03d", taskIndex);
+                            String tableName = namePrefix + String.format("%03d", taskIndex % 1000);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
-                            con.createTable(table, newTableSchema);
+                            con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
                             intermTables.add(table);
                         }
                     } else {
                         String tableName = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 0,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         table = buildIntermediateTableId(con, task, tableName);
-                        con.createTable(table, newTableSchema);
+                        con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
                         intermTables.add(table);
                     }
                     return intermTables.build();
@@ -667,8 +706,8 @@ public abstract class AbstractJdbcOutputPlugin
     {
         Charset tableNameCharset = con.getTableNameCharset();
         String tableName = baseTableName;
-        String suffix = "_bl_tmp";
-        String uniqueSuffix = getTransactionUniqueName() + suffix;
+        String suffix = "_embulk";
+        String uniqueSuffix = String.format("%016x", System.currentTimeMillis()) + suffix;
 
         // way to count length of table name varies by DBMSs (bytes or characters),
         // so truncate swap table name by one character.
@@ -766,7 +805,8 @@ public abstract class AbstractJdbcOutputPlugin
         case INSERT:
             // aggregate insert into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get(),
+                        task.getCreateTableConstraint(), task.getCreateTableOption());
             }
             con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), false, task.getBeforeLoad(), task.getAfterLoad());
             break;
@@ -774,7 +814,8 @@ public abstract class AbstractJdbcOutputPlugin
         case TRUNCATE_INSERT:
             // truncate & aggregate insert into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get(),
+                        task.getCreateTableConstraint(), task.getCreateTableOption());
             }
             con.collectInsert(task.getIntermediateTables().get(), schema, task.getActualTable(), true, task.getBeforeLoad(), task.getAfterLoad());
             break;
@@ -782,7 +823,8 @@ public abstract class AbstractJdbcOutputPlugin
         case MERGE:
             // aggregate merge into target
             if (task.getNewTableSchema().isPresent()) {
-                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get());
+                con.createTableIfNotExists(task.getActualTable(), task.getNewTableSchema().get(),
+                        task.getCreateTableConstraint(), task.getCreateTableOption());
             }
             con.collectMerge(task.getIntermediateTables().get(), schema, task.getActualTable(),
                     new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()), task.getBeforeLoad(), task.getAfterLoad());
@@ -984,6 +1026,29 @@ public abstract class AbstractJdbcOutputPlugin
                     throw new RuntimeException(ex);
                 }
             }
+        }
+    }
+
+    public static File findPluginRoot(Class<?> cls)
+    {
+        try {
+            URL url = cls.getResource("/" + cls.getName().replace('.', '/') + ".class");
+            if (url.toString().startsWith("jar:")) {
+                url = new URL(url.toString().replaceAll("^jar:", "").replaceAll("![^!]*$", ""));
+            }
+
+            File folder = new File(url.toURI()).getParentFile();
+            for (;; folder = folder.getParentFile()) {
+                if (folder == null) {
+                    throw new RuntimeException("Cannot find 'embulk-output-xxx' folder.");
+                }
+
+                if (folder.getName().startsWith("embulk-output-")) {
+                    return folder;
+                }
+            }
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -27,6 +27,10 @@ public class PostgreSQLOutputPlugin
     public interface PostgreSQLPluginTask
             extends PluginTask
     {
+        @Config("driver_path")
+        @ConfigDefault("null")
+        public Optional<String> getDriverPath();
+
         @Config("host")
         public String getHost();
 
@@ -67,7 +71,7 @@ public class PostgreSQLOutputPlugin
     protected Features getFeatures(PluginTask task)
     {
         return new Features()
-            .setMaxTableNameLength(30)
+            .setMaxTableNameLength(63)
             .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.MERGE_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
             .setIgnoreMergeKeys(false);
     }
@@ -76,6 +80,8 @@ public class PostgreSQLOutputPlugin
     protected PostgreSQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         PostgreSQLPluginTask t = (PostgreSQLPluginTask) task;
+
+        loadDriver("org.postgresql.Driver", t.getDriverPath());
 
         String url = String.format("jdbc:postgresql://%s:%d/%s",
                 t.getHost(), t.getPort(), t.getDatabase());

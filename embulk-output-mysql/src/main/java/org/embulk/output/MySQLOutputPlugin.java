@@ -25,6 +25,10 @@ public class MySQLOutputPlugin
     public interface MySQLPluginTask
             extends PluginTask
     {
+        @Config("driver_path")
+        @ConfigDefault("null")
+        public Optional<String> getDriverPath();
+
         @Config("host")
         public String getHost();
 
@@ -70,6 +74,8 @@ public class MySQLOutputPlugin
     protected MySQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         MySQLPluginTask t = (MySQLPluginTask) task;
+
+        loadDriver("com.mysql.jdbc.Driver", t.getDriverPath());
 
         String url = String.format("jdbc:mysql://%s:%d/%s",
                 t.getHost(), t.getPort(), t.getDatabase());

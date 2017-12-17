@@ -64,26 +64,9 @@ public class OracleOutputConnection
     }
 
     @Override
-    public void dropTableIfExists(TableIdentifier table) throws SQLException
+    protected boolean supportsTableIfExistsClause()
     {
-        if (tableExists(table)) {
-            dropTable(table);
-        }
-    }
-
-    @Override
-    protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException {
-        if (tableExists(table)) {
-            dropTable(stmt, table);
-        }
-    }
-
-    @Override
-    public void createTableIfNotExists(TableIdentifier table, JdbcSchema schema) throws SQLException
-    {
-        if (!tableExists(table)) {
-            createTable(table, schema);
-        }
+        return false;
     }
 
     private static String getSchema(Connection connection) throws SQLException
