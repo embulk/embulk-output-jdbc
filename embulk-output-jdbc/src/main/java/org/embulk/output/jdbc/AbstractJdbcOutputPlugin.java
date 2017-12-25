@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.io.IOException;
@@ -227,6 +228,19 @@ public abstract class AbstractJdbcOutputPlugin
                 loadedJarGlobs.add(glob);
             }
         }
+    }
+
+    protected void logConnectionProperties(String url, Properties props)
+    {
+        Properties maskedProps = new Properties();
+        for(String key : props.stringPropertyNames()) {
+            if (key.equals("password")) {
+                maskedProps.setProperty(key, "***");
+            } else {
+                maskedProps.setProperty(key, props.getProperty(key));
+            }
+        }
+        logger.info("Connecting to {} options {}", url, maskedProps);
     }
 
     // for subclasses to add @Config
