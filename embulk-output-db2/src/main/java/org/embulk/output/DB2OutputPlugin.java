@@ -77,6 +77,7 @@ public class DB2OutputPlugin
         if (db2Task.getPassword().isPresent()) {
             props.setProperty("password", db2Task.getPassword().get());
         }
+        logConnectionProperties(url, props);
 
         return new DB2OutputConnector(url, props, null);
     }

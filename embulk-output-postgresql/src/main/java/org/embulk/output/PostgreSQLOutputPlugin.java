@@ -111,8 +111,8 @@ public class PostgreSQLOutputPlugin
         props.putAll(t.getOptions());
 
         props.setProperty("user", t.getUser());
-        logger.info("Connecting to {} options {}", url, props);
         props.setProperty("password", t.getPassword());
+        logConnectionProperties(url, props);
 
         return new PostgreSQLOutputConnector(url, props, t.getSchema());
     }

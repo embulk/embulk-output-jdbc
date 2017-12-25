@@ -165,7 +165,7 @@ public class SQLServerOutputPlugin
         }
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
-        logger.info("Connecting to {} options {}", urlProps.getUrl(), getPropsWithMaskedSecret(urlProps));
+        logConnectionProperties(urlProps.getUrl(), urlProps.getProps());
         return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orNull());
     }
 
@@ -285,19 +285,5 @@ public class SQLServerOutputPlugin
     protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
     {
         return new SQLServerColumnSetterFactory(batch, defaultTimeZone);
-    }
-
-    private Properties getPropsWithMaskedSecret(UrlAndProperties urlAndProperties)
-    {
-        Properties safeProps = new Properties();
-        Properties originalProps = urlAndProperties.getProps();
-        for(String key : originalProps.stringPropertyNames()) {
-            if (key.equals("password")) {
-                safeProps.setProperty(key, "***");
-            } else {
-                safeProps.setProperty(key, originalProps.getProperty(key));
-            }
-        }
-        return safeProps;
     }
 }
