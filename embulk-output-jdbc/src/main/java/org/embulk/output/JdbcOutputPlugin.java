@@ -77,10 +77,10 @@ public class JdbcOutputPlugin
         if (t.getUser().isPresent()) {
             props.setProperty("user", t.getUser().get());
         }
-        logger.info("Connecting to {} options {}", t.getUrl(), props);
         if (t.getPassword().isPresent()) {
             props.setProperty("password", t.getPassword().get());
         }
+        logConnectionProperties(t.getUrl(), props);
 
         return new GenericOutputConnector(t.getUrl(), props, t.getDriverClass(),
                 t.getSchema().orNull());
