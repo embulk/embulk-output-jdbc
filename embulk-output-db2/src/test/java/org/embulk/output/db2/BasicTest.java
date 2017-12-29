@@ -91,6 +91,15 @@ public class BasicTest
     }
 
     @Test
+    public void testReplaceLongName() throws Exception
+    {
+        // table name has 128 characters
+        Path in1 = toPath("test_char.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_long_name.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_CHAR_1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678"), is(readResource("test_create_char_expected.txt")));
+    }
+
+    @Test
     public void testInsertNumber() throws Exception
     {
         Path in1 = toPath("test_number.csv");
@@ -121,6 +130,31 @@ public class BasicTest
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert.yml")), in1);
         assertThat(selectRecords(embulk, "TEST_NUMBER"), is(readResource("test_truncate_insert_expected.txt")));
     }
+
+    @Test
+    public void testInsertDateTime() throws Exception
+    {
+        Path in1 = toPath("test_datetime.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_datetime.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DATETIME"), is(readResource("test_insert_datetime_expected.txt")));
+    }
+
+    @Test
+    public void testInsertDirectDateTime() throws Exception
+    {
+        Path in1 = toPath("test_datetime.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_datetime.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DATETIME"), is(readResource("test_insert_datetime_expected.txt")));
+    }
+
+    @Test
+    public void testInsertCreateDateTime() throws Exception
+    {
+        Path in1 = toPath("test_datetime.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_create_datetime.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_DATETIME2"), is(readResource("test_create_datetime_expected.txt")));
+    }
+
 
     private Path toPath(String fileName) throws URISyntaxException
     {
