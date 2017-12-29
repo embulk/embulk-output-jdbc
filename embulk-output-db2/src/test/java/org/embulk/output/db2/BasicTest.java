@@ -58,6 +58,37 @@ public class BasicTest
         assertThat(selectRecords(embulk, "TEST_CHAR"), is(readResource("test_insert_char_expected.txt")));
     }
 
+    @Test
+    public void testInsertDirectChar() throws Exception
+    {
+        Path in1 = toPath("test_char.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_char.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_CHAR"), is(readResource("test_insert_char_expected.txt")));
+    }
+
+    @Test
+    public void testInsertCreateChar() throws Exception
+    {
+        Path in1 = toPath("test_char.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_create_char.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_CHAR2"), is(readResource("test_create_char_expected.txt")));
+    }
+
+    @Test
+    public void testReplace() throws Exception
+    {
+        Path in1 = toPath("test_char.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_CHAR"), is(readResource("test_create_char_expected.txt")));
+    }
+
+    @Test
+    public void testReplaceCreate() throws Exception
+    {
+        Path in1 = toPath("test_char.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_create.yml")), in1);
+        assertThat(selectRecords(embulk, "TEST_CHAR2"), is(readResource("test_create_char_expected.txt")));
+    }
 
     private Path toPath(String fileName) throws URISyntaxException
     {
