@@ -10,7 +10,7 @@ MySQL output plugin for Embulk loads records to MySQL.
 
 ## Configuration
 
-- **driver_path**: path to the jar file of the MySQL JDBC driver. If not set, the bundled JDBC driver (MySQL Connector/J 5.1.44) will be used (string). NOTE: the bundled JDBC driver version was upgrade from 5.1.34 to 5.1.44 at embulk-output-mysql 0.8.0 . Please check release notes for MySQL Connector/J (https://dev.mysql.com/doc/relnotes/connector-j/5.1/en/news-5-1.html) .
+- **driver_path**: path to the jar file of the MySQL JDBC driver. If not set, the bundled JDBC driver (MySQL Connector/J 5.1.34) will be used. (string)
 - **host**: database host name (string, required)
 - **port**: database port number (integer, default: 3306)
 - **user**: database login user name (string, required)
