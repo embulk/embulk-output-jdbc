@@ -212,31 +212,30 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         writer.write(f);
     }
 
+    private void setEscapedString(String v) throws IOException
+    {
+        for (char c : v.toCharArray()) {
+            writer.write(escape(c));
+        }
+    }
+
     // Escape \, \n, \t, \r
     // Remove \0
-    private void setEscapedString(String v) throws IOException{
-        for (char c : v.toCharArray()) {
-            String s;
-            switch (c) {
-            case '\\':
-                s = "\\\\";
-                break;
-            case '\n':
-                s = "\\n";
-                break;
-            case '\t':
-                s = "\\t";
-                break;
-            case '\r':
-                s = "\\r";
-                break;
-            case 0:
-                s = "";
-                break;
-            default:
-                s = String.valueOf(c);
-            }
-            writer.write(s);
+    protected String escape(char c)
+    {
+        switch (c) {
+        case '\\':
+            return "\\\\";
+        case '\n':
+            return "\\n";
+        case '\t':
+            return "\\t";
+        case '\r':
+            return "\\r";
+        case 0:
+            return "";
+        default:
+            return String.valueOf(c);
         }
     }
 }
