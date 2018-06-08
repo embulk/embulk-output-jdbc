@@ -172,6 +172,23 @@ public class RedshiftCopyBatchInsert
         }
     }
 
+    // Add \ before \, \n, \t
+    // Remove \0
+    @Override
+    protected String escape(char c)
+    {
+        switch (c) {
+        case '\n':
+            return "\\\n";
+        case '\t':
+            return "\\\t";
+        case '\r':
+            return String.valueOf(c);
+        default:
+            return super.escape(c);
+        }
+    }
+
     private BasicSessionCredentials generateReaderSessionCredentials(String s3KeyName)
     {
         Policy policy = new Policy()
