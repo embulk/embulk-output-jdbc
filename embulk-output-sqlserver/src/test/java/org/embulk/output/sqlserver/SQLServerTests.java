@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,6 +25,21 @@ public class SQLServerTests
     public static ConfigSource baseConfig()
     {
         return EmbulkTests.config("EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG");
+    }
+
+    public static Connection connect() throws SQLException
+    {
+        ConfigSource config = baseConfig();
+
+        String user = config.get(String.class, "user");
+        String password = config.get(String.class, "password");
+        String host = config.get(String.class, "host");
+        Integer port = config.get(Integer.class, "port");
+        String database = config.get(String.class, "database");
+
+        String url = String.format("jdbc:jtds:sqlserver://%s:%d/%s", host, port, database);
+
+        return DriverManager.getConnection(url, user, password);
     }
 
     public static void execute(String sql, String... options)

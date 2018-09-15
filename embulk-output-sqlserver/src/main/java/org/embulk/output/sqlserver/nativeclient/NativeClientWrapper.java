@@ -21,6 +21,8 @@ import com.google.common.base.Optional;
 
 public class NativeClientWrapper
 {
+    private static int MAX_COLUMN_SIZE_FOR_BCP_BIND = 7999;
+
     private static ODBC odbc;
     private static NativeClient client;
 
@@ -206,11 +208,19 @@ public class NativeClientWrapper
                 odbcHandle,
                 pointer,
                 0,
-                size,
+                Math.min(size, MAX_COLUMN_SIZE_FOR_BCP_BIND),
                 null,
                 0,
                 NativeClient.SQLCHARACTER,
                 columnIndex));
+
+        if (size > MAX_COLUMN_SIZE_FOR_BCP_BIND) {
+            checkBCPResult("bcp_collen", client.bcp_collen(
+                    odbcHandle,
+                    size,
+                    columnIndex));
+        }
+
         return (int)pointer.size();
     }
 

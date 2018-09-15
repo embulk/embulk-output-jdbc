@@ -25,6 +25,8 @@ public interface NativeClient
             Pointer pTerm, int cbTerm,
             int eDataType, int idxServerCol);
 
+    short bcp_collen(Pointer hdbc, int cbData, int idxServerCol);
+
     short bcp_sendrow(Pointer hdbc);
 
     int bcp_batch(Pointer hdbc);

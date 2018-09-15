@@ -1,0 +1,3 @@
+table: TEST_HUGE
+mode: insert_direct
+insert_method: native
