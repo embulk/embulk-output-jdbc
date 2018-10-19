@@ -23,7 +23,7 @@ subprojects {
         mavenCentral()
         jcenter()
         maven {
-            url "http://dl.bintray.com/embulk-input-s3/maven"
+            url "https://dl.bintray.com/embulk-input-s3/maven"
         }
     }
 
