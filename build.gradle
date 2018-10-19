@@ -7,9 +7,46 @@ plugins {
 }
 import com.github.jrubygradle.JRubyExec
 
+def bintrayReleaseProjects = [
+    project(":embulk-output-jdbc"),
+]
+
 allprojects {
     group = 'org.embulk.output.jdbc'
     version = '0.8.0'
+
+    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'maven-publish'
+
+    bintray {
+        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
+        // bintray_user=frsyuki
+        // bintray_api_key=xxxxxxxxxxx
+        user = project.hasProperty('bintray_user') ? bintray_user : ''
+        key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
+
+        publications = ['bintrayMavenRelease']
+
+        dryRun = !bintrayReleaseProjects.contains(project)
+        publish = true
+
+        pkg {
+            userOrg = 'embulk-output-jdbc'
+            repo = 'maven'
+            name = project.name
+            desc = 'MySQL, PostgreSQL, Redshift and generic JDBC output plugins for Embulk'
+            websiteUrl = 'https://github.com/embulk/embulk-output-jdbc'
+            issueTrackerUrl = 'https://github.com/embulk/embulk-output-jdbc/issues'
+            vcsUrl = 'https://github.com/embulk/embulk-output-jdbc.git'
+            licenses = ['Apache-2.0']
+            labels = ['embulk', 'java']
+            publicDownloadNumbers = true
+
+            version {
+                name = project.version
+            }
+        }
+    }
 }
 
 subprojects {
@@ -22,6 +59,7 @@ subprojects {
     repositories {
         mavenCentral()
         jcenter()
+
         maven {
             url "https://dl.bintray.com/embulk-input-s3/maven"
         }
@@ -99,6 +137,34 @@ subprojects {
         jrubyArgs '-rrubygems/gem_runner', "-eGem::GemRunner.new.run(ARGV)", 'build'
         scriptArgs "${project.projectDir.absolutePath}/build/gemspec"
         doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "${parent.projectDir}/pkg") }
+    }
+
+    // add tests/javadoc/source jar tasks as artifacts to be released
+    task testsJar(type: Jar, dependsOn: classes) {
+        classifier = 'tests'
+        from sourceSets.test.output
+    }
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+    artifacts {
+        archives testsJar, sourcesJar, javadocJar
+    }
+
+    publishing {
+        publications {
+            bintrayMavenRelease(MavenPublication) {
+                from components.java
+                artifact testsJar
+                artifact sourcesJar
+                artifact javadocJar
+            }
+        }
     }
 
     task gemspec << {
