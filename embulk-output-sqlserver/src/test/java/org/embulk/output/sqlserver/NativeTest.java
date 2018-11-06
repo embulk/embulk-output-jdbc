@@ -8,10 +8,15 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.List;
 
-import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.output.SQLServerOutputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -21,6 +26,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
 public class NativeTest
@@ -247,6 +253,59 @@ public class NativeTest
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_time_null.yml")), in1);
         assertThat(selectRecords(embulk, "TEST_TIME"), is(readResource("test_time_null_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testHuge() throws Exception
+    {
+        Path in1 = toPath("test_huge.csv");
+
+        // create input data dynamically because it is huge.
+
+        ImmutableList.Builder<String[]> recordsBuilder = ImmutableList.builder();
+        recordsBuilder.add(new String[]{"a", "X", "あ"});
+        recordsBuilder.add(new String[]{"b", createString(9000), createString(10000) + "い"});
+        recordsBuilder.add(new String[]{"c", createString(20000), createString(30000) + "う"});
+        List<String[]> records = recordsBuilder.build();
+
+        ImmutableList.Builder<String> linesBuilder = ImmutableList.builder();
+        linesBuilder.add("ITEM1:long,ITEM2:string,ITEM3:string,ITEM4:string");
+        for (int i = 0; i < records.size(); i++) {
+            String[] record = records.get(i);
+            linesBuilder.add((i + 1) + "," + record[0] + "," + record[1] + "," + record[2]);
+        }
+
+        Charset charset = Charset.forName("UTF8");
+        Files.write(in1, linesBuilder.build(), charset);
+
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_huge.yml")), in1);
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+
+        try (Connection conn = SQLServerTests.connect()) {
+            try (Statement statement = conn.createStatement()) {
+                try (ResultSet rs = statement.executeQuery("SELECT * FROM TEST_HUGE ORDER BY ITEM1")) {
+                    int recordIndex = 0;
+                    while (rs.next()) {
+                        assertThat(rs.getInt(1), is(recordIndex + 1));
+                        assertThat(rs.getString(2), is(records.get(recordIndex)[0]));
+                        assertThat(rs.getString(3), is(records.get(recordIndex)[1]));
+                        assertThat(rs.getString(4), is(records.get(recordIndex)[2]));
+                        recordIndex++;
+                    }
+
+                    assertThat(recordIndex, is(records.size()));
+                }
+            }
+        }
+    }
+
+    private String createString(int size)
+    {
+        char[] chars = new char[size];
+        for (int i = 0; i < size; i++) {
+            chars[i] = (char)('A' + i % 26);
+        }
+        return new String(chars);
     }
 
     private Path toPath(String fileName) throws URISyntaxException
