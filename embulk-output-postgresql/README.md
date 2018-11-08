@@ -19,12 +19,12 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 - **schema**: destination schema name (string, default: "public")
 - **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the schema specified by `schema`. replace mode doesn't support temp_schema. (string, optional)
 - **table**: destination table name (string, required)
-- **create_table_constraint** table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
-- **create_table_option** table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_constraint**: table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_option**: table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **options**: extra connection properties (hash, default: {})
-- **retry_limit** max retry count for database operations (integer, default: 12)
-- **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
-- **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
+- **retry_limit**: max retry count for database operations (integer, default: 12)
+- **retry_wait**: initial retry wait time in milliseconds (integer, default: 1000 (1 second))
+- **max_retry_wait**: upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert", "replace", "merge" or "merge_direct". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = foo + S.foo` (`S` means source table). (string array, default: always overwrites with new values)

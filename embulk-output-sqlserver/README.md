@@ -26,12 +26,12 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **temp_schema**: schema name for intermediate tables. by default, intermediate tables will be created in the same schema as destination table. (string, optional)
 - **url**: URL of the JDBC connection (string, optional)
 - **table**: destination table name (string, required)
-- **create_table_constraint** table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
-- **create_table_option** table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_constraint**: table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **create_table_option**: table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **options**: extra connection properties (hash, default: {})
-- **retry_limit** max retry count for database operations (integer, default: 12)
-- **retry_wait** initial retry wait time in milliseconds (integer, default: 1000 (1 second))
-- **max_retry_wait** upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
+- **retry_limit**: max retry count for database operations (integer, default: 12)
+- **retry_wait**: initial retry wait time in milliseconds (integer, default: 1000 (1 second))
+- **max_retry_wait**: upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert" , "replace" or "merge". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = T.foo + S.foo` (`T` means target table and `S` means source table). (string array, default: always overwrites with new values)
