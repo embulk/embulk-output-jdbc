@@ -1,3 +1,9 @@
+Release 0.8.1 - 2018-11-16
+
+* Enabled to insert \r , \n and \t into Redshift.
+* Upgrade embulk-util-aws-credentials (@jami-i++).
+* SQL Server native mode supported string value longer than 7999 (@nickolay++).
+
 Release 0.8.0 - 2017-12-26
 
 * Upgraded the bundled MySQL JDBC driver version from 5.1.34 to 5.1.44 (@y-ken++).
