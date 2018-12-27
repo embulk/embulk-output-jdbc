@@ -14,8 +14,6 @@ import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-
 public class RedshiftOutputConnection
         extends JdbcOutputConnection
 {
@@ -48,11 +46,8 @@ public class RedshiftOutputConnection
     @Override
     protected String buildColumnTypeName(JdbcColumn c)
     {
-        // Redshift does not support TEXT type.
         switch(c.getSimpleTypeName()) {
         case "CLOB":
-            return "VARCHAR(65535)";
-        case "TEXT":
             return "VARCHAR(65535)";
         case "BLOB":
             return "BYTEA";
