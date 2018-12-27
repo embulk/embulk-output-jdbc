@@ -144,13 +144,23 @@ public class JdbcOutputConnection
                 executeUpdate(stmt, sql);
                 commitIfNecessary(connection);
             } catch (SQLException ex) {
-                throw safeRollback(connection, ex);
+                // another client might create the table at the same time.
+                if (!tableExists(table)) {
+                    throw safeRollback(connection, ex);
+                }
             } finally {
                 stmt.close();
             }
         } else {
             if (!tableExists(table)) {
-                createTable(table, schema, tableConstraint, tableOption);
+                try {
+                    createTable(table, schema, tableConstraint, tableOption);
+                } catch (SQLException e) {
+                    // another client might create the table at the same time.
+                    if (!tableExists(table)) {
+                        throw e;
+                    }
+                }
             }
         }
     }
