@@ -1,3 +1,8 @@
+Release 0.8.2 - 2019-01-30
+
+* Supported Redshift TEXT type.
+* Supported concurrent execution of 'CREATE TABLE' in order to execute embulk-output-jdbc in parallel.
+
 Release 0.8.1 - 2018-11-16
 
 * Enabled to insert \r , \n and \t into Redshift.
