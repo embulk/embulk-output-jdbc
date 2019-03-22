@@ -2,8 +2,8 @@ dependencies {
     compile project(':embulk-output-jdbc')
     compile project(':embulk-output-postgresql')
 
-    compile "com.amazonaws:aws-java-sdk-s3:1.10.77"
-    compile "com.amazonaws:aws-java-sdk-sts:1.10.77"
+    compile "com.amazonaws:aws-java-sdk-s3:1.11.523"
+    compile "com.amazonaws:aws-java-sdk-sts:1.11.523"
     compile 'org.embulk.input.s3:embulk-util-aws-credentials:0.2.21'
 
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
