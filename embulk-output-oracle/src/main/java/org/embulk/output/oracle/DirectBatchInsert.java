@@ -101,6 +101,7 @@ public class DirectBatchInsert implements BatchInsert
                     break;
 
                 case Types.DECIMAL:
+                case Types.NUMERIC:
                     // sign + size
                     int size = 1 + insertColumn.getSizeTypeParameter();
                     if (insertColumn.getSizeTypeParameter() > 0) {
