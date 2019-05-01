@@ -78,7 +78,7 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected OracleOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         OraclePluginTask oracleTask = (OraclePluginTask) task;
 

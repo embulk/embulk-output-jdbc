@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 
 public class MySQLOutputConnector
@@ -20,7 +21,7 @@ public class MySQLOutputConnector
     }
 
     @Override
-    public MySQLOutputConnection connect(boolean autoCommit) throws SQLException
+    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         try {

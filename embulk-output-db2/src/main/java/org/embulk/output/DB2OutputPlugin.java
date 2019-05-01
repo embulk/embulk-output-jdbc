@@ -9,6 +9,7 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.output.db2.DB2BatchInsert;
 import org.embulk.output.db2.DB2OutputConnector;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.MergeConfig;
 
@@ -60,7 +61,7 @@ public class DB2OutputPlugin
     }
 
     @Override
-    protected DB2OutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         DB2PluginTask db2Task = (DB2PluginTask) task;
 

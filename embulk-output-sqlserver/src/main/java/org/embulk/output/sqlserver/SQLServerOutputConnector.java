@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class SQLServerOutputConnector
     }
 
     @Override
-    public SQLServerOutputConnection connect(boolean autoCommit) throws SQLException
+    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {

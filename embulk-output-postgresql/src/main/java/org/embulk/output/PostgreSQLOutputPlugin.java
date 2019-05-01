@@ -77,7 +77,7 @@ public class PostgreSQLOutputPlugin
     }
 
     @Override
-    protected PostgreSQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         PostgreSQLPluginTask t = (PostgreSQLPluginTask) task;
 

@@ -24,7 +24,7 @@ public class RedshiftOutputConnector
     }
 
     @Override
-    public RedshiftOutputConnection connect(boolean autoCommit) throws SQLException
+    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
     {
         Connection c = driver.connect(url, properties);
         try {

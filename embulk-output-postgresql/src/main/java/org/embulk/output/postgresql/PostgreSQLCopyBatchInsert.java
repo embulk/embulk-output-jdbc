@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.spi.Exec;
@@ -15,14 +16,14 @@ public class PostgreSQLCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
 {
     private final Logger logger = Exec.getLogger(PostgreSQLCopyBatchInsert.class);
-    private final PostgreSQLOutputConnector connector;
+    private final JdbcOutputConnector connector;
 
     private PostgreSQLOutputConnection connection = null;
     private CopyManager copyManager = null;
     private String copySql = null;
     private long totalRows;
 
-    public PostgreSQLCopyBatchInsert(PostgreSQLOutputConnector connector) throws IOException, SQLException
+    public PostgreSQLCopyBatchInsert(JdbcOutputConnector connector) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -31,7 +32,7 @@ public class PostgreSQLCopyBatchInsert
     @Override
     public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
-        this.connection = connector.connect(true);
+        this.connection = (PostgreSQLOutputConnection)connector.connect(true);
         this.copySql = connection.buildCopySql(loadTable, insertSchema);
         this.copyManager = connection.newCopyManager();
         logger.info("Copy SQL: "+copySql);

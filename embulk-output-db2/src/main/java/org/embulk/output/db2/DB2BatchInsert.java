@@ -3,6 +3,7 @@ package org.embulk.output.db2;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.StandardBatchInsert;
 
@@ -11,7 +12,7 @@ import com.google.common.base.Optional;
 public class DB2BatchInsert
         extends StandardBatchInsert
 {
-    public DB2BatchInsert(DB2OutputConnector connector, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
+    public DB2BatchInsert(JdbcOutputConnector connector, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
         super(connector, mergeConfig);
     }

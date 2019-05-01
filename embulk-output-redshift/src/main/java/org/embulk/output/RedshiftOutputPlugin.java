@@ -16,6 +16,7 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.Ssl;
@@ -100,7 +101,7 @@ public class RedshiftOutputPlugin
     }
 
     @Override
-    protected RedshiftOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         RedshiftPluginTask t = (RedshiftPluginTask) task;
 

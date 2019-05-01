@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 
 public class DB2OutputConnector
@@ -27,7 +28,7 @@ public class DB2OutputConnector
     }
 
     @Override
-    public DB2OutputConnection connect(boolean autoCommit) throws SQLException
+    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
