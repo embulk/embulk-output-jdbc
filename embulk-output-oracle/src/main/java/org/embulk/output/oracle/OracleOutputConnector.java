@@ -7,6 +7,9 @@ import java.util.Properties;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
+
+import com.google.common.base.Optional;
 
 public class OracleOutputConnector
         extends AbstractJdbcOutputConnector
@@ -16,8 +19,10 @@ public class OracleOutputConnector
     private final String schemaName;
     private final boolean direct;
 
-    public OracleOutputConnector(String url, Properties properties, String schemaName, boolean direct)
+    public OracleOutputConnector(String url, Properties properties, String schemaName, boolean direct,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (Exception ex) {

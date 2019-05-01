@@ -123,7 +123,8 @@ public class OracleOutputPlugin
         props.setProperty("password", oracleTask.getPassword());
         logConnectionProperties(url, props);
 
-        return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct);
+        return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct,
+                oracleTask.getTransactionIsolation());
     }
 
     @Override

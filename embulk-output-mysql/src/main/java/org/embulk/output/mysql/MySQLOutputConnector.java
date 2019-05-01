@@ -7,6 +7,9 @@ import java.sql.SQLException;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
+
+import com.google.common.base.Optional;
 
 public class MySQLOutputConnector
         extends AbstractJdbcOutputConnector
@@ -14,8 +17,10 @@ public class MySQLOutputConnector
     private final String url;
     private final Properties properties;
 
-    public MySQLOutputConnector(String url, Properties properties)
+    public MySQLOutputConnector(String url, Properties properties,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         this.url = url;
         this.properties = properties;
     }

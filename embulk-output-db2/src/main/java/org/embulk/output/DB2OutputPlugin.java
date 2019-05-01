@@ -80,7 +80,7 @@ public class DB2OutputPlugin
         }
         logConnectionProperties(url, props);
 
-        return new DB2OutputConnector(url, props, null);
+        return new DB2OutputConnector(url, props, null, task.getTransactionIsolation());
     }
 
     @Override

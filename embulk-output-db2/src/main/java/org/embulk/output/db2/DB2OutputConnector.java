@@ -7,6 +7,9 @@ import java.util.Properties;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
+
+import com.google.common.base.Optional;
 
 public class DB2OutputConnector
         extends AbstractJdbcOutputConnector
@@ -15,8 +18,10 @@ public class DB2OutputConnector
     private final Properties properties;
     private final String schemaName;
 
-    public DB2OutputConnector(String url, Properties properties, String schemaName)
+    public DB2OutputConnector(String url, Properties properties, String schemaName,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         try {
             Class.forName("com.ibm.db2.jcc.DB2Driver");
         } catch (Exception ex) {

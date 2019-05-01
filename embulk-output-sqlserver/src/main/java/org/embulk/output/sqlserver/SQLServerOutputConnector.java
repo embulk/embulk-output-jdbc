@@ -9,8 +9,11 @@ import java.util.Properties;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+
+import com.google.common.base.Optional;
 
 
 public class SQLServerOutputConnector
@@ -22,8 +25,10 @@ public class SQLServerOutputConnector
     private final Properties properties;
     private final String schemaName;
 
-    public SQLServerOutputConnector(String url, Properties properties, String schemaName)
+    public SQLServerOutputConnector(String url, Properties properties, String schemaName,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         this.url = url;
         this.properties = properties;
         this.schemaName = schemaName;

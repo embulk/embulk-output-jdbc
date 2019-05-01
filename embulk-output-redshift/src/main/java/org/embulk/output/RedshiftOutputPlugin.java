@@ -141,7 +141,7 @@ public class RedshiftOutputPlugin
         props.setProperty("password", t.getPassword());
         logConnectionProperties(url, props);
 
-        return new RedshiftOutputConnector(url, props, t.getSchema());
+        return new RedshiftOutputConnector(url, props, t.getSchema(), t.getTransactionIsolation());
     }
 
     private static AWSCredentialsProvider getAWSCredentialsProvider(RedshiftPluginTask task)

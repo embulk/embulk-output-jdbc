@@ -114,7 +114,7 @@ public class PostgreSQLOutputPlugin
         props.setProperty("password", t.getPassword());
         logConnectionProperties(url, props);
 
-        return new PostgreSQLOutputConnector(url, props, t.getSchema());
+        return new PostgreSQLOutputConnector(url, props, t.getSchema(), t.getTransactionIsolation());
     }
 
     @Override

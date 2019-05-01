@@ -123,7 +123,7 @@ public class MySQLOutputPlugin
         props.setProperty("password", t.getPassword());
         logConnectionProperties(url, props);
 
-        return new MySQLOutputConnector(url, props);
+        return new MySQLOutputConnector(url, props, task.getTransactionIsolation());
     }
 
     @Override
