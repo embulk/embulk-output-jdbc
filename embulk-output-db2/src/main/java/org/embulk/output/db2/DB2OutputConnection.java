@@ -12,11 +12,10 @@ import static java.util.Locale.ENGLISH;
 public class DB2OutputConnection
         extends JdbcOutputConnection
 {
-    public DB2OutputConnection(Connection connection, String schemaName, boolean autoCommit)
+    public DB2OutputConnection(Connection connection, String schemaName)
             throws SQLException
     {
         super(connection, schemaName);
-        connection.setAutoCommit(autoCommit);
     }
 
     @Override

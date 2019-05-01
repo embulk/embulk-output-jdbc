@@ -38,6 +38,12 @@ public class JdbcOutputConnection
         }
     }
 
+    public void initialize(boolean autoCommit)
+            throws SQLException
+    {
+        connection.setAutoCommit(autoCommit);
+    }
+
     @Override
     public void close() throws SQLException
     {

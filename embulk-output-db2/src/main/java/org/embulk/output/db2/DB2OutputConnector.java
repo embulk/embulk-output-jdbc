@@ -6,10 +6,10 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 
 public class DB2OutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
@@ -28,7 +28,7 @@ public class DB2OutputConnector
     }
 
     @Override
-    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
@@ -37,7 +37,7 @@ public class DB2OutputConnector
         }
 
         try {
-            DB2OutputConnection con = new DB2OutputConnection(c, schemaName, autoCommit);
+            DB2OutputConnection con = new DB2OutputConnection(c, schemaName);
             c = null;
             return con;
 

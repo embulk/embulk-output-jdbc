@@ -4,11 +4,11 @@ import java.util.Properties;
 import java.sql.Driver;
 import java.sql.Connection;
 import java.sql.SQLException;
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 
 public class RedshiftOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private static final Driver driver = new org.postgresql.Driver();
 
@@ -24,11 +24,11 @@ public class RedshiftOutputConnector
     }
 
     @Override
-    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = driver.connect(url, properties);
         try {
-            RedshiftOutputConnection con = new RedshiftOutputConnection(c, schemaName, autoCommit);
+            RedshiftOutputConnection con = new RedshiftOutputConnection(c, schemaName);
             c = null;
             return con;
         } finally {

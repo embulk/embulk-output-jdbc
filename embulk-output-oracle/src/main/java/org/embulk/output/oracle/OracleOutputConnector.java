@@ -6,10 +6,10 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 
 public class OracleOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
@@ -30,7 +30,7 @@ public class OracleOutputConnector
     }
 
     @Override
-    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
@@ -39,7 +39,7 @@ public class OracleOutputConnector
         }
 
         try {
-            OracleOutputConnection con = new OracleOutputConnection(c, schemaName, autoCommit, direct);
+            OracleOutputConnection con = new OracleOutputConnection(c, schemaName, direct);
             c = null;
             return con;
 

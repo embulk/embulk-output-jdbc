@@ -6,10 +6,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 
 public class MySQLOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
@@ -21,11 +21,11 @@ public class MySQLOutputConnector
     }
 
     @Override
-    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         try {
-            MySQLOutputConnection con = new MySQLOutputConnection(c, autoCommit);
+            MySQLOutputConnection con = new MySQLOutputConnection(c);
             c = null;
             return con;
         } finally {

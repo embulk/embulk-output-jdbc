@@ -14,11 +14,10 @@ import org.embulk.output.jdbc.TableIdentifier;
 public class MySQLOutputConnection
         extends JdbcOutputConnection
 {
-    public MySQLOutputConnection(Connection connection, boolean autoCommit)
+    public MySQLOutputConnection(Connection connection)
             throws SQLException
     {
         super(connection, null);
-        connection.setAutoCommit(autoCommit);
     }
 
     @Override

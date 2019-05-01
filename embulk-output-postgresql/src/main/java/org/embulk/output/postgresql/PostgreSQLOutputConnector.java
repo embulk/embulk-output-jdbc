@@ -6,10 +6,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 
 public class PostgreSQLOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
@@ -23,11 +23,11 @@ public class PostgreSQLOutputConnector
     }
 
     @Override
-    public JdbcOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         try {
-            PostgreSQLOutputConnection con = new PostgreSQLOutputConnection(c, schemaName, autoCommit);
+            PostgreSQLOutputConnection con = new PostgreSQLOutputConnection(c, schemaName);
             c = null;
             return con;
         } finally {

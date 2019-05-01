@@ -14,11 +14,10 @@ import org.embulk.output.jdbc.TableIdentifier;
 public class SQLServerOutputConnection
         extends JdbcOutputConnection
 {
-    public SQLServerOutputConnection(Connection connection, String schemaName, boolean autoCommit)
+    public SQLServerOutputConnection(Connection connection, String schemaName)
             throws SQLException
     {
         super(connection, schemaName);
-        connection.setAutoCommit(autoCommit);
     }
 
     @Override

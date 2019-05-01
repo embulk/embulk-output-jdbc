@@ -18,11 +18,10 @@ public class PostgreSQLOutputConnection
 {
     private static final int MAX_NUMERIC_PRECISION = 1000;
 
-    public PostgreSQLOutputConnection(Connection connection, String schemaName, boolean autoCommit)
+    public PostgreSQLOutputConnection(Connection connection, String schemaName)
             throws SQLException
     {
         super(connection, schemaName);
-        connection.setAutoCommit(autoCommit);
     }
 
     public String buildCopySql(TableIdentifier toTable, JdbcSchema toTableSchema)
