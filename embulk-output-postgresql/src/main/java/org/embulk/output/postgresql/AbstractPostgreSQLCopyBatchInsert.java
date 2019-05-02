@@ -9,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.output.jdbc.BatchInsert;
 
@@ -68,14 +67,6 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
             return Integer.MAX_VALUE;
         } else {
             return (int) fsize;
-        }
-    }
-
-    public void finish() throws IOException, SQLException
-    {
-        closeCurrentFile();  // this is necessary to make getBatchWeight() work
-        if (getBatchWeight() != 0) {
-            flush();
         }
     }
 

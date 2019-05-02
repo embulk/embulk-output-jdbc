@@ -138,8 +138,6 @@ public class RedshiftCopyBatchInsert
     @Override
     public void finish() throws IOException, SQLException
     {
-        super.finish();
-
         for (Future<Void> uploadAndCopyFuture : uploadAndCopyFutures) {
             try {
                 uploadAndCopyFuture.get();

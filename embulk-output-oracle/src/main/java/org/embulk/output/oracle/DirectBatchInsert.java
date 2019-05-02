@@ -178,7 +178,6 @@ public class DirectBatchInsert implements BatchInsert
     @Override
     public void finish() throws IOException, SQLException
     {
-        flush();
     }
 
     @Override

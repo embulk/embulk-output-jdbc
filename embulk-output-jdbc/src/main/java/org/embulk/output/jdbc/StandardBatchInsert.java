@@ -70,6 +70,8 @@ public class StandardBatchInsert
 
     public void flush() throws IOException, SQLException
     {
+        if (batchWeight == 0) return;
+
         logger.info(String.format("Loading %,d rows", batchRows));
         long startTime = System.currentTimeMillis();
         batch.executeBatch();  // here can't use returned value because MySQL Connector/J returns SUCCESS_NO_INFO as a batch result
@@ -84,9 +86,6 @@ public class StandardBatchInsert
 
     public void finish() throws IOException, SQLException
     {
-        if (getBatchWeight() != 0) {
-            flush();
-        }
     }
 
     public void setNull(int sqlType) throws IOException, SQLException

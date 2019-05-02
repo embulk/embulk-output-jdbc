@@ -1108,41 +1108,39 @@ public abstract class AbstractJdbcOutputPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     if (batch.getBatchWeight() > forceBatchFlushSize) {
-                        withRetry(task, new IdempotentSqlRunnable() {
-                            @Override
-                            public void run() throws SQLException {
-                                try {
-                                    batch.flush();
-                                } catch (IOException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }
-                        });
+                        flush();
                     }
                     handleColumnsSetters();
                     batch.add();
                 }
                 if (batch.getBatchWeight() > batchSize) {
-                    withRetry(task, new IdempotentSqlRunnable() {
-                        @Override
-                        public void run() throws SQLException {
-                            try {
-                                batch.flush();
-                            } catch (IOException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    });
+                    flush();
                 }
             } catch (IOException | SQLException | InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
         }
 
+        private void flush() throws SQLException, InterruptedException
+        {
+            withRetry(task, new IdempotentSqlRunnable() {
+                @Override
+                public void run() throws SQLException {
+                    try {
+                        batch.flush();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+        }
+
         @Override
         public void finish()
         {
             try {
+                flush();
+
                 withRetry(task, new IdempotentSqlRunnable() {
                     @Override
                     public void run() throws SQLException {

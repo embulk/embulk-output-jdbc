@@ -219,6 +219,8 @@ public class NativeBatchInsert implements BatchInsert
     @Override
     public void flush() throws IOException, SQLException
     {
+        if (batchWeight == 0) return;
+
         logger.info(String.format("Loading %,d rows", batchRows));
         long startTime = System.currentTimeMillis();
 
@@ -236,9 +238,6 @@ public class NativeBatchInsert implements BatchInsert
     @Override
     public void finish() throws IOException, SQLException
     {
-        if (getBatchWeight() != 0) {
-            flush();
-        }
         client.commit(true);
     }
 
