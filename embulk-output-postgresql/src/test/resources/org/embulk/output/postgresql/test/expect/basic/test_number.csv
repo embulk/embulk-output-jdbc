@@ -1,0 +1,4 @@
+id:string,bool_item:long,smallint_item:long,int_item:long,bigint_item:long,real_item:double,double_item:double,money_item:string,numeric_item:string
+A001,0,0,0,0,0,0,0,0
+A002,1,12345,123456789,123456789012,123.45,123456.789,1234,1234.567
+A003,0,-1,-1,-1,-1,-1,-1,-1
