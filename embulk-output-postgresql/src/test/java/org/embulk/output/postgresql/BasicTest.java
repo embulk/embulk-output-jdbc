@@ -66,6 +66,33 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testString() throws Exception
+    {
+        Path in1 = toPath("test_string.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string.yml")), in1);
+        assertThat(selectRecords(embulk, "test_string"), is(readResource("test_string_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testTimestamp() throws Exception
+    {
+        Path in1 = toPath("test_timestamp.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_timestamp.yml")), in1);
+        assertThat(selectRecords(embulk, "test_timestamp"), is(readResource("test_timestamp_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testJson() throws Exception
+    {
+        Path in1 = toPath("test_json.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_json.yml")), in1);
+        assertThat(selectRecords(embulk, "test_json"), is(readResource("test_json_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
 
     private Path toPath(String fileName) throws URISyntaxException
     {

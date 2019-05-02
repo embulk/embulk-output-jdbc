@@ -1,0 +1,4 @@
+id:long,char_item:string,varchar_item:string,text_item:string
+1,a,b,c
+2,abc,def,ABCDEFGHIJ
+3,,,
