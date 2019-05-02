@@ -6,6 +6,9 @@ import static org.embulk.test.EmbulkTests.readSortedFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
@@ -20,6 +23,17 @@ public class MySQLTests
     public static ConfigSource baseConfig()
     {
         return EmbulkTests.config("EMBULK_OUTPUT_MYSQL_TEST_CONFIG");
+    }
+
+    public static Connection connect() throws SQLException
+    {
+        ConfigSource config = baseConfig();
+
+        String url = String.format("jdbc:mysql://%s:%s/%s",
+                config.get(String.class, "host"),
+                config.get(String.class, "port", "3306"),
+                config.get(String.class, "database"));
+        return DriverManager.getConnection(url, config.get(String.class, "user"), config.get(String.class, "password"));
     }
 
     public static void execute(String sql)
