@@ -78,7 +78,7 @@ public class OracleOutputPlugin
     }
 
     @Override
-    protected OracleOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         OraclePluginTask oracleTask = (OraclePluginTask) task;
 
@@ -123,7 +123,8 @@ public class OracleOutputPlugin
         props.setProperty("password", oracleTask.getPassword());
         logConnectionProperties(url, props);
 
-        return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct);
+        return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct,
+                oracleTask.getTransactionIsolation());
     }
 
     @Override

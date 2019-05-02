@@ -128,6 +128,11 @@ public abstract class AbstractJdbcOutputPlugin
         @ConfigDefault("null")
         public Optional<String> getAfterLoad();
 
+        @Config("transaction_isolation")
+        @ConfigDefault("null")
+        public Optional<TransactionIsolation> getTransactionIsolation();
+        public void setTransactionIsolation(Optional<TransactionIsolation> transactionIsolation);
+
         public void setActualTable(TableIdentifier actualTable);
         public TableIdentifier getActualTable();
 

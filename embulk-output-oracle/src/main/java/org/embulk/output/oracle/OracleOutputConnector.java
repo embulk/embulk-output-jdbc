@@ -5,18 +5,24 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
+
+import com.google.common.base.Optional;
 
 public class OracleOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
     private final String schemaName;
     private final boolean direct;
 
-    public OracleOutputConnector(String url, Properties properties, String schemaName, boolean direct)
+    public OracleOutputConnector(String url, Properties properties, String schemaName, boolean direct,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (Exception ex) {
@@ -29,7 +35,7 @@ public class OracleOutputConnector
     }
 
     @Override
-    public OracleOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
@@ -38,7 +44,7 @@ public class OracleOutputConnector
         }
 
         try {
-            OracleOutputConnection con = new OracleOutputConnection(c, schemaName, autoCommit, direct);
+            OracleOutputConnection con = new OracleOutputConnection(c, schemaName, direct);
             c = null;
             return con;
 

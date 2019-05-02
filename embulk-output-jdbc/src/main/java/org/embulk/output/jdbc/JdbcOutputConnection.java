@@ -38,6 +38,23 @@ public class JdbcOutputConnection
         }
     }
 
+    public void initialize(boolean autoCommit, Optional<TransactionIsolation> transactionIsolation)
+            throws SQLException
+    {
+        connection.setAutoCommit(autoCommit);
+
+        if (transactionIsolation.isPresent()) {
+            connection.setTransactionIsolation(transactionIsolation.get().toInt());
+        }
+
+        try {
+            TransactionIsolation currentTransactionIsolation = TransactionIsolation.fromInt(connection.getTransactionIsolation());
+            logger.info("TransactionIsolation={}", currentTransactionIsolation.toString());
+        } catch (IllegalArgumentException e) {
+            logger.info("TransactionIsolation=unknown");
+        }
+    }
+
     @Override
     public void close() throws SQLException
     {

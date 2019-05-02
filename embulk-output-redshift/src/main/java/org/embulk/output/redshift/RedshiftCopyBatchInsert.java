@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
@@ -42,7 +43,7 @@ public class RedshiftCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
 {
     private final Logger logger = Exec.getLogger(RedshiftCopyBatchInsert.class);
-    private final RedshiftOutputConnector connector;
+    private final JdbcOutputConnector connector;
     private final String s3BucketName;
     private final String s3KeyPrefix;
     private final String iamReaderUserName;
@@ -61,7 +62,7 @@ public class RedshiftCopyBatchInsert
 
     public static final String COPY_AFTER_FROM = "GZIP DELIMITER '\\t' NULL '\\\\N' ESCAPE TRUNCATECOLUMNS ACCEPTINVCHARS STATUPDATE OFF COMPUPDATE OFF";
 
-    public RedshiftCopyBatchInsert(RedshiftOutputConnector connector,
+    public RedshiftCopyBatchInsert(JdbcOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
             String iamReaderUserName, boolean deleteS3TempFile) throws IOException, SQLException
     {
@@ -98,7 +99,7 @@ public class RedshiftCopyBatchInsert
     @Override
     public void prepare(TableIdentifier loadTable, JdbcSchema insertSchema) throws SQLException
     {
-        this.connection = connector.connect(true);
+        this.connection = (RedshiftOutputConnection)connector.connect(true);
         this.copySqlBeforeFrom = connection.buildCopySQLBeforeFrom(loadTable, insertSchema);
         logger.info("Copy SQL: "+copySqlBeforeFrom+" ? "+COPY_AFTER_FROM);
     }
@@ -269,7 +270,7 @@ public class RedshiftCopyBatchInsert
             try {
                 uploadFuture.get();
 
-                RedshiftOutputConnection con = connector.connect(true);
+                RedshiftOutputConnection con = (RedshiftOutputConnection)connector.connect(true);
                 try {
                     logger.info("Running COPY from file {}", s3KeyName);
 

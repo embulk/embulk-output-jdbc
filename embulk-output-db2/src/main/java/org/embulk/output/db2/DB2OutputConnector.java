@@ -5,17 +5,23 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
+
+import com.google.common.base.Optional;
 
 public class DB2OutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
     private final String schemaName;
 
-    public DB2OutputConnector(String url, Properties properties, String schemaName)
+    public DB2OutputConnector(String url, Properties properties, String schemaName,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         try {
             Class.forName("com.ibm.db2.jcc.DB2Driver");
         } catch (Exception ex) {
@@ -27,7 +33,7 @@ public class DB2OutputConnector
     }
 
     @Override
-    public DB2OutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
@@ -36,7 +42,7 @@ public class DB2OutputConnector
         }
 
         try {
-            DB2OutputConnection con = new DB2OutputConnection(c, schemaName, autoCommit);
+            DB2OutputConnection con = new DB2OutputConnection(c, schemaName);
             c = null;
             return con;
 

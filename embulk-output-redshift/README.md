@@ -21,6 +21,7 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **table**: destination table name (string, required)
 - **create_table_constraint**: table constraint added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
 - **create_table_option**: table option added to `CREATE TABLE` statement, like `CREATE TABLE <table_name> (<column1> <type1>, <column2> <type2>, ..., <create_table_constraint>) <create_table_option>`.
+- **transaction_isolation**: transaction isolation level for each connection ("read_uncommitted", "read_committed", "repeatable_read" or "serializable"). if not specified, database default value will be used.
 - **access_key_id**: deprecated. `aws_access_key_id` should be used (see "basic" in `aws_auth_method`).
 - **secret_access_key**: deprecated. `aws_secret_access_key` should be used (see "basic" in `aws_auth_method`).
 - **aws_auth_method**: name of mechanism to authenticate requests ("basic", "env", "instance", "profile", "properties", "anonymous", "session" or "default". default: "basic")

@@ -5,26 +5,32 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
+
+import com.google.common.base.Optional;
 
 public class MySQLOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final String url;
     private final Properties properties;
 
-    public MySQLOutputConnector(String url, Properties properties)
+    public MySQLOutputConnector(String url, Properties properties,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         this.url = url;
         this.properties = properties;
     }
 
     @Override
-    public MySQLOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         try {
-            MySQLOutputConnection con = new MySQLOutputConnection(c, autoCommit);
+            MySQLOutputConnection con = new MySQLOutputConnection(c);
             c = null;
             return con;
         } finally {

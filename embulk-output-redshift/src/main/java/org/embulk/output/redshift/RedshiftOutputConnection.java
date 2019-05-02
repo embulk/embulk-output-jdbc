@@ -19,11 +19,10 @@ public class RedshiftOutputConnection
 {
     private final Logger logger = Exec.getLogger(RedshiftOutputConnection.class);
 
-    public RedshiftOutputConnection(Connection connection, String schemaName, boolean autoCommit)
+    public RedshiftOutputConnection(Connection connection, String schemaName)
             throws SQLException
     {
         super(connection, schemaName);
-        connection.setAutoCommit(autoCommit);
     }
 
     // ALTER TABLE cannot change the schema of a table

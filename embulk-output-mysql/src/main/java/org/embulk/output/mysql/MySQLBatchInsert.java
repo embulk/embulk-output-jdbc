@@ -1,17 +1,17 @@
 package org.embulk.output.mysql;
 
-import java.util.List;
 import java.io.IOException;
 import java.sql.Types;
 import java.sql.SQLException;
 import com.google.common.base.Optional;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.StandardBatchInsert;
 
 public class MySQLBatchInsert
         extends StandardBatchInsert
 {
-    public MySQLBatchInsert(MySQLOutputConnector connector, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
+    public MySQLBatchInsert(JdbcOutputConnector connector, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
         super(connector, mergeConfig);
     }

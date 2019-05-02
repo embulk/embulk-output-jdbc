@@ -7,13 +7,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.embulk.output.jdbc.JdbcOutputConnector;
+import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
+import org.embulk.output.jdbc.TransactionIsolation;
 import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
+
 
 public class SQLServerOutputConnector
-        implements JdbcOutputConnector
+        extends AbstractJdbcOutputConnector
 {
     private final Logger logger = Exec.getLogger(getClass());
 
@@ -21,15 +25,17 @@ public class SQLServerOutputConnector
     private final Properties properties;
     private final String schemaName;
 
-    public SQLServerOutputConnector(String url, Properties properties, String schemaName)
+    public SQLServerOutputConnector(String url, Properties properties, String schemaName,
+            Optional<TransactionIsolation> transactionIsolation)
     {
+        super(transactionIsolation);
         this.url = url;
         this.properties = properties;
         this.schemaName = schemaName;
     }
 
     @Override
-    public SQLServerOutputConnection connect(boolean autoCommit) throws SQLException
+    protected JdbcOutputConnection connect() throws SQLException
     {
         Connection c = DriverManager.getConnection(url, properties);
         if (c == null) {
@@ -55,7 +61,7 @@ public class SQLServerOutputConnector
         }
 
         try {
-            SQLServerOutputConnection con = new SQLServerOutputConnection(c, schemaName, autoCommit);
+            SQLServerOutputConnection con = new SQLServerOutputConnection(c, schemaName);
             c = null;
             return con;
 

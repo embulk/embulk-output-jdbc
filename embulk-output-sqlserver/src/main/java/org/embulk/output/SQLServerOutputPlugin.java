@@ -9,6 +9,7 @@ import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.TableIdentifier;
@@ -130,7 +131,7 @@ public class SQLServerOutputPlugin
     }
 
     @Override
-    protected SQLServerOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
         boolean useJtdsDriver = false;
@@ -166,7 +167,8 @@ public class SQLServerOutputPlugin
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
         logConnectionProperties(urlProps.getUrl(), urlProps.getProps());
-        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orNull());
+        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orNull(),
+                sqlServerTask.getTransactionIsolation());
     }
 
     private UrlAndProperties getUrlAndProperties(SQLServerPluginTask sqlServerTask, boolean useJtdsDriver)

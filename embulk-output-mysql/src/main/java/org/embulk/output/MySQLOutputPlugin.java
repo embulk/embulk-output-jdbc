@@ -12,6 +12,7 @@ import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.Ssl;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
+import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.mysql.MySQLOutputConnection;
@@ -71,7 +72,7 @@ public class MySQLOutputPlugin
     }
 
     @Override
-    protected MySQLOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
+    protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         MySQLPluginTask t = (MySQLPluginTask) task;
 
@@ -122,7 +123,7 @@ public class MySQLOutputPlugin
         props.setProperty("password", t.getPassword());
         logConnectionProperties(url, props);
 
-        return new MySQLOutputConnector(url, props);
+        return new MySQLOutputConnector(url, props, task.getTransactionIsolation());
     }
 
     @Override

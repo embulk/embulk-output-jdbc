@@ -35,11 +35,10 @@ public class OracleOutputConnection
     private OracleCharset charset;
     private OracleCharset nationalCharset;
 
-    public OracleOutputConnection(Connection connection, String schemaName, boolean autoCommit, boolean direct)
+    public OracleOutputConnection(Connection connection, String schemaName, boolean direct)
             throws SQLException
     {
         super(connection, schemaName == null ? getSchema(connection) : schemaName);
-        connection.setAutoCommit(autoCommit);
 
         this.direct = direct;
     }
