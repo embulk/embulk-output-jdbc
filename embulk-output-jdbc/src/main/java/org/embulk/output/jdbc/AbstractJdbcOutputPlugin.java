@@ -1075,25 +1075,27 @@ public abstract class AbstractJdbcOutputPlugin
             implements TransactionalPageOutput
     {
         protected final List<Column> columns;
+        protected final List<ColumnSetter> columnSetters;
         protected final List<ColumnSetterVisitor> columnVisitors;
-        private final PageReader pageReader;
+        private final PageReaderRecord pageReader;
         private final BatchInsert batch;
         private final int batchSize;
         private final int forceBatchFlushSize;
         private final PluginTask task;
 
-        public PluginPageOutput(final PageReader pageReader,
+        public PluginPageOutput(PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
                 int batchSize, PluginTask task)
         {
-            this.pageReader = pageReader;
+            this.pageReader = new PageReaderRecord(pageReader);
             this.batch = batch;
             this.columns = pageReader.getSchema().getColumns();
+            this.columnSetters = columnSetters;
             this.columnVisitors = ImmutableList.copyOf(Lists.transform(
                         columnSetters, new Function<ColumnSetter, ColumnSetterVisitor>() {
                             public ColumnSetterVisitor apply(ColumnSetter setter)
                             {
-                                return new ColumnSetterVisitor(pageReader, setter);
+                                return new ColumnSetterVisitor(PluginPageOutput.this.pageReader, setter);
                             }
                         }));
             this.batchSize = batchSize;
@@ -1124,15 +1126,31 @@ public abstract class AbstractJdbcOutputPlugin
         private void flush() throws SQLException, InterruptedException
         {
             withRetry(task, new IdempotentSqlRunnable() {
+                private boolean first = true;
+
                 @Override
                 public void run() throws SQLException {
                     try {
+                        if (!first) {
+                            retryColumnsSetters();
+                        }
+
                         batch.flush();
+
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
+                    } catch (SQLException ex) {
+                        if (!first && !isRetryableException(ex)) {
+                            logger.error("Retry failed : ", ex);
+                        }
+                        throw ex;
+                    } finally {
+                        first = false;
                     }
                 }
             });
+
+            pageReader.clearReadRecords();
         }
 
         @Override
@@ -1182,6 +1200,18 @@ public abstract class AbstractJdbcOutputPlugin
             int size = columnVisitors.size();
             for (int i=0; i < size; i++) {
                 columns.get(i).visit(columnVisitors.get(i));
+            }
+        }
+
+        protected void retryColumnsSetters() throws IOException, SQLException
+        {
+            int size = columnVisitors.size();
+            for (Record record : pageReader.getReadRecords()) {
+                for (int i = 0; i < size; i++) {
+                    ColumnSetterVisitor columnVisitor = new ColumnSetterVisitor(record, columnSetters.get(i));
+                    columns.get(i).visit(columnVisitor);
+                }
+                batch.add();
             }
         }
     }

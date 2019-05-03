@@ -95,6 +95,41 @@ public class RetryTest
         assertThat(selectRecords(embulk, "test1"), is(readResource("test1_expected.csv")));
     }
 
+    // will be flushed multiple times
+    @Test
+    public void testRetryLarge() throws Exception
+    {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    try (Connection conn = MySQLTests.connect()) {
+                        conn.setAutoCommit(false);
+                        try (Statement statement = conn.createStatement()) {
+                            // make the transaction larger so that embulk-output-mysql transaction will be rolled back at a deadlock.
+                            for (int i = 100; i < 200; i++) {
+                                statement.execute("insert into test1 values('B" + i + "', 0)");
+                            }
+
+                            statement.execute("insert into test1 values('A170', 0)");
+                            Thread.sleep(3000);
+                            // deadlock will occur
+                            statement.execute("insert into test1 values('A160', 0)");
+                            conn.rollback();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+
+        Path in1 = toPath("test1_large.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1_large.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_large_expected.csv")));
+    }
+
     private Path toPath(String fileName) throws URISyntaxException
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);

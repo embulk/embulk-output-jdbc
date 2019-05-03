@@ -1,0 +1,3 @@
+table: test1
+mode: insert_direct
+batch_size: 1000
