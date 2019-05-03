@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static java.util.Locale.ENGLISH;
 
@@ -85,6 +88,30 @@ public class OracleTests
         sql.append("EXIT;");
         execute(embulk, sql.toString());
 
-        return EmbulkTests.readSortedFile(temp);
+        //return EmbulkTests.readSortedFile(temp);
+
+        // trim spaces oracle sql client padded
+        // (it seems that number of spaces is different depending on environment or oracle client version)
+        String text = EmbulkTests.readFile(temp);
+        List<String> lines = new ArrayList<String>();
+        for (String line : text.split("\n")) {
+            StringBuilder trimmedLineBuilder = new StringBuilder();
+            for (String value : line.split(",")) {
+                if (trimmedLineBuilder.length() > 0) {
+                    trimmedLineBuilder.append(",");
+                }
+                trimmedLineBuilder.append(value.trim());
+            }
+            lines.add(trimmedLineBuilder.toString());
+        }
+
+        Collections.sort(lines);
+
+        StringBuilder trimmedTextBuilder = new StringBuilder();
+        for (String line : lines) {
+            trimmedTextBuilder.append(line);
+            trimmedTextBuilder.append("\n");
+        }
+        return trimmedTextBuilder.toString();
     }
 }

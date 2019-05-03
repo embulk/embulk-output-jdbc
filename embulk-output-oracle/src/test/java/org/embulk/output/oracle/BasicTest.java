@@ -327,7 +327,7 @@ public class BasicTest
     {
         Path in1 = getEmptyDir();
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST1"), is(""));
+        assertThat(selectRecords(embulk, "TEST1"), is("\n"));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
