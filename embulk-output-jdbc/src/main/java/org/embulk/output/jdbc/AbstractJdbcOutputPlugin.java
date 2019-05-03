@@ -1129,7 +1129,7 @@ public abstract class AbstractJdbcOutputPlugin
                 private boolean first = true;
 
                 @Override
-                public void run() throws SQLException {
+                public void run() throws IOException, SQLException {
                     try {
                         if (!first) {
                             retryColumnsSetters();
@@ -1137,9 +1137,7 @@ public abstract class AbstractJdbcOutputPlugin
 
                         batch.flush();
 
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (SQLException ex) {
+                    } catch (IOException | SQLException ex) {
                         if (!first && !isRetryableException(ex)) {
                             logger.error("Retry failed : ", ex);
                         }
@@ -1161,12 +1159,8 @@ public abstract class AbstractJdbcOutputPlugin
 
                 withRetry(task, new IdempotentSqlRunnable() {
                     @Override
-                    public void run() throws SQLException {
-                        try {
-                            batch.finish();
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
+                    public void run() throws IOException, SQLException {
+                        batch.finish();
                     }
                 });
             } catch (InterruptedException | SQLException ex) {
@@ -1216,10 +1210,16 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected boolean isRetryableException(SQLException exception)
+    protected boolean isRetryableException(Exception exception)
     {
-        return isRetryableException(exception.getSQLState(), exception.getErrorCode());
+        if (exception instanceof SQLException) {
+            SQLException ex = (SQLException)exception;
+            return isRetryableException(ex.getSQLState(), ex.getErrorCode());
+        } else {
+            return false;
+        }
     }
+
     protected boolean isRetryableException(String sqlState, int errorCode)
     {
         return false;
@@ -1228,7 +1228,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     public static interface IdempotentSqlRunnable
     {
-        public void run() throws SQLException;
+        public void run() throws IOException, SQLException;
     }
 
     protected void withRetry(PluginTask task, IdempotentSqlRunnable op)
@@ -1302,17 +1302,13 @@ public abstract class AbstractJdbcOutputPlugin
             }
         }
 
-        public boolean isRetryableException(Exception exception) {
-            if (exception instanceof SQLException) {
-                SQLException ex = (SQLException)exception;
-
-                return AbstractJdbcOutputPlugin.this.isRetryableException(ex);
-            } else {
-                return false;
-            }
+        public boolean isRetryableException(Exception exception)
+        {
+            return AbstractJdbcOutputPlugin.this.isRetryableException(exception);
         }
 
-        private String buildExceptionMessage(Throwable ex) {
+        private String buildExceptionMessage(Throwable ex)
+        {
             StringBuilder sb = new StringBuilder();
             sb.append(ex.getMessage());
             if (ex.getCause() != null) {
@@ -1321,7 +1317,8 @@ public abstract class AbstractJdbcOutputPlugin
             return sb.toString();
         }
 
-        private void buildExceptionMessageCont(StringBuilder sb, Throwable ex, String lastMessage) {
+        private void buildExceptionMessageCont(StringBuilder sb, Throwable ex, String lastMessage)
+        {
             if (!lastMessage.equals(ex.getMessage())) {
                 // suppress same messages
                 sb.append(" < ");
