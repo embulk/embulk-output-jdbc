@@ -42,6 +42,7 @@ public class PostgreSQLCopyBatchInsert
     public void flush() throws IOException, SQLException
     {
         File file = closeCurrentFile();  // flush buffered data in writer
+        if (getBatchWeight() == 0) return;
 
         logger.info(String.format("Loading %,d rows (%,d bytes)", batchRows, file.length()));
         long startTime = System.currentTimeMillis();
@@ -60,6 +61,11 @@ public class PostgreSQLCopyBatchInsert
 
         openNewFile();
         file.delete();
+    }
+
+    @Override
+    public void finish() throws IOException ,SQLException
+    {
     }
 
     @Override

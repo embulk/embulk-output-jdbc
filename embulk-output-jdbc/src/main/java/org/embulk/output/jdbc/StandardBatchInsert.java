@@ -70,23 +70,27 @@ public class StandardBatchInsert
 
     public void flush() throws IOException, SQLException
     {
+        if (batchWeight == 0) return;
+
         logger.info(String.format("Loading %,d rows", batchRows));
         long startTime = System.currentTimeMillis();
-        batch.executeBatch();  // here can't use returned value because MySQL Connector/J returns SUCCESS_NO_INFO as a batch result
-        double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
+        try {
+            batch.executeBatch();  // here can't use returned value because MySQL Connector/J returns SUCCESS_NO_INFO as a batch result
+            double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
 
-        totalRows += batchRows;
-        logger.info(String.format("> %.2f seconds (loaded %,d rows in total)", seconds, totalRows));
-        batch.clearBatch();
-        batchRows = 0;
-        batchWeight = 0;
+            totalRows += batchRows;
+            logger.info(String.format("> %.2f seconds (loaded %,d rows in total)", seconds, totalRows));
+
+        } finally {
+            // clear for retry
+            batch.clearBatch();
+            batchRows = 0;
+            batchWeight = 0;
+        }
     }
 
     public void finish() throws IOException, SQLException
     {
-        if (getBatchWeight() != 0) {
-            flush();
-        }
     }
 
     public void setNull(int sqlType) throws IOException, SQLException

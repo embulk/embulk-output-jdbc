@@ -1075,25 +1075,27 @@ public abstract class AbstractJdbcOutputPlugin
             implements TransactionalPageOutput
     {
         protected final List<Column> columns;
+        protected final List<ColumnSetter> columnSetters;
         protected final List<ColumnSetterVisitor> columnVisitors;
-        private final PageReader pageReader;
+        private final PageReaderRecord pageReader;
         private final BatchInsert batch;
         private final int batchSize;
         private final int forceBatchFlushSize;
         private final PluginTask task;
 
-        public PluginPageOutput(final PageReader pageReader,
+        public PluginPageOutput(PageReader pageReader,
                 BatchInsert batch, List<ColumnSetter> columnSetters,
                 int batchSize, PluginTask task)
         {
-            this.pageReader = pageReader;
+            this.pageReader = new PageReaderRecord(pageReader);
             this.batch = batch;
             this.columns = pageReader.getSchema().getColumns();
+            this.columnSetters = columnSetters;
             this.columnVisitors = ImmutableList.copyOf(Lists.transform(
                         columnSetters, new Function<ColumnSetter, ColumnSetterVisitor>() {
                             public ColumnSetterVisitor apply(ColumnSetter setter)
                             {
-                                return new ColumnSetterVisitor(pageReader, setter);
+                                return new ColumnSetterVisitor(PluginPageOutput.this.pageReader, setter);
                             }
                         }));
             this.batchSize = batchSize;
@@ -1108,49 +1110,57 @@ public abstract class AbstractJdbcOutputPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     if (batch.getBatchWeight() > forceBatchFlushSize) {
-                        withRetry(task, new IdempotentSqlRunnable() {
-                            @Override
-                            public void run() throws SQLException {
-                                try {
-                                    batch.flush();
-                                } catch (IOException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }
-                        });
+                        flush();
                     }
                     handleColumnsSetters();
                     batch.add();
                 }
                 if (batch.getBatchWeight() > batchSize) {
-                    withRetry(task, new IdempotentSqlRunnable() {
-                        @Override
-                        public void run() throws SQLException {
-                            try {
-                                batch.flush();
-                            } catch (IOException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    });
+                    flush();
                 }
             } catch (IOException | SQLException | InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
         }
 
+        private void flush() throws SQLException, InterruptedException
+        {
+            withRetry(task, new IdempotentSqlRunnable() {
+                private boolean first = true;
+
+                @Override
+                public void run() throws IOException, SQLException {
+                    try {
+                        if (!first) {
+                            retryColumnsSetters();
+                        }
+
+                        batch.flush();
+
+                    } catch (IOException | SQLException ex) {
+                        if (!first && !isRetryableException(ex)) {
+                            logger.error("Retry failed : ", ex);
+                        }
+                        throw ex;
+                    } finally {
+                        first = false;
+                    }
+                }
+            });
+
+            pageReader.clearReadRecords();
+        }
+
         @Override
         public void finish()
         {
             try {
+                flush();
+
                 withRetry(task, new IdempotentSqlRunnable() {
                     @Override
-                    public void run() throws SQLException {
-                        try {
-                            batch.finish();
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
+                    public void run() throws IOException, SQLException {
+                        batch.finish();
                     }
                 });
             } catch (InterruptedException | SQLException ex) {
@@ -1186,12 +1196,30 @@ public abstract class AbstractJdbcOutputPlugin
                 columns.get(i).visit(columnVisitors.get(i));
             }
         }
+
+        protected void retryColumnsSetters() throws IOException, SQLException
+        {
+            int size = columnVisitors.size();
+            for (Record record : pageReader.getReadRecords()) {
+                for (int i = 0; i < size; i++) {
+                    ColumnSetterVisitor columnVisitor = new ColumnSetterVisitor(record, columnSetters.get(i));
+                    columns.get(i).visit(columnVisitor);
+                }
+                batch.add();
+            }
+        }
     }
 
-    protected boolean isRetryableException(SQLException exception)
+    protected boolean isRetryableException(Exception exception)
     {
-        return isRetryableException(exception.getSQLState(), exception.getErrorCode());
+        if (exception instanceof SQLException) {
+            SQLException ex = (SQLException)exception;
+            return isRetryableException(ex.getSQLState(), ex.getErrorCode());
+        } else {
+            return false;
+        }
     }
+
     protected boolean isRetryableException(String sqlState, int errorCode)
     {
         return false;
@@ -1200,7 +1228,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     public static interface IdempotentSqlRunnable
     {
-        public void run() throws SQLException;
+        public void run() throws IOException, SQLException;
     }
 
     protected void withRetry(PluginTask task, IdempotentSqlRunnable op)
@@ -1274,17 +1302,13 @@ public abstract class AbstractJdbcOutputPlugin
             }
         }
 
-        public boolean isRetryableException(Exception exception) {
-            if (exception instanceof SQLException) {
-                SQLException ex = (SQLException)exception;
-
-                return AbstractJdbcOutputPlugin.this.isRetryableException(ex);
-            } else {
-                return false;
-            }
+        public boolean isRetryableException(Exception exception)
+        {
+            return AbstractJdbcOutputPlugin.this.isRetryableException(exception);
         }
 
-        private String buildExceptionMessage(Throwable ex) {
+        private String buildExceptionMessage(Throwable ex)
+        {
             StringBuilder sb = new StringBuilder();
             sb.append(ex.getMessage());
             if (ex.getCause() != null) {
@@ -1293,7 +1317,8 @@ public abstract class AbstractJdbcOutputPlugin
             return sb.toString();
         }
 
-        private void buildExceptionMessageCont(StringBuilder sb, Throwable ex, String lastMessage) {
+        private void buildExceptionMessageCont(StringBuilder sb, Throwable ex, String lastMessage)
+        {
             if (!lastMessage.equals(ex.getMessage())) {
                 // suppress same messages
                 sb.append(" < ");

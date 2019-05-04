@@ -1,0 +1,5 @@
+id:long,json_item:json,jsonb_item:json
+1,null,null
+2,88,99
+3,{"x":"@"},{"y":{"z":[5]}}
+4,,

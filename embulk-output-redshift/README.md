@@ -75,7 +75,7 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default: "")
 - **delete_s3_temp_file**: whether to delete temporary files uploaded on S3 (boolean, default: true)
 - **options**: extra connection properties (hash, default: {})
-- **retry_limit**: max retry count for database operations (integer, default: 12)
+- **retry_limit**: max retry count for database operations (integer, default: 12). When intermediate table to create already created by another process, this plugin will retry with another table name to avoid collision.
 - **retry_wait**: initial retry wait time in milliseconds (integer, default: 1000 (1 second))
 - **max_retry_wait**: upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
 - **mode**: "insert", "insert_direct", "truncate_insert", "replace" or "merge". See below. (string, required)
