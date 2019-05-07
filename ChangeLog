@@ -1,3 +1,11 @@
+Release 0.8.3 - 2019-05-07
+
+* Supported java.sql.Types.NUMERIC in Oracle OCI.
+* Updated aws-java-sdk version from 1.10.77 to 1.11.523 in order to support AWS Signature Version 4, which will be required by S3 after June 24, 2019 (@tatsuo48++).
+* Enable to set transaction isolation level.
+* Fixed a bug that embulk-output-mysql loses records during retry.
+* JdbcOutputConnector and JdbcOutputConnection were refactored.
+
 Release 0.8.2 - 2019-01-30
 
 * Supported Redshift TEXT type.
