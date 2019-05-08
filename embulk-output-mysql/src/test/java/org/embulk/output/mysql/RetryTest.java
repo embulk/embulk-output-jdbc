@@ -29,6 +29,11 @@ import com.google.common.io.Resources;
 
 public class RetryTest
 {
+    private static class Lock
+    {
+        public boolean enabled = true;
+    }
+
     private static final String BASIC_RESOURCE_PATH = "org/embulk/output/mysql/test/expect/retry/";
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
@@ -151,7 +156,7 @@ public class RetryTest
             }
         }
 
-        final Object lock = new Object();
+        final Lock lock = new Lock();
 
         Thread thread = new Thread() {
             @Override
@@ -167,6 +172,7 @@ public class RetryTest
 
                             synchronized (lock) {
                                 lock.notify();
+                                lock.enabled = false;
                             }
 
                             statement.execute("insert into test1 values('A1249010', 0)");
@@ -184,7 +190,9 @@ public class RetryTest
         thread.start();
 
         synchronized (lock) {
-            lock.wait();
+            if (lock.enabled) {
+                lock.wait();
+            }
         }
 
         //Path in1 = toPath("test1_flushed_multiple_times.csv");
@@ -193,7 +201,7 @@ public class RetryTest
     }
 
     @Test
-    public void testRetryMultipleTimes() throws Exception
+    public void testRetry_MultipleTimes() throws Exception
     {
         Thread thread1 = new Thread() {
             @Override
@@ -250,6 +258,106 @@ public class RetryTest
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
         assertThat(selectRecords(embulk, "test1"), is(readResource("test1_expected.csv")));
+    }
+
+    // records will be partially committed
+    @Test
+    public void testRetry_Large_MultipleTimes() throws Exception
+    {
+        Path in1 = embulk.createTempFile("csv");
+        StringBuilder expected1 = new StringBuilder();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(in1.toFile()))) {
+            writer.write("id:string,num:long");
+            writer.newLine();
+
+            for (int i = 1000000; i < 1250000; i++) {
+                writer.write("A" + i + "," + i);
+                writer.newLine();
+
+                expected1.append("A" + i + "," + i + "\n");
+            }
+        }
+
+        final Lock lock1 = new Lock();
+        final Lock lock2 = new Lock();
+
+        Thread thread1 = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    try (Connection conn = MySQLTests.connect()) {
+                        conn.setAutoCommit(false);
+                        try (Statement statement = conn.createStatement()) {
+                            // make the transaction larger so that embulk-output-mysql transaction will be rolled back at a deadlock.
+                            for (int i = 1000000; i < 1260000; i++) {
+                                statement.execute("insert into test1 values('B" + i + "', 0)");
+                            }
+
+                            synchronized (lock1) {
+                                lock1.notify();
+                                lock1.enabled = false;
+                            }
+
+                            statement.execute("insert into test1 values('A1249010', 0)");
+                            Thread.sleep(5000);
+                            // deadlock will occur
+                            statement.execute("insert into test1 values('A1249000', 0)");
+                            conn.rollback();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread1.start();
+
+        Thread thread2 = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    try (Connection conn = MySQLTests.connect()) {
+                        conn.setAutoCommit(false);
+                        try (Statement statement = conn.createStatement()) {
+                            // make the transaction larger so that embulk-output-mysql transaction will be rolled back at a deadlock.
+                            for (int i = 1000000; i < 1260000; i++) {
+                                statement.execute("insert into test1 values('C" + i + "', 0)");
+                            }
+
+                            synchronized (lock2) {
+                                lock2.notify();
+                                lock2.enabled = false;
+                            }
+
+                            statement.execute("insert into test1 values('A1249020', 0)");
+                            Thread.sleep(10000);
+                            // deadlock will occur
+                            statement.execute("insert into test1 values('A1249005', 0)");
+                            conn.rollback();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread2.start();
+
+        synchronized (lock1) {
+            if (lock1.enabled) {
+                lock1.wait();
+            }
+        }
+        synchronized (lock2) {
+            if (lock2.enabled) {
+                lock2.wait();
+            }
+        }
+
+        //Path in1 = toPath("test1_flushed_multiple_times.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(expected1.toString()));
     }
 
     private Path toPath(String fileName) throws URISyntaxException
