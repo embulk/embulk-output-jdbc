@@ -3,6 +3,7 @@ package org.embulk.output.jdbc;
 import java.util.Calendar;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.BatchUpdateException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Date;
@@ -26,6 +27,7 @@ public class StandardBatchInsert
     private int batchWeight;
     private int batchRows;
     private long totalRows;
+    private int[] lastUpdateCounts;
 
     public StandardBatchInsert(JdbcOutputConnector connector, Optional<MergeConfig> mergeConfig) throws IOException, SQLException
     {
@@ -70,16 +72,23 @@ public class StandardBatchInsert
 
     public void flush() throws IOException, SQLException
     {
+        lastUpdateCounts = new int[]{};
+
         if (batchWeight == 0) return;
 
         logger.info(String.format("Loading %,d rows", batchRows));
         long startTime = System.currentTimeMillis();
         try {
-            batch.executeBatch();  // here can't use returned value because MySQL Connector/J returns SUCCESS_NO_INFO as a batch result
+            lastUpdateCounts = batch.executeBatch();  // here can't use returned value because MySQL Connector/J returns SUCCESS_NO_INFO as a batch result
             double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
 
             totalRows += batchRows;
             logger.info(String.format("> %.2f seconds (loaded %,d rows in total)", seconds, totalRows));
+
+        } catch (BatchUpdateException e) {
+            // will be used for retry
+            lastUpdateCounts = e.getUpdateCounts();
+            throw e;
 
         } finally {
             // clear for retry
@@ -87,6 +96,12 @@ public class StandardBatchInsert
             batchRows = 0;
             batchWeight = 0;
         }
+    }
+
+    @Override
+    public int[] getLastUpdateCounts()
+    {
+        return lastUpdateCounts;
     }
 
     public void finish() throws IOException, SQLException

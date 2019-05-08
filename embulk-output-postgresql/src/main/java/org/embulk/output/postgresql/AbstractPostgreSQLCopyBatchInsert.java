@@ -229,4 +229,11 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
             return String.valueOf(c);
         }
     }
+
+    @Override
+    public int[] getLastUpdateCounts()
+    {
+        // need not be implemented because AbstractPostgreSQLCopyBatchInsert won't retry.
+        return new int[]{};
+    }
 }

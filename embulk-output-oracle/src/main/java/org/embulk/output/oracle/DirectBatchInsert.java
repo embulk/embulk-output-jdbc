@@ -176,6 +176,13 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
+    public int[] getLastUpdateCounts()
+    {
+        // need not be implemented because DirectBatchInsert won't retry.
+        return new int[]{};
+    }
+
+    @Override
     public void finish() throws IOException, SQLException
     {
     }
