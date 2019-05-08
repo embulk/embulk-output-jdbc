@@ -18,6 +18,9 @@ public interface BatchInsert
 
     public void flush() throws IOException, SQLException;
 
+    // should be implemented for retry
+    public int[] getLastUpdateCounts();
+
     public void finish() throws IOException, SQLException;
 
     public void setNull(int sqlType) throws IOException, SQLException;

@@ -5,7 +5,9 @@ import static org.embulk.output.mysql.MySQLTests.selectRecords;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystems;
@@ -97,7 +99,7 @@ public class RetryTest
 
     // will be flushed multiple times
     @Test
-    public void testRetryLarge() throws Exception
+    public void testRetry_FlushedMultipleTimes() throws Exception
     {
         Thread thread = new Thread() {
             @Override
@@ -125,9 +127,71 @@ public class RetryTest
         };
         thread.start();
 
-        Path in1 = toPath("test1_large.csv");
-        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1_large.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_large_expected.csv")));
+        Path in1 = toPath("test1_flushed_multiple_times.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1_flushed_multiple_times.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_flushed_multiple_times_expected.csv")));
+    }
+
+    // records will be partially committed
+    @Test
+    public void testRetry_Large() throws Exception
+    {
+        Path in1 = embulk.createTempFile("csv");
+        StringBuilder expected1 = new StringBuilder();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(in1.toFile()))) {
+            writer.write("id:string,num:long");
+            writer.newLine();
+
+            for (int i = 1000000; i < 1250000; i++) {
+                writer.write("A" + i + "," + i);
+                writer.newLine();
+
+                expected1.append("A" + i + "," + i + "\n");
+            }
+        }
+
+        final Object lock = new Object();
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    try (Connection conn = MySQLTests.connect()) {
+                        conn.setAutoCommit(false);
+                        try (Statement statement = conn.createStatement()) {
+                            // make the transaction larger so that embulk-output-mysql transaction will be rolled back at a deadlock.
+                            for (int i = 1000000; i < 1260000; i++) {
+                                statement.execute("insert into test1 values('B" + i + "', 0)");
+                            }
+
+                            synchronized (lock) {
+                                lock.notify();
+                            }
+
+                            System.out.println("##1");
+
+                            statement.execute("insert into test1 values('A1249010', 0)");
+                            Thread.sleep(5000);
+                            // deadlock will occur
+                            statement.execute("insert into test1 values('A1249000', 0)");
+                            conn.rollback();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+
+        synchronized (lock) {
+            lock.wait();
+        }
+
+        //Path in1 = toPath("test1_flushed_multiple_times.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(expected1.toString()));
     }
 
     private Path toPath(String fileName) throws URISyntaxException

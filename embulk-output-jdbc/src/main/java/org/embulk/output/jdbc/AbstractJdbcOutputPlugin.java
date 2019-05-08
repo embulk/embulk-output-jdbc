@@ -15,6 +15,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Statement;
 import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
@@ -1200,12 +1201,18 @@ public abstract class AbstractJdbcOutputPlugin
         protected void retryColumnsSetters() throws IOException, SQLException
         {
             int size = columnVisitors.size();
+            int[] updateCounts = batch.getLastUpdateCounts();
+            int index = 0;
             for (Record record : pageReader.getReadRecords()) {
-                for (int i = 0; i < size; i++) {
-                    ColumnSetterVisitor columnVisitor = new ColumnSetterVisitor(record, columnSetters.get(i));
-                    columns.get(i).visit(columnVisitor);
+                // retry failed records
+                if (index >= updateCounts.length || updateCounts[index] == Statement.EXECUTE_FAILED) {
+                    for (int i = 0; i < size; i++) {
+                        ColumnSetterVisitor columnVisitor = new ColumnSetterVisitor(record, columnSetters.get(i));
+                        columns.get(i).visit(columnVisitor);
+                    }
+                    batch.add();
                 }
-                batch.add();
+                index++;
             }
         }
     }
