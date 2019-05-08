@@ -169,15 +169,18 @@ public class RetryTest
                             for (int i = 1000000; i < 1260000; i++) {
                                 statement.execute("insert into test1 values('B" + i + "', 0)");
                             }
+                            System.out.println("# Inserted many records.");
 
                             synchronized (lock) {
                                 lock.notify();
                                 lock.enabled = false;
                             }
 
+                            System.out.println("# Insert 'A1249000'.");
                             statement.execute("insert into test1 values('A1249010', 0)");
                             Thread.sleep(5000);
                             // deadlock will occur
+                            System.out.println("# Insert 'A1249010'.");
                             statement.execute("insert into test1 values('A1249000', 0)");
                             conn.rollback();
                         }
@@ -293,15 +296,18 @@ public class RetryTest
                             for (int i = 1000000; i < 1260000; i++) {
                                 statement.execute("insert into test1 values('B" + i + "', 0)");
                             }
+                            System.out.println("# Inserted many records (1).");
 
                             synchronized (lock1) {
                                 lock1.notify();
                                 lock1.enabled = false;
                             }
 
+                            System.out.println("# Insert 'A1249010'.");
                             statement.execute("insert into test1 values('A1249010', 0)");
                             Thread.sleep(5000);
                             // deadlock will occur
+                            System.out.println("# Insert 'A1249000'.");
                             statement.execute("insert into test1 values('A1249000', 0)");
                             conn.rollback();
                         }
@@ -324,16 +330,19 @@ public class RetryTest
                             for (int i = 1000000; i < 1260000; i++) {
                                 statement.execute("insert into test1 values('C" + i + "', 0)");
                             }
+                            System.out.println("# Inserted many records (2).");
 
                             synchronized (lock2) {
                                 lock2.notify();
                                 lock2.enabled = false;
                             }
 
-                            statement.execute("insert into test1 values('A1249020', 0)");
-                            Thread.sleep(10000);
+                            System.out.println("# Insert 'A1249030'.");
+                            statement.execute("insert into test1 values('A1249030', 0)");
+                            Thread.sleep(20000);
                             // deadlock will occur
-                            statement.execute("insert into test1 values('A1249005', 0)");
+                            System.out.println("# Insert 'A1249020'.");
+                            statement.execute("insert into test1 values('A1249020', 0)");
                             conn.rollback();
                         }
                     }
