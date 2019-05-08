@@ -169,8 +169,6 @@ public class RetryTest
                                 lock.notify();
                             }
 
-                            System.out.println("##1");
-
                             statement.execute("insert into test1 values('A1249010', 0)");
                             Thread.sleep(5000);
                             // deadlock will occur
@@ -192,6 +190,66 @@ public class RetryTest
         //Path in1 = toPath("test1_flushed_multiple_times.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
         assertThat(selectRecords(embulk, "test1"), is(expected1.toString()));
+    }
+
+    @Test
+    public void testRetryMultipleTimes() throws Exception
+    {
+        Thread thread1 = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    try (Connection conn = MySQLTests.connect()) {
+                        conn.setAutoCommit(false);
+                        try (Statement statement = conn.createStatement()) {
+                            // make the transaction larger so that embulk-output-mysql transaction will be rolled back at a deadlock.
+                            for (int i = 100; i < 110; i++) {
+                                statement.execute("insert into test1 values('B" + i + "', 0)");
+                            }
+
+                            statement.execute("insert into test1 values('A003', 0)");
+                            Thread.sleep(3000);
+                            // deadlock will occur
+                            statement.execute("insert into test1 values('A002', 0)");
+                            conn.rollback();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread1.start();
+
+        Thread thread2 = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    try (Connection conn = MySQLTests.connect()) {
+                        conn.setAutoCommit(false);
+                        try (Statement statement = conn.createStatement()) {
+                            // make the transaction larger so that embulk-output-mysql transaction will be rolled back at a deadlock.
+                            for (int i = 100; i < 110; i++) {
+                                statement.execute("insert into test1 values('C" + i + "', 0)");
+                            }
+
+                            statement.execute("insert into test1 values('A004', 0)");
+                            Thread.sleep(6000);
+                            // deadlock will occur
+                            statement.execute("insert into test1 values('A001', 0)");
+                            conn.rollback();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread2.start();
+
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
+        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_expected.csv")));
     }
 
     private Path toPath(String fileName) throws URISyntaxException
