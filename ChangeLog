@@ -1,3 +1,7 @@
+Release 0.8.5 - 2019-05-10
+
+* Fixed a bug that embulk-output-mysql may insert incorrect records by re-retry.
+
 Release 0.8.4 - 2019-05-08
 
 * Fixed a bug that embulk-output-mysql may insert duplicate records by retry.

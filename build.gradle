@@ -13,7 +13,7 @@ def bintrayReleaseProjects = [
 
 allprojects {
     group = 'org.embulk.output.jdbc'
-    version = '0.8.4'
+    version = '0.8.5'
 
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven-publish'
