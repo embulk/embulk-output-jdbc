@@ -1,5 +1,6 @@
 package org.embulk.output.jdbc;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -1203,7 +1204,8 @@ public abstract class AbstractJdbcOutputPlugin
             int size = columnVisitors.size();
             int[] updateCounts = batch.getLastUpdateCounts();
             int index = 0;
-            for (Record record : pageReader.getReadRecords()) {
+            for (Iterator<? extends Record> it = pageReader.getReadRecords().iterator(); it.hasNext();) {
+                Record record = it.next();
                 // retry failed records
                 if (index >= updateCounts.length || updateCounts[index] == Statement.EXECUTE_FAILED) {
                     for (int i = 0; i < size; i++) {
@@ -1211,6 +1213,9 @@ public abstract class AbstractJdbcOutputPlugin
                         columns.get(i).visit(columnVisitor);
                     }
                     batch.add();
+                } else {
+                    // remove for re-retry
+                    it.remove();
                 }
                 index++;
             }
