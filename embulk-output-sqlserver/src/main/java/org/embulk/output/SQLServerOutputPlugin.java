@@ -92,6 +92,14 @@ public class SQLServerOutputPlugin
         @Config("database_encoding")
         @ConfigDefault("\"MS932\"")
         public String getDatabaseEncoding();
+
+        @Config("connect_timeout")
+        @ConfigDefault("300")
+        public int getConnectTimeout();
+
+        @Config("socket_timeout")
+        @ConfigDefault("1800")
+        public int getSocketTimeout();
     }
 
     private static class UrlAndProperties {
@@ -232,6 +240,8 @@ public class SQLServerOutputPlugin
             if (!sqlServerTask.getUser().isPresent()) {
                 throw new ConfigException("'user' option is required but not set.");
             }
+
+            props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout())); // seconds
         }else {
             StringBuilder urlBuilder = new StringBuilder();
             if (sqlServerTask.getInstance().isPresent()) {
@@ -254,8 +264,11 @@ public class SQLServerOutputPlugin
                     throw new IllegalArgumentException("Field 'password' is not set.");
                 }
             }
+            props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout() * 1000)); // milliseconds
             url = urlBuilder.toString();
         }
+
+        props.setProperty("loginTimeout", String.valueOf(sqlServerTask.getConnectTimeout())); // seconds
 
         return new UrlAndProperties(url, props);
     }
