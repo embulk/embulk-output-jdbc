@@ -94,11 +94,9 @@ public class SQLServerOutputPlugin
         public String getDatabaseEncoding();
 
         @Config("connect_timeout")
-        @ConfigDefault("300")
         public int getConnectTimeout();
 
         @Config("socket_timeout")
-        @ConfigDefault("1800")
         public int getSocketTimeout();
     }
 
