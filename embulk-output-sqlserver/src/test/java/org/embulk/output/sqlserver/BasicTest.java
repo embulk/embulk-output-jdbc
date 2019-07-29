@@ -11,7 +11,6 @@ import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
-import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.output.SQLServerOutputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -175,20 +174,6 @@ public class BasicTest
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string_timestamp.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_string_timestamp_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-    }
-
-    @Test
-    public void testJtds() throws Exception
-    {
-        SQLServerOutputPlugin.preferMicrosoftDriver = false;
-        try {
-            Path in1 = toPath("test1.csv");
-            TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert.yml")), in1);
-            assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_insert_expected.csv")));
-            //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
-        } finally {
-            SQLServerOutputPlugin.preferMicrosoftDriver = true;
-        }
     }
 
     private Path toPath(String fileName) throws URISyntaxException
