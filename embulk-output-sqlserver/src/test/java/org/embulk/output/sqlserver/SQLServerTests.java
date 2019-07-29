@@ -37,7 +37,7 @@ public class SQLServerTests
         Integer port = config.get(Integer.class, "port");
         String database = config.get(String.class, "database");
 
-        String url = String.format("jdbc:jtds:sqlserver://%s:%d/%s", host, port, database);
+        String url = String.format("jdbc:sqlserver://%s:%d;databaseName=%s", host, port, database);
 
         return DriverManager.getConnection(url, user, password);
     }
