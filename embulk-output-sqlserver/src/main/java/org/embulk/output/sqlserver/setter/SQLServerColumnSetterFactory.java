@@ -7,6 +7,7 @@ import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcColumnOption;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
+import org.embulk.output.jdbc.setter.StringColumnSetter;
 import org.joda.time.DateTimeZone;
 
 public class SQLServerColumnSetterFactory
@@ -42,6 +43,12 @@ public class SQLServerColumnSetterFactory
         case "time":
             return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
 
+        case "coerce":
+            {
+                if(column.getName().equals("datetimeoffset") || column.getName().equals("sql_variant")) {
+                    return new StringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
+                }
+            }
         default:
             return super.newColumnSetter(column, option);
         }
