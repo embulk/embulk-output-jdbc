@@ -45,7 +45,11 @@ public class SQLServerColumnSetterFactory
 
         case "coerce":
             {
-                if(column.getName().equals("datetimeoffset") || column.getName().equals("sql_variant")) {
+                if(column.getName().equals("datetimeoffset")
+                        || column.getName().equals("sql_variant")
+                        || column.getName().equals("date")
+                        || column.getName().equals("time")
+                        || column.getName().equals("datetime2")) {
                     return new StringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
                 }
             }
