@@ -83,6 +83,10 @@ public class RedshiftOutputPlugin
         @Config("ssl")
         @ConfigDefault("\"disable\"")
         public Ssl getSsl();
+
+        @Config("copy_unload_iam_role_name")
+        @ConfigDefault("null")
+        Optional<String> getCopyUnloadIamRoleName();
     }
 
     @Override
@@ -193,6 +197,6 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyUnloadIamRoleName().get());
     }
 }

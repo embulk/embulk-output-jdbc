@@ -36,6 +36,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.Credentials;
+import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
+import com.amazonaws.services.securitytoken.model.GetCallerIdentityResult;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
 
@@ -53,6 +55,7 @@ public class RedshiftCopyBatchInsert
     private final String s3RegionName;
     private final AWSSecurityTokenServiceClient sts;
     private final ExecutorService executorService;
+    private final String copyUnloadIamRoleARN;
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
@@ -64,7 +67,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(JdbcOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName, boolean deleteS3TempFile) throws IOException, SQLException
+            String iamReaderUserName, boolean deleteS3TempFile, String copyUnloadIamRoleName) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -94,6 +97,16 @@ public class RedshiftCopyBatchInsert
                     + " IAM user needs \"s3:GetBucketLocation\" permission if Redshift region and S3 region are different.");
         }
         this.s3RegionName = s3RegionName;
+
+        String copyUnloadIamRoleARN = null;
+        if (copyUnloadIamRoleName != null && copyUnloadIamRoleName.length() > 0) {
+            String accountId = null;
+            GetCallerIdentityRequest request = new GetCallerIdentityRequest();
+            GetCallerIdentityResult response = this.sts.getCallerIdentity(request);
+            accountId = response.getAccount();
+            copyUnloadIamRoleARN = "arn:aws:iam::"+accountId+":role/"+copyUnloadIamRoleName;
+        }
+        this.copyUnloadIamRoleARN = copyUnloadIamRoleARN;
     }
 
     @Override
@@ -305,13 +318,18 @@ public class RedshiftCopyBatchInsert
             sb.append("/");
             sb.append(s3KeyName);
             sb.append("' CREDENTIALS '");
-            sb.append("aws_access_key_id=");
-            sb.append(creds.getAWSAccessKeyId());
-            sb.append(";aws_secret_access_key=");
-            sb.append(creds.getAWSSecretKey());
-            if (creds.getSessionToken() != null) {
-                sb.append(";token=");
-                sb.append(creds.getSessionToken());
+            if (copyUnloadIamRoleARN != null && copyUnloadIamRoleARN.length() > 0) {
+                sb.append("aws_iam_role=");
+                sb.append(copyUnloadIamRoleARN);
+            } else {
+                sb.append("aws_access_key_id=");
+                sb.append(creds.getAWSAccessKeyId());
+                sb.append(";aws_secret_access_key=");
+                sb.append(creds.getAWSSecretKey());
+                if (creds.getSessionToken() != null) {
+                    sb.append(";token=");
+                    sb.append(creds.getSessionToken());
+                }
             }
             sb.append("' ");
             if (s3RegionName != null) {
