@@ -1,6 +1,7 @@
 package org.embulk.output.sqlserver;
 
 import static org.embulk.output.sqlserver.SQLServerTests.execute;
+import static org.embulk.output.sqlserver.SQLServerTests.executeQuery;
 import static org.embulk.output.sqlserver.SQLServerTests.selectRecords;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -9,7 +10,9 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -175,6 +178,24 @@ public class BasicTest
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_string_timestamp.yml")), in1);
         assertThat(selectRecords(embulk, "TEST1"), is(readResource("test_string_timestamp_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    @Test
+    public void testMax() throws Exception
+    {
+        Path in1 = embulk.createTempFile(".csv");
+        String line3 = "2," + createString('A', 8000) + "," + createString('a', 10000) + "," + createString('あ', 4000) + "," + createString('ア', 10000);
+        Files.write(in1, Arrays.asList("ID:long,C1:string,C2:string,C3:string,C4:string", "1,,,,", line3));
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_max.yml")), in1);
+        assertThat(executeQuery(embulk, "SELECT ID, LEN(C1), LEN(C2), LEN(C3), LEN(C4) FROM TEST_MAX"), is("1,NULL,NULL,NULL,NULL\n2,8000,10000,4000,10000\n"));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
+    private static String createString(char c, int n)
+    {
+        char[] chars = new char[n];
+        Arrays.fill(chars, c);
+        return new String(chars);
     }
 
     @Test

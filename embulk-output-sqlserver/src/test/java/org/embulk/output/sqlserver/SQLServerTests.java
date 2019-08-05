@@ -80,11 +80,16 @@ public class SQLServerTests
 
     public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
     {
+        return executeQuery(embulk, "SELECT * FROM " + tableName);
+    }
+
+    public static String executeQuery(TestingEmbulk embulk, String query) throws IOException
+    {
         Path temp = embulk.createTempFile("txt");
         Files.delete(temp);
 
         // should not use UTF8 because of BOM
-        execute("SET NOCOUNT ON; SELECT * FROM " + tableName, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
+        execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
 
         List<String> lines = Files.readAllLines(temp, Charset.forName("MS932"));
         Collections.sort(lines);
