@@ -241,7 +241,9 @@ public class SQLServerOutputPlugin
                 throw new ConfigException("'user' option is required but not set.");
             }
 
-            props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout().or(0))); // seconds
+            if (sqlServerTask.getSocketTimeout().isPresent()) {
+                props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout().get())); // seconds
+            }
         }else {
             StringBuilder urlBuilder = new StringBuilder();
             if (sqlServerTask.getInstance().isPresent()) {
@@ -264,11 +266,17 @@ public class SQLServerOutputPlugin
                     throw new IllegalArgumentException("Field 'password' is not set.");
                 }
             }
-            props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout().or(0) * 1000)); // milliseconds
+
+            if (sqlServerTask.getSocketTimeout().isPresent()) {
+                props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout().get() * 1000L)); // milliseconds
+            }
+
             url = urlBuilder.toString();
         }
 
-        props.setProperty("loginTimeout", String.valueOf(sqlServerTask.getConnectTimeout().or(0))); // seconds
+        if (sqlServerTask.getConnectTimeout().isPresent()) {
+            props.setProperty("loginTimeout", String.valueOf(sqlServerTask.getConnectTimeout().get())); // seconds
+        }
 
         return new UrlAndProperties(url, props);
     }

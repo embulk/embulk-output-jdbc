@@ -48,8 +48,8 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 - **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert mode, the SQL will be executed after truncating. replace mode doesn't support this option.
 - **after_load**: if set, this SQL will be executed after loading all records.
-- **connect_timeout**: timeout for the driver to connect. 0 means the default of SQL Server (15 by default). (integer (seconds), default: 300)
-- **socket_timeout**: timeout for executing the query. 0 means no timeout. (integer (seconds), default: 1800)
+- **connect_timeout**: timeout for the driver to connect. 0 means the default of SQL Server (15 by default). (integer (seconds), optional)
+- **socket_timeout**: timeout for executing the query. 0 means no timeout. (integer (seconds), optional)
 ### Modes
 
 * **insert**:
