@@ -44,15 +44,18 @@ public class SQLServerColumnSetterFactory
             return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
 
         case "coerce":
-            {
-                if(column.getName().equals("datetimeoffset")
-                        || column.getName().equals("sql_variant")
-                        || column.getName().equals("date")
-                        || column.getName().equals("time")
-                        || column.getName().equals("datetime2")) {
-                    return new StringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
-                }
+            switch (column.getSimpleTypeName().toLowerCase()) {
+            case "date":
+            case "datetime2":
+            case "time":
+            case "sql_variant":
+            case "datetimeoffset":
+                // because jTDS driver, default JDBC driver for older embulk-output-sqlserver, returns Types.VARCHAR as JDBC type for these types.
+                return new StringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
+            default:
+                return super.newColumnSetter(column, option);
             }
+
         default:
             return super.newColumnSetter(column, option);
         }
