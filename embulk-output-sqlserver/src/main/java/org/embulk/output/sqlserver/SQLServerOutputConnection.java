@@ -48,7 +48,7 @@ public class SQLServerOutputConnection
         case "TIMESTAMP":
             return "DATETIME2";
         case "NVARCHAR":
-            if(c.getSizeTypeParameter() > 8000) {
+            if(c.getSizeTypeParameter() > 4000) {
                 return "NVARCHAR(max)";
             }
         case "VARCHAR":
