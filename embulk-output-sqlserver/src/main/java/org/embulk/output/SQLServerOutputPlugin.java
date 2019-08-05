@@ -29,9 +29,6 @@ import static java.util.Locale.ENGLISH;
 public class SQLServerOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    // for test
-    public static boolean preferMicrosoftDriver = true;
-
     private static int DEFAULT_PORT = 1433;
 
     public interface SQLServerPluginTask
@@ -40,6 +37,10 @@ public class SQLServerOutputPlugin
         @Config("driver_path")
         @ConfigDefault("null")
         public Optional<String> getDriverPath();
+
+        @Config("driver_type")
+        @ConfigDefault("\"mssql-jdbc\"")
+        public String getDriverType();
 
         @Config("host")
         @ConfigDefault("null")
@@ -142,35 +143,30 @@ public class SQLServerOutputPlugin
     protected JdbcOutputConnector getConnector(PluginTask task, boolean retryableMetadataOperation)
     {
         SQLServerPluginTask sqlServerTask = (SQLServerPluginTask) task;
-        boolean useJtdsDriver = false;
 
         if (sqlServerTask.getDriverPath().isPresent()) {
             addDriverJarToClasspath(sqlServerTask.getDriverPath().get());
+        }
+
+        boolean useJtdsDriver;
+        if (sqlServerTask.getDriverType().equalsIgnoreCase("mssql-jdbc")) {
+            useJtdsDriver = false;
             try {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            } catch (Exception e) {
-                throw new ConfigException("Driver set at field 'driver_path' doesn't include Microsoft SQLServerDriver", e);
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+            }
+            catch (Exception e) {
+                throw new ConfigException("Can't load Microsoft SQLServerDriver from classpath", e);
+            }
+        } else if (sqlServerTask.getDriverType().equalsIgnoreCase("jtds")) {
+            useJtdsDriver = true;
+            try {
+                Class.forName("net.sourceforge.jtds.jdbc.Driver").newInstance();
+            }
+            catch (Exception e) {
+                throw new ConfigException("Can't load jTDS Driver from classpath", e);
             }
         } else {
-            boolean useMicrosoftDriver = false;
-            if (preferMicrosoftDriver) {
-                // prefer Microsoft SQLServerDriver if it is in classpath
-                try {
-                    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-                    useMicrosoftDriver = true;
-                } catch (Exception e) {
-                }
-            }
-
-            if (!useMicrosoftDriver) {
-                logger.info("Using jTDS Driver");
-                try {
-                    Class.forName("net.sourceforge.jtds.jdbc.Driver");
-                } catch (Exception e) {
-                    throw new ConfigException("'driver_path' doesn't set and can't find jTDS driver", e);
-                }
-                useJtdsDriver = true;
-            }
+            throw new ConfigException("Unknown driver_type : " + sqlServerTask.getDriverType());
         }
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
@@ -199,9 +195,8 @@ public class SQLServerOutputPlugin
 
             if (sqlServerTask.getHost().isPresent()
                     || sqlServerTask.getInstance().isPresent()
-                    || sqlServerTask.getDatabase().isPresent()
-                    || sqlServerTask.getIntegratedSecurity().isPresent()) {
-                throw new IllegalArgumentException("'host', 'port', 'instance', 'database' and 'integratedSecurity' parameters are invalid if 'url' parameter is set.");
+                    || sqlServerTask.getDatabase().isPresent()) {
+                throw new IllegalArgumentException("'host', 'instance' and 'database' parameters are invalid if 'url' parameter is set.");
             }
             url = sqlServerTask.getUrl().get();
         } else {
@@ -244,7 +239,7 @@ public class SQLServerOutputPlugin
             if (sqlServerTask.getSocketTimeout().isPresent()) {
                 props.setProperty("socketTimeout", String.valueOf(sqlServerTask.getSocketTimeout().get())); // seconds
             }
-        }else {
+        } else {
             StringBuilder urlBuilder = new StringBuilder();
             if (sqlServerTask.getInstance().isPresent()) {
                 urlBuilder.append(String.format("jdbc:sqlserver://%s\\%s",

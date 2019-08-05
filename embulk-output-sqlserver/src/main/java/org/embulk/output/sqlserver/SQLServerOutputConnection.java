@@ -47,6 +47,15 @@ public class SQLServerOutputConnection
             return "TEXT";
         case "TIMESTAMP":
             return "DATETIME2";
+        case "NVARCHAR":
+            if(c.getSizeTypeParameter() > 8000) {
+                return "NVARCHAR(max)";
+            }
+        case "VARCHAR":
+            if(c.getSizeTypeParameter() > 8000) {
+                return "VARCHAR(max)";
+            }
+
         default:
             return super.buildColumnTypeName(c);
         }

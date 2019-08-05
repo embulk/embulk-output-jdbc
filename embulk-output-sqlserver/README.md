@@ -10,8 +10,8 @@ SQL Server output plugin for Embulk loads records to SQL Server.
 
 ## Configuration
 
-- **driver_path**: path to the jar file of Microsoft SQL Server JDBC driver. If not set, open-source driver (jTDS driver) is used (string)
-- **host**: database host name (string, required)
+- **driver_path**: path to the jar file of Microsoft SQL Server JDBC driver. If not set, the bundled JDBC driver (Microsoft SQL Server JDBC driver 7.2.2) will be used. (string)
+- **driver_type**: the current version of embulk-input-sqlserver will use Microsoft SQL Server JDBC driver in default, but version 0.10.0 or older will use jTDS driver in default. You can still use jTDS driver by setting this option to "jtds". (string, default: "mssql-jdbc")- **host**: database host name (string, required)
 - **port**: database port number (integer, default: 1433)
 - **integratedSecutiry**: whether to use integrated authentication or not. The `sqljdbc_auth.dll` must be located on Java library path if using integrated authentication. : (boolean, default: false)
 ```
