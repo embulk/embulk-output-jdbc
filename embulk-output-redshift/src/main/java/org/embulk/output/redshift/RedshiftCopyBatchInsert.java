@@ -67,7 +67,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(JdbcOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName, boolean deleteS3TempFile, String copyUnloadIamRoleName) throws IOException, SQLException
+            String iamReaderUserName, boolean deleteS3TempFile, String copyUnloadIamRoleName, String copyUnloadIamAccountId) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -101,9 +101,13 @@ public class RedshiftCopyBatchInsert
         String copyUnloadIamRoleARN = null;
         if (copyUnloadIamRoleName != null && copyUnloadIamRoleName.length() > 0) {
             String accountId = null;
-            GetCallerIdentityRequest request = new GetCallerIdentityRequest();
-            GetCallerIdentityResult response = this.sts.getCallerIdentity(request);
-            accountId = response.getAccount();
+            if (copyUnloadIamAccountId != null && copyUnloadIamAccountId.length() > 0) {
+                accountId = copyUnloadIamAccountId;
+            } else {
+                GetCallerIdentityRequest request = new GetCallerIdentityRequest();
+                GetCallerIdentityResult response = this.sts.getCallerIdentity(request);
+                accountId = response.getAccount();
+            }
             copyUnloadIamRoleARN = "arn:aws:iam::"+accountId+":role/"+copyUnloadIamRoleName;
         }
         this.copyUnloadIamRoleARN = copyUnloadIamRoleARN;

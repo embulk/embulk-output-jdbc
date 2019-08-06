@@ -87,6 +87,10 @@ public class RedshiftOutputPlugin
         @Config("copy_unload_iam_role_name")
         @ConfigDefault("\"\"")
         public String getCopyUnloadIamRoleName();
+
+        @Config("copy_unload_iam_account_id")
+        @ConfigDefault("\"\"")
+        public String getCopyUnloadIamAccountId();
     }
 
     @Override
@@ -197,6 +201,6 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyUnloadIamRoleName());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyUnloadIamRoleName(), t.getCopyUnloadIamAccountId());
     }
 }
