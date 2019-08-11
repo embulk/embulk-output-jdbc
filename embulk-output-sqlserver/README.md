@@ -10,8 +10,8 @@ SQL Server output plugin for Embulk loads records to SQL Server.
 
 ## Configuration
 
-- **driver_path**: path to the jar file of Microsoft SQL Server JDBC driver. If not set, open-source driver (jTDS driver) is used (string)
-- **host**: database host name (string, required)
+- **driver_path**: path to the jar file of Microsoft SQL Server JDBC driver. If not set, the bundled JDBC driver (Microsoft SQL Server JDBC driver 7.2.2) will be used. (string)
+- **driver_type**: the current version of embulk-input-sqlserver will use Microsoft SQL Server JDBC driver in default, but version 0.10.0 or older will use jTDS driver in default. You can still use jTDS driver by setting this option to "jtds". (string, default: "mssql-jdbc")- **host**: database host name (string, required)
 - **port**: database port number (integer, default: 1433)
 - **integratedSecutiry**: whether to use integrated authentication or not. The `sqljdbc_auth.dll` must be located on Java library path if using integrated authentication. : (boolean, default: false)
 ```
@@ -44,11 +44,13 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
   - **type**: type of a column when this plugin creates new tables (e.g. `VARCHAR(255)`, `INTEGER NOT NULL UNIQUE`). This used when this plugin creates intermediate tables (insert, insert_truncate and merge modes), when it creates the target table (insert_direct, merge_direct and replace modes), and when it creates nonexistent target table automatically. (string, default: depends on input column type. `BIGINT` if input column type is long, `BOOLEAN` if boolean, `DOUBLE PRECISION` if double, `CLOB` if string, `TIMESTAMP` if timestamp)
   - **value_type**: This plugin converts input column type (embulk type) into a database type to build a INSERT statement. This value_type option controls the type of the value in a INSERT statement. (string, default: depends on the sql type of the column. Available values options are: `byte`, `short`, `int`, `long`, `double`, `float`, `boolean`, `string`, `nstring`, `date`, `time`, `timestamp`, `decimal`, `json`, `null`, `pass`)
+  NOTE: the default value_type for DATE, TIME and DATETIME2 is `string`, because jTDS driver, default JDBC driver for older embulk-output-sqlserver, returns Types.VARCHAR as JDBC type for these types.
   - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 - **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert mode, the SQL will be executed after truncating. replace mode doesn't support this option.
 - **after_load**: if set, this SQL will be executed after loading all records.
-
+- **connect_timeout**: timeout for the driver to connect. 0 means the default of SQL Server (15 by default). (integer (seconds), optional)
+- **socket_timeout**: timeout for executing the query. 0 means no timeout. (integer (seconds), optional)
 ### Modes
 
 * **insert**:

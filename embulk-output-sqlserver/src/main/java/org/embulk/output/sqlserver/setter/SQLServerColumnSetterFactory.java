@@ -7,6 +7,7 @@ import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcColumnOption;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
+import org.embulk.output.jdbc.setter.StringColumnSetter;
 import org.joda.time.DateTimeZone;
 
 public class SQLServerColumnSetterFactory
@@ -41,6 +42,19 @@ public class SQLServerColumnSetterFactory
 
         case "time":
             return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+
+        case "coerce":
+            switch (column.getSimpleTypeName().toLowerCase()) {
+            case "date":
+            case "datetime2":
+            case "time":
+            case "sql_variant":
+            case "datetimeoffset":
+                // because jTDS driver, default JDBC driver for older embulk-output-sqlserver, returns Types.VARCHAR as JDBC type for these types.
+                return new StringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
+            default:
+                return super.newColumnSetter(column, option);
+            }
 
         default:
             return super.newColumnSetter(column, option);
