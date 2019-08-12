@@ -74,8 +74,8 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **s3_bucket**: S3 bucket name for temporary files
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default: "")
 - **delete_s3_temp_file**: whether to delete temporary files uploaded on S3 (boolean, default: true)
-- **copy_unload_iam_role_name**: IAM Role for COPY and UNLOAD credential(https://docs.aws.amazon.com/redshift/latest/dg/copy-usage_notes-access-permissions.html), if this is set, IAM Role is used instead of aws access key and aws secret access key(string, default: "")
-- **copy_unload_iam_account_id**: IAM Role's account ID for multi account COPY and UNLOAD. If this is set, the ID is used instead of authenticated user's account ID. This is enabled only copy_unload_iam_role_name is set.(string, default: "")
+- **copy_iam_role_name**: IAM Role for COPY credential(https://docs.aws.amazon.com/redshift/latest/dg/copy-usage_notes-access-permissions.html), if this is set, IAM Role is used instead of aws access key and aws secret access key(string, optional)
+- **copy_aws_account_id**: IAM Role's account ID for multi account COPY. If this is set, the ID is used instead of authenticated user's account ID. This is enabled only copy_iam_role_name is set.(string, optional)
 - **options**: extra connection properties (hash, default: {})
 - **retry_limit**: max retry count for database operations (integer, default: 12). When intermediate table to create already created by another process, this plugin will retry with another table name to avoid collision.
 - **retry_wait**: initial retry wait time in milliseconds (integer, default: 1000 (1 second))

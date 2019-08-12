@@ -55,7 +55,7 @@ public class RedshiftCopyBatchInsert
     private final String s3RegionName;
     private final AWSSecurityTokenServiceClient sts;
     private final ExecutorService executorService;
-    private final String copyUnloadIamRoleARN;
+    private final String copyIamRoleARN;
 
     private RedshiftOutputConnection connection = null;
     private String copySqlBeforeFrom = null;
@@ -67,7 +67,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(JdbcOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName, boolean deleteS3TempFile, String copyUnloadIamRoleName, String copyUnloadIamAccountId) throws IOException, SQLException
+            String iamReaderUserName, boolean deleteS3TempFile, String copyIamRoleName, String copyAwsAccountId) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -98,19 +98,19 @@ public class RedshiftCopyBatchInsert
         }
         this.s3RegionName = s3RegionName;
 
-        String copyUnloadIamRoleARN = null;
-        if (copyUnloadIamRoleName != null && copyUnloadIamRoleName.length() > 0) {
+        if (copyIamRoleName != null && copyIamRoleName.length() > 0) {
             String accountId = null;
-            if (copyUnloadIamAccountId != null && copyUnloadIamAccountId.length() > 0) {
-                accountId = copyUnloadIamAccountId;
+            if (copyAwsAccountId != null && copyAwsAccountId.length() > 0) {
+                accountId = copyAwsAccountId;
             } else {
                 GetCallerIdentityRequest request = new GetCallerIdentityRequest();
                 GetCallerIdentityResult response = this.sts.getCallerIdentity(request);
                 accountId = response.getAccount();
             }
-            copyUnloadIamRoleARN = "arn:aws:iam::"+accountId+":role/"+copyUnloadIamRoleName;
+            this.copyIamRoleARN = "arn:aws:iam::"+accountId+":role/"+copyIamRoleName;
+        } else {
+            this.copyIamRoleARN = null;
         }
-        this.copyUnloadIamRoleARN = copyUnloadIamRoleARN;
     }
 
     @Override
@@ -322,9 +322,9 @@ public class RedshiftCopyBatchInsert
             sb.append("/");
             sb.append(s3KeyName);
             sb.append("' CREDENTIALS '");
-            if (copyUnloadIamRoleARN != null && copyUnloadIamRoleARN.length() > 0) {
+            if (copyIamRoleARN != null && copyIamRoleARN.length() > 0) {
                 sb.append("aws_iam_role=");
-                sb.append(copyUnloadIamRoleARN);
+                sb.append(copyIamRoleARN);
             } else {
                 sb.append("aws_access_key_id=");
                 sb.append(creds.getAWSAccessKeyId());
