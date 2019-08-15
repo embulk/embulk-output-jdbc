@@ -98,9 +98,9 @@ public class RedshiftCopyBatchInsert
         }
         this.s3RegionName = s3RegionName;
 
-        if (copyIamRoleName != null && copyIamRoleName.length() > 0) {
+        if (copyIamRoleName != null) {
             String accountId = null;
-            if (copyAwsAccountId != null && copyAwsAccountId.length() > 0) {
+            if (copyAwsAccountId != null) {
                 accountId = copyAwsAccountId;
             } else {
                 GetCallerIdentityRequest request = new GetCallerIdentityRequest();
