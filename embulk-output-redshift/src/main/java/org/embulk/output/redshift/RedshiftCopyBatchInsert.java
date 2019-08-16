@@ -107,7 +107,7 @@ public class RedshiftCopyBatchInsert
                 GetCallerIdentityResult response = this.sts.getCallerIdentity(request);
                 accountId = response.getAccount();
             }
-            this.copyIamRoleARN = "arn:aws:iam::"+accountId+":role/"+copyIamRoleName;
+            this.copyIamRoleARN = "arn:aws:iam::" + accountId + ":role/" + copyIamRoleName;
         } else {
             this.copyIamRoleARN = null;
         }
@@ -322,7 +322,7 @@ public class RedshiftCopyBatchInsert
             sb.append("/");
             sb.append(s3KeyName);
             sb.append("' CREDENTIALS '");
-            if (copyIamRoleARN != null && copyIamRoleARN.length() > 0) {
+            if (copyIamRoleARN != null) {
                 sb.append("aws_iam_role=");
                 sb.append(copyIamRoleARN);
             } else {
