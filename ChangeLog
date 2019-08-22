@@ -1,3 +1,9 @@
+Release 0.8.6 - 2019-08-22
+
+* Changed the default JDBC driver for SQL Server from jTDS JDBC Driver to Microsoft JDBC Driver (@hieudion++).
+* embulk-output-sqlserver supported connection_timeout and socket_timeout (@hieudion++).
+* embulk-output-redshift supported IAM role for accessing to S3 by Redshift COPY command (@ynishi++).
+
 Release 0.8.5 - 2019-05-10
 
 * Fixed a bug that embulk-output-mysql may insert incorrect records by re-retry.
