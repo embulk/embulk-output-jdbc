@@ -70,7 +70,7 @@ public class NativeClientWrapper
 
     public void open(String server, int port, Optional<String> instance,
             String database, Optional<String> user, Optional<String> password,
-            String table, Optional<String> nativeDriverName,
+            String schemaName, String table, Optional<String> nativeDriverName,
             String databaseEncoding)
                     throws SQLException
     {
@@ -141,8 +141,9 @@ public class NativeClientWrapper
         StringBuilder fullTableName = new StringBuilder();
         fullTableName.append("[");
         fullTableName.append(database);
-        fullTableName.append("].");
-        fullTableName.append(".[");
+        fullTableName.append("].[");
+        fullTableName.append(schemaName);
+        fullTableName.append("].[");
         fullTableName.append(table);
         fullTableName.append("]");
         checkBCPResult("bcp_init", client.bcp_initW(
@@ -381,7 +382,7 @@ public class NativeClientWrapper
             throwException(operation, NativeClient.FAIL);
         } else {
             if (result > 0) {
-                logger.info(String.format("SQL Server Native Client : %,d rows have bean loaded.", result));
+                logger.info(String.format("SQL Server Native Client : %,d rows have been loaded.", result));
             }
         }
 

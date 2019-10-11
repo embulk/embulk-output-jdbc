@@ -9,10 +9,10 @@ public class TableIdentifier
     private String schemaName;
     private String tableName;
 
-    public TableIdentifier(String database, String shcemaName, String tableName)
+    public TableIdentifier(String database, String schemaName, String tableName)
     {
         this.database = database;
-        this.schemaName = shcemaName;
+        this.schemaName = schemaName;
         this.tableName = tableName;
     }
 
