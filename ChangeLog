@@ -1,3 +1,7 @@
+Release 0.8.7 - 2019-12-23
+
+* embulk-output-sqlserver supported 'schema' and 'temp_schema' option in native mode (@nickolay ++).
+
 Release 0.8.6 - 2019-08-22
 
 * Changed the default JDBC driver for SQL Server from jTDS JDBC Driver to Microsoft JDBC Driver (@hieudion++).
