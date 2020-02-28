@@ -50,6 +50,7 @@ public abstract class AbstractJdbcOutputPluginTest
     protected abstract void prepare() throws SQLException;
 
 
+    @SuppressWarnings("unchecked")
     private Map<String, ?> getTestConfigs()
     {
         if (testConfigurations == null) {
