@@ -3,7 +3,7 @@
 dependencies {
     compile project(':embulk-output-jdbc')
 
-    testCompile 'org.embulk:embulk-standards:0.8.22'
+    testCompile 'org.embulk:embulk-standards:0.9.20'
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
     testCompile files('test_jdbc_driver/db2jcc4.jar')
 }
