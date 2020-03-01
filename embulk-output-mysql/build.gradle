@@ -3,5 +3,4 @@ dependencies {
     compile 'mysql:mysql-connector-java:5.1.44'
     defaultJdbcDriver 'mysql:mysql-connector-java:5.1.44'
 
-    testCompile 'org.embulk:embulk-standards:0.9.20'
 }
