@@ -144,7 +144,7 @@ public class BasicTest
     {
         Path in1 = toPath("test_datetime.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_datetime.yml")), in1);
-        assertThat(selectRecords(embulk, "TEST_DATETIME"), is(readResource("test_insert_datetime_expected.txt")));
+        assertThat(selectRecords(embulk, "TEST_DATETIME"), is(readResource("test_insert_direct_datetime_expected.txt")));
     }
 
     @Test
