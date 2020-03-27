@@ -45,7 +45,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 * **insert**:
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `INSERT INTO <target_table> SELECT * FROM <intermediate_table_1> UNION ALL SELECT * FROM <intermediate_table_2> UNION ALL ...` query. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes. This mode successfully writes all rows, or fails with writing zero rows.
-  * Resumable: Yes.
+  * Resumable: No.
 * **insert_direct**:
   * Behavior: This mode inserts rows to the target table directly. If the target table doesn't exist, it is created automatically.
   * Transactional: No. If fails, the target table could have some rows inserted.
@@ -53,7 +53,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 * **truncate_insert**:
   * Behavior: Same with `insert` mode excepting that it truncates the target table right before the last `INSERT ...` query.
   * Transactional: Yes.
-  * Resumable: Yes.
+  * Resumable: No.
 * **replace**:
   * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
   * Transactional: Yes.
@@ -61,7 +61,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 * **merge**:
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `WITH updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.
   * Transactional: Yes.
-  * Resumable: Yes.
+  * Resumable: No.
 * **merge_direct**:
   * Behavior: This mode inserts rows to the target table directly using `WITH S AS (SELECT ...), updated AS (UPDATE .... RETURNING ...) INSERT INTO ....` query. If the target table doesn't exist, it is created automatically.
   * Transactional: No.
