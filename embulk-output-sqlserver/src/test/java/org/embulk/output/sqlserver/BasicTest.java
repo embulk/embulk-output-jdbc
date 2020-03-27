@@ -183,7 +183,8 @@ public class BasicTest
     @Test
     public void testMax() throws Exception
     {
-        Path in1 = embulk.createTempFile(".csv");
+        // canonicalize path because LocalFileInputPlugin can't read Windows short file name.
+        Path in1 = embulk.createTempFile("csv").toRealPath();
         String line3 = "2," + createString('A', 8000) + "," + createString('a', 10000) + "," + createString('あ', 4000) + "," + createString('ア', 10000);
         Files.write(in1, Arrays.asList("ID:long,C1:string,C2:string,C3:string,C4:string", "1,,,,", line3));
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_max.yml")), in1);

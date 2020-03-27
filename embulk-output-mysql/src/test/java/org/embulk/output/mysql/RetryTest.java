@@ -141,7 +141,8 @@ public class RetryTest
     @Test
     public void testRetry_Large() throws Exception
     {
-        Path in1 = embulk.createTempFile("csv");
+        // canonicalize path because LocalFileInputPlugin can't read Windows short file name.
+        Path in1 = embulk.createTempFile("csv").toRealPath();
         StringBuilder expected1 = new StringBuilder();
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(in1.toFile()))) {
@@ -267,7 +268,8 @@ public class RetryTest
     @Test
     public void testRetry_Large_MultipleTimes() throws Exception
     {
-        Path in1 = embulk.createTempFile("csv");
+        // canonicalize path because LocalFileInputPlugin can't read Windows short file name.
+        Path in1 = embulk.createTempFile("csv").toRealPath();
         StringBuilder expected1 = new StringBuilder();
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(in1.toFile()))) {
