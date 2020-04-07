@@ -119,6 +119,17 @@ out:
     my_col_5: {type: 'DECIMAL(18,9)', value_type: pass}
 ```
 
+You can add a primary key, index, unique key..etc with `create_table_constraint`, `column options`
+
+```yaml
+out:
+  type: mysql
+  # snip
+  create_table_constraint: 'primary key(id)'
+  column_options:
+    id: {type: 'int auto_increment'}
+```
+
 ### Build
 
 ```
