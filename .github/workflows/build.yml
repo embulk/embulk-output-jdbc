@@ -57,9 +57,9 @@ jobs:
       run: ls -C -R
       working-directory: "${{ env.workspace }}"
     - name: Run clpplus
-      run: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus -verbose 'db2inst1/password@127.0.0.1:50000/testdb' @${{ env.workspace }}/embulk-input-db2/src/test/resources/org/embulk/input/db2/test/expect/basic/setup.sql"
+      run: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus -verbose 'db2inst1/password@127.0.0.1:50000/testdb' @${{ env.workspace }}/embulk-output-db2/src/test/resources/org/embulk/input/db2/test/expect/basic/setup.sql"
     - name: Build with testing
-      run: ./gradlew --stacktrace :embulk-input-db2:check
+      run: ./gradlew --stacktrace :embulk-output-db2:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_INPUT_DB2_TEST_CONFIG: "${{ env.workspace }}/ci/db2.yml"
@@ -68,7 +68,7 @@ jobs:
       if: always()
       with:
         name: db2
-        path: embulk-input-db2/build/reports/tests/test
+        path: embulk-output-db2/build/reports/tests/test
   mysql:
     strategy:
       fail-fast: false
@@ -96,7 +96,7 @@ jobs:
     - name: Set env
       run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
     - name: Build with testing
-      run: ./gradlew --stacktrace :embulk-input-mysql:check
+      run: ./gradlew --stacktrace :embulk-output-mysql:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_INPUT_MYSQL_TEST_CONFIG: "${{ env.workspace }}/ci/mysql.yml"
@@ -104,7 +104,7 @@ jobs:
       if: always()
       with:
         name: mysql
-        path: embulk-input-mysql/build/reports/tests/test
+        path: embulk-output-mysql/build/reports/tests/test
   oracle:  # https://hub.docker.com/_/oracle-database-enterprise-edition
     runs-on: ubuntu-latest
     steps:
@@ -134,7 +134,7 @@ jobs:
     - name: Set env
       run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
     - name: Build with testing
-      run: ./gradlew --stacktrace :embulk-input-postgresql:check
+      run: ./gradlew --stacktrace :embulk-output-postgresql:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_INPUT_POSTGRESQL_TEST_CONFIG: "${{ env.workspace }}/ci/postgresql.yml"
@@ -142,10 +142,10 @@ jobs:
       if: always()
       with:
         name: postgresql
-        path: embulk-input-postgresql/build/reports/tests/test
+        path: embulk-output-postgresql/build/reports/tests/test
   redshift:
     runs-on: ubuntu-latest
-    # Testing embulk-input-redshift emulated with PostgreSQL.
+    # Testing embulk-output-redshift emulated with PostgreSQL.
     services:
       postgres:
         image: postgres:9.4
@@ -167,7 +167,7 @@ jobs:
     - name: Set env
       run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
     - name: Build with testing
-      run: ./gradlew --stacktrace :embulk-input-redshift:check
+      run: ./gradlew --stacktrace :embulk-output-redshift:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_INPUT_REDSHIFT_TEST_CONFIG: "${{ env.workspace }}/ci/redshift.yml"
@@ -175,7 +175,7 @@ jobs:
       if: always()
       with:
         name: redshift
-        path: embulk-input-redshift/build/reports/tests/test
+        path: embulk-output-redshift/build/reports/tests/test
   sqlserver:  # https://hub.docker.com/_/microsoft-mssql-server
     runs-on: ubuntu-16.04
     services:
@@ -201,7 +201,7 @@ jobs:
     - name: Set env
       run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
     - name: Copy test resources into Docker container
-      run: docker cp ${{ env.workspace }}/embulk-input-sqlserver/src/test/resources/org/embulk/input/sqlserver/test/expect/. mssqlcontainer:/tmp
+      run: docker cp ${{ env.workspace }}/embulk-output-sqlserver/src/test/resources/org/embulk/input/sqlserver/test/expect/. mssqlcontainer:/tmp
     - name: List resource files
       run: docker exec mssqlcontainer ls -R /tmp
     - name: Show SQL Server objects
@@ -211,7 +211,7 @@ jobs:
     - name: Show SQL Server objects in testdb
       run: docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P "P@ssw0rd" -d testdb -Q "SELECT * FROM sys.objects;"
     - name: Build with testing
-      run: ./gradlew --stacktrace :embulk-input-sqlserver:check
+      run: ./gradlew --stacktrace :embulk-output-sqlserver:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_INPUT_SQLSERVER_TEST_CONFIG: "${{ env.workspace }}/ci/sqlserver.yml"
@@ -220,4 +220,4 @@ jobs:
       if: always()
       with:
         name: sqlserver
-        path: embulk-input-sqlserver/build/reports/tests/test
+        path: embulk-output-sqlserver/build/reports/tests/test
