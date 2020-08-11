@@ -132,5 +132,4 @@ public class AfterLoadTest
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
-
 }
