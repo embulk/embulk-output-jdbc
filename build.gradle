@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     id 'com.jfrog.bintray' version '1.8.4'
@@ -8,7 +10,7 @@ plugins {
 import com.github.jrubygradle.JRubyExec
 
 def bintrayReleaseProjects = [
-    project(":embulk-output-jdbc"),
+        project(":embulk-output-jdbc"),
 ]
 
 allprojects {
@@ -74,7 +76,7 @@ subprojects {
     targetCompatibility = 1.8
 
     dependencies {
-        compile  'org.embulk:embulk-core:0.9.20'
+        compile 'org.embulk:embulk-core:0.9.20'
         provided 'org.embulk:embulk-core:0.9.20'
         testCompile 'org.embulk:embulk-test:0.9.20'
         testCompile 'org.embulk:embulk-standards:0.9.20'
@@ -104,12 +106,12 @@ subprojects {
 
     task classpath(type: Copy, dependsOn: ["jar"]) {
         doFirst { file('classpath').deleteDir() }
-        from (configurations.runtime - configurations.provided - configurations.defaultJdbcDriver + files(jar.archivePath))
+        from(configurations.runtime - configurations.provided - configurations.defaultJdbcDriver + files(jar.archivePath))
         into 'classpath'
     }
     task defaultJdbcDriver(type: Copy, dependsOn: ["jar"]) {
         doFirst { file('default_jdbc_driver').deleteDir() }
-        from (configurations.defaultJdbcDriver)
+        from(configurations.defaultJdbcDriver)
         into 'default_jdbc_driver'
     }
     clean {
@@ -140,13 +142,6 @@ subprojects {
         doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "${parent.projectDir}/pkg") }
     }
 
-    test {
-        testLogging {
-            outputs.upToDateWhen {false}
-            showStandardStreams = true
-        }
-    }
-
     // add tests/javadoc/source jar tasks as artifacts to be released
     task testsJar(type: Jar, dependsOn: classes) {
         classifier = 'tests'
@@ -171,6 +166,29 @@ subprojects {
                 artifact testsJar
                 artifact sourcesJar
                 artifact javadocJar
+            }
+        }
+    }
+
+    tasks.withType(Test) {
+        testLogging {
+            // set options for log level LIFECYCLE
+            events TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+            showExceptions true
+            showCauses true
+            showStackTraces true
+
+            afterSuite { desc, result ->
+                if (!desc.parent) { // will match the outermost suite
+                    def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                    def startItem = '|  ', endItem = '  |'
+                    def repeatLength = startItem.length() + output.length() + endItem.length()
+                    println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+                }
             }
         }
     }
