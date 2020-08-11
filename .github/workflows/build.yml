@@ -57,13 +57,13 @@ jobs:
       run: ls -C -R
       working-directory: "${{ env.workspace }}"
     - name: Run clpplus
-      run: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus -verbose 'db2inst1/password@127.0.0.1:50000/testdb' @${{ env.workspace }}/embulk-output-db2/src/test/resources/org/embulk/input/db2/test/expect/basic/setup.sql"
+      run: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus -verbose 'db2inst1/password@127.0.0.1:50000/testdb' @${{ env.workspace }}/embulk-output-db2/src/test/resources/org/embulk/output/db2/test/expect/basic/setup.sql"
     - name: Build with testing
       run: ./gradlew --stacktrace :embulk-output-db2:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-        EMBULK_INPUT_DB2_TEST_CONFIG: "${{ env.workspace }}/ci/db2.yml"
-        EMBULK_INPUT_DB2_TEST_CLPPLUS_COMMAND: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus"
+        EMBULK_OUTPUT_DB2_TEST_CONFIG: "${{ env.workspace }}/ci/db2.yml"
+        EMBULK_OUTPUT_DB2_TEST_CLPPLUS_COMMAND: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus"
     - uses: actions/upload-artifact@v1
       if: always()
       with:
@@ -99,7 +99,7 @@ jobs:
       run: ./gradlew --stacktrace :embulk-output-mysql:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-        EMBULK_INPUT_MYSQL_TEST_CONFIG: "${{ env.workspace }}/ci/mysql.yml"
+        EMBULK_OUTPUT_MYSQL_TEST_CONFIG: "${{ env.workspace }}/ci/mysql.yml"
     - uses: actions/upload-artifact@v1
       if: always()
       with:
@@ -137,7 +137,7 @@ jobs:
       run: ./gradlew --stacktrace :embulk-output-postgresql:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-        EMBULK_INPUT_POSTGRESQL_TEST_CONFIG: "${{ env.workspace }}/ci/postgresql.yml"
+        EMBULK_OUTPUT_POSTGRESQL_TEST_CONFIG: "${{ env.workspace }}/ci/postgresql.yml"
     - uses: actions/upload-artifact@v1
       if: always()
       with:
@@ -170,7 +170,7 @@ jobs:
       run: ./gradlew --stacktrace :embulk-output-redshift:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-        EMBULK_INPUT_REDSHIFT_TEST_CONFIG: "${{ env.workspace }}/ci/redshift.yml"
+        EMBULK_OUTPUT_REDSHIFT_TEST_CONFIG: "${{ env.workspace }}/ci/redshift.yml"
     - uses: actions/upload-artifact@v1
       if: always()
       with:
@@ -201,7 +201,7 @@ jobs:
     - name: Set env
       run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
     - name: Copy test resources into Docker container
-      run: docker cp ${{ env.workspace }}/embulk-output-sqlserver/src/test/resources/org/embulk/input/sqlserver/test/expect/. mssqlcontainer:/tmp
+      run: docker cp ${{ env.workspace }}/embulk-output-sqlserver/src/test/resources/org/embulk/output/sqlserver/test/expect/. mssqlcontainer:/tmp
     - name: List resource files
       run: docker exec mssqlcontainer ls -R /tmp
     - name: Show SQL Server objects
@@ -214,8 +214,8 @@ jobs:
       run: ./gradlew --stacktrace :embulk-output-sqlserver:check
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-        EMBULK_INPUT_SQLSERVER_TEST_CONFIG: "${{ env.workspace }}/ci/sqlserver.yml"
-        EMBULK_INPUT_SQLSERVER_TEST_SQLCMD_COMMAND: "docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd"
+        EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG: "${{ env.workspace }}/ci/sqlserver.yml"
+        EMBULK_OUTPUT_SQLSERVER_TEST_SQLCMD_COMMAND: "docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd"
     - uses: actions/upload-artifact@v1
       if: always()
       with:
