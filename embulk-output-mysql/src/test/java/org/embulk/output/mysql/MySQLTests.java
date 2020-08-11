@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
@@ -42,17 +43,14 @@ public class MySQLTests
 
         ImmutableList.Builder<String> args = ImmutableList.builder();
         args.add("mysql")
-                .add("-u")
-                .add(config.get(String.class, "user"));
-        if (!config.get(String.class, "password").isEmpty()) {
+                .add("-u" + config.get(String.class, "user"));
+        if (StringUtils.isNotBlank(config.get(String.class, "password"))) {
             args.add("-p" + config.get(String.class, "password"));
         }
         args
-                .add("-h")
-                .add(config.get(String.class, "host"))
-                .add("-P")
-                .add(config.get(String.class, "port", "3306"))
-                .add(config.get(String.class, "database"))
+                .add("-h" + config.get(String.class, "host"))
+                .add("-P" + config.get(String.class, "port", "3306"))
+                .add("-D" + config.get(String.class, "database"))
                 .add("-e")
                 .add(sql);
 
