@@ -140,6 +140,13 @@ subprojects {
         doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "${parent.projectDir}/pkg") }
     }
 
+    test {
+        testLogging {
+            outputs.upToDateWhen {false}
+            showStandardStreams = true
+        }
+    }
+
     // add tests/javadoc/source jar tasks as artifacts to be released
     task testsJar(type: Jar, dependsOn: classes) {
         classifier = 'tests'
