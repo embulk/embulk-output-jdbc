@@ -1,17 +1,6 @@
 package org.embulk.output.mysql;
 
-import static org.embulk.output.mysql.MySQLTests.execute;
-import static org.embulk.output.mysql.MySQLTests.selectRecords;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-
-import org.embulk.config.ConfigDiff;
+import com.google.common.io.Resources;
 import org.embulk.config.ConfigSource;
 import org.embulk.output.MySQLOutputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -21,7 +10,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.io.Resources;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.util.Arrays;
+
+import static org.embulk.output.mysql.MySQLTests.execute;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 public class CreateTableTest
 {
@@ -56,7 +54,7 @@ public class CreateTableTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_table_option.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_table_option_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_table_option_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -66,7 +64,7 @@ public class CreateTableTest
         Path in1 = toPath("test1.csv");
         // exception will be thrown without table constraint because auto column must be defined as a key.
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_table_constraint.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_table_constraint_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_table_constraint_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -76,4 +74,8 @@ public class CreateTableTest
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
+    private String selectRecords()
+    {
+        return MySQLTests.selectRecords("test1", Arrays.asList("id", "value"));
+    }
 }

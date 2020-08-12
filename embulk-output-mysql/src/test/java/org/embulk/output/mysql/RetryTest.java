@@ -1,9 +1,14 @@
 package org.embulk.output.mysql;
 
-import static org.embulk.output.mysql.MySQLTests.execute;
-import static org.embulk.output.mysql.MySQLTests.selectRecords;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import com.google.common.io.Resources;
+import org.embulk.config.ConfigSource;
+import org.embulk.output.MySQLOutputPlugin;
+import org.embulk.spi.OutputPlugin;
+import org.embulk.test.EmbulkTests;
+import org.embulk.test.TestingEmbulk;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,18 +19,11 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Arrays;
 
-import org.embulk.config.ConfigDiff;
-import org.embulk.config.ConfigSource;
-import org.embulk.output.MySQLOutputPlugin;
-import org.embulk.spi.OutputPlugin;
-import org.embulk.test.EmbulkTests;
-import org.embulk.test.TestingEmbulk;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.google.common.io.Resources;
+import static org.embulk.output.mysql.MySQLTests.execute;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 public class RetryTest
 {
@@ -65,7 +63,7 @@ public class RetryTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test1_expected.csv")));
     }
 
     @Test
@@ -99,7 +97,7 @@ public class RetryTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test1_expected.csv")));
     }
 
     // will be flushed multiple times
@@ -134,7 +132,7 @@ public class RetryTest
 
         Path in1 = toPath("test1_flushed_multiple_times.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1_flushed_multiple_times.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_flushed_multiple_times_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test1_flushed_multiple_times_expected.csv")));
     }
 
     // records will be partially committed
@@ -201,7 +199,7 @@ public class RetryTest
 
         //Path in1 = toPath("test1_flushed_multiple_times.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(expected1.toString()));
+        assertThat(selectRecords(), is(expected1.toString()));
     }
 
     @Test
@@ -261,7 +259,7 @@ public class RetryTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test1_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test1_expected.csv")));
     }
 
     // records will be partially committed
@@ -368,7 +366,7 @@ public class RetryTest
 
         //Path in1 = toPath("test1_flushed_multiple_times.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test1.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(expected1.toString()));
+        assertThat(selectRecords(), is(expected1.toString()));
     }
 
     private Path toPath(String fileName) throws URISyntaxException
@@ -376,5 +374,9 @@ public class RetryTest
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
-
+    
+    private String selectRecords()
+    {
+        return MySQLTests.selectRecords("test1", Arrays.asList("id", "num"));
+    }
 }

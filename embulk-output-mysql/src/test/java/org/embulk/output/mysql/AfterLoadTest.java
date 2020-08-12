@@ -1,17 +1,6 @@
 package org.embulk.output.mysql;
 
-import static org.embulk.output.mysql.MySQLTests.execute;
-import static org.embulk.output.mysql.MySQLTests.selectRecords;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-
-import org.embulk.config.ConfigDiff;
+import com.google.common.io.Resources;
 import org.embulk.config.ConfigSource;
 import org.embulk.output.MySQLOutputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -21,7 +10,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.io.Resources;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.util.Arrays;
+
+import static org.embulk.output.mysql.MySQLTests.execute;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 public class AfterLoadTest
 {
@@ -59,7 +57,7 @@ public class AfterLoadTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_after_load.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_insert_after_load_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_insert_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -71,7 +69,7 @@ public class AfterLoadTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_insert_direct_after_load.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_insert_after_load_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_insert_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -83,7 +81,7 @@ public class AfterLoadTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace_after_load.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_replace_after_load_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_replace_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -95,7 +93,7 @@ public class AfterLoadTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_truncate_insert_after_load.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_truncate_insert_after_load_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_truncate_insert_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -109,7 +107,7 @@ public class AfterLoadTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_after_load.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_merge_after_load_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_merge_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -123,7 +121,7 @@ public class AfterLoadTest
 
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_direct_after_load.yml")), in1);
-        assertThat(selectRecords(embulk, "test1"), is(readResource("test_merge_after_load_expected.csv")));
+        assertThat(selectRecords(), is(readResource("test_merge_after_load_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
@@ -131,5 +129,10 @@ public class AfterLoadTest
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
+    }
+
+    private String selectRecords()
+    {
+        return MySQLTests.selectRecords("test1", Arrays.asList("id", "int_item", "varchar_item"));
     }
 }
