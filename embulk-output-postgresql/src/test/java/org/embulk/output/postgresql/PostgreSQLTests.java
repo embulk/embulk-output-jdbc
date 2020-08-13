@@ -1,5 +1,6 @@
 package org.embulk.output.postgresql;
 
+import org.apache.commons.lang3.StringUtils;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 
@@ -27,13 +28,15 @@ public class PostgreSQLTests
 
     public static void execute(String sql)
     {
-        System.out.println(sql);
         ConfigSource config = baseConfig();
-        ProcessBuilder pb = new ProcessBuilder("psql", "-w", "--set", "ON_ERROR_STOP=1", "-c", sql);
-        pb.environment().put("PGUSER", config.get(String.class, "user"));
+        ProcessBuilder pb = new ProcessBuilder(
+                "psql", "-w",
+                "--set", "ON_ERROR_STOP=1",
+                "--host", config.get(String.class, "host"),
+                "--username", config.get(String.class, "user"),
+                "--dbname", config.get(String.class, "database"),
+                "-c", convert(sql));
         pb.environment().put("PGPASSWORD", config.get(String.class, "password"));
-        pb.environment().put("PGDATABASE", config.get(String.class, "database"));
-        pb.environment().put("PGPORT", config.get(String.class, "port", "5432"));
         pb.redirectErrorStream(true);
         int code;
         try {
