@@ -1,20 +1,16 @@
 package org.embulk.output.postgresql;
 
-import org.apache.commons.lang3.StringUtils;
-import org.embulk.test.EmbulkTests;
-import org.embulk.test.TestingEmbulk;
-
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
+import jnr.ffi.Platform;
+import jnr.ffi.Platform.OS;
+import org.embulk.config.ConfigSource;
+import org.embulk.test.EmbulkTests;
+import org.embulk.test.TestingEmbulk;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import jnr.ffi.Platform;
-import jnr.ffi.Platform.OS;
-
-import org.embulk.config.ConfigSource;
 
 import static java.util.Locale.ENGLISH;
 import static org.embulk.test.EmbulkTests.readSortedFile;
