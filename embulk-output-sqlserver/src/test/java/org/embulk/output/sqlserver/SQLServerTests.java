@@ -50,7 +50,7 @@ public class SQLServerTests
 
         final ArrayList<String> args = new ArrayList<>();
 
-        final String sqlcmdCommand = System.getenv("EMBULK_INPUT_SQLSERVER_TEST_SQLCMD_COMMAND");
+        final String sqlcmdCommand = System.getenv("EMBULK_OUTPUT_SQLSERVER_TEST_SQLCMD_COMMAND");
         if (sqlcmdCommand == null || sqlcmdCommand.isEmpty()) {
             args.add("sqlcmd");
         } else {
