@@ -10,6 +10,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -46,11 +47,21 @@ public class DB2Tests
         String password = config.get(String.class, "password");
         String database = config.get(String.class, "database");
 
-        boolean isWindows = File.separatorChar == '\\';
-        ProcessBuilder pb = new ProcessBuilder(
-                "clpplus." + (isWindows ? "bat" : "sh"),
-                user + "/" + password + "@" + host + ":" + port + "/" + database,
-                "@" + sqlFile.getAbsolutePath());
+        final ArrayList<String> commandLine = new ArrayList<>();
+
+        // JFYI: We may use the "db2" command instead of "clpplus".
+        // https://publib.boulder.ibm.com/tividd/td/ITCM/GC23-4702-01/ja_JA/HTML/CM_PI107.htm
+        final String clpplusCommand = System.getenv("EMBULK_OUTPUT_DB2_TEST_CLPPLUS_COMMAND");
+        if (clpplusCommand == null || clpplusCommand.isEmpty()) {
+            commandLine.add("clpplus." + (File.separatorChar == '\\' ? "bat" : "sh"));
+        } else {
+            commandLine.addAll(Arrays.asList(clpplusCommand.split(" ")));
+        }
+        commandLine.add(user + "/" + password + "@" + host + ":" + port + "/" + database);
+        commandLine.add("@" + new File(sqlFile.toURI()).getAbsolutePath());
+        System.out.println(commandLine);
+        final ProcessBuilder pb = new ProcessBuilder(commandLine);
+
         pb.redirectErrorStream(true);
         int code;
         try {
