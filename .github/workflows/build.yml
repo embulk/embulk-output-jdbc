@@ -64,7 +64,7 @@ jobs:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_OUTPUT_DB2_TEST_CONFIG: "${{ env.workspace }}/ci/db2.yml"
         EMBULK_OUTPUT_DB2_TEST_CLPPLUS_COMMAND: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus"
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       if: always()
       with:
         name: db2
@@ -100,7 +100,7 @@ jobs:
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_OUTPUT_MYSQL_TEST_CONFIG: "${{ env.workspace }}/ci/mysql.yml"
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       if: always()
       with:
         name: mysql
@@ -138,7 +138,7 @@ jobs:
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_OUTPUT_POSTGRESQL_TEST_CONFIG: "${{ env.workspace }}/ci/postgresql.yml"
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       if: always()
       with:
         name: postgresql
@@ -171,7 +171,7 @@ jobs:
       env:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_OUTPUT_REDSHIFT_TEST_CONFIG: "${{ env.workspace }}/ci/redshift.yml"
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       if: always()
       with:
         name: redshift
@@ -217,7 +217,7 @@ jobs:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG: "${{ env.workspace }}/ci/sqlserver.yml"
         EMBULK_OUTPUT_SQLSERVER_TEST_SQLCMD_COMMAND: "docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd"
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       if: always()
       with:
         name: sqlserver

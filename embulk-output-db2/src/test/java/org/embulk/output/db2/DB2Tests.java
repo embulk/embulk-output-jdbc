@@ -40,6 +40,7 @@ public class DB2Tests
 
     private static void execute(File sqlFile) throws Exception
     {
+        Class.forName("com.ibm.db2.jcc.DB2Driver");
         ConfigSource config = baseConfig();
         String host = config.get(String.class, "host");
         String port = config.get(String.class, "port", "50000");
