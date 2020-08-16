@@ -176,6 +176,7 @@ jobs:
       with:
         name: redshift
         path: embulk-output-redshift/build/reports/tests/test
+        if-no-files-found: ignore
   sqlserver:  # https://hub.docker.com/_/microsoft-mssql-server
     runs-on: ubuntu-16.04
     services:
