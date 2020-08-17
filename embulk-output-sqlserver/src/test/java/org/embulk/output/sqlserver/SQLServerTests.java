@@ -61,7 +61,7 @@ public class SQLServerTests
         args.add(config.get(String.class, "user"));
         args.add("-P");
         args.add(config.get(String.class, "password"));
-        args.add("-H");
+        args.add("-S");
         args.add(config.get(String.class, "host"));
         args.add("-d");
         args.add(config.get(String.class, "database"));
