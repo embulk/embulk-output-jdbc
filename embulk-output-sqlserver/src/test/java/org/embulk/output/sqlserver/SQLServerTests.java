@@ -1,12 +1,13 @@
 package org.embulk.output.sqlserver;
 
-import static java.util.Locale.ENGLISH;
+import com.google.common.base.Throwables;
+import com.google.common.io.ByteStreams;
+import org.embulk.config.ConfigSource;
+import org.embulk.test.EmbulkTests;
+import org.embulk.test.TestingEmbulk;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -17,13 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.embulk.config.ConfigSource;
-import org.embulk.test.EmbulkTests;
-import org.embulk.test.TestingEmbulk;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
+import static java.util.Locale.ENGLISH;
 
 public class SQLServerTests
 {
@@ -97,12 +92,7 @@ public class SQLServerTests
 
     public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
-        // cannot use TestingEmbulk.createTempFile because sqlcmd cannot read files whose names including ' '.
-        FileSystem fs = FileSystems.getDefault();
-        File tempDir = new File(SQLServerTests.class.getResource("/org/embulk/output/sqlserver/test").toURI());
-
-        //Path temp = embulk.createTempFile("txt");
-        Path temp = fs.getPath(new File(tempDir, "temp.txt").getAbsolutePath());
+        Path temp = Files.createTempFile("sqlserver", ".txt");
         Files.deleteIfExists(temp);
 
         // should not use UTF8 because of BOM
