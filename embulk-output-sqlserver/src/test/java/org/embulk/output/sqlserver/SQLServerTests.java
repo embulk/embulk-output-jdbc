@@ -94,9 +94,8 @@ public class SQLServerTests
     public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
         File tempFile = File.createTempFile("sqlserver-", ".txt");
-        tempFile.deleteOnExit();
-
         Path temp = tempFile.toPath();
+        tempFile.deleteOnExit();
 
         // should not use UTF8 because of BOM
         execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
