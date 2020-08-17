@@ -2,8 +2,11 @@ package org.embulk.output.sqlserver;
 
 import static java.util.Locale.ENGLISH;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -87,15 +90,20 @@ public class SQLServerTests
         }
     }
 
-    public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
+    public static String selectRecords(TestingEmbulk embulk, String tableName) throws Exception
     {
         return executeQuery(embulk, "SELECT * FROM " + tableName);
     }
 
-    public static String executeQuery(TestingEmbulk embulk, String query) throws IOException
+    public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
-        Path temp = embulk.createTempFile("txt");
-        Files.delete(temp);
+        // cannot use TestingEmbulk.createTempFile because sqlcmd cannot read files whose names including ' '.
+        FileSystem fs = FileSystems.getDefault();
+        File tempDir = new File(SQLServerTests.class.getResource("/org/embulk/output/sqlserver/test").toURI());
+
+        //Path temp = embulk.createTempFile("txt");
+        Path temp = fs.getPath(new File(tempDir, "temp.txt").getAbsolutePath());
+        Files.deleteIfExists(temp);
 
         // should not use UTF8 because of BOM
         execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
