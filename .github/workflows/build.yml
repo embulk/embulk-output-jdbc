@@ -219,6 +219,7 @@ jobs:
         _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
         EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG: "${{ env.workspace }}/ci/sqlserver.yml"
         EMBULK_OUTPUT_SQLSERVER_TEST_SQLCMD_COMMAND: "docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd"
+        EMBULK_OUTPUT_SQLSERVER_VOLUME_BIND: "/home/runner/:/github/home/tmp"
     - uses: actions/upload-artifact@v2
       if: always()
       with:

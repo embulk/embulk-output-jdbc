@@ -2,6 +2,7 @@ package org.embulk.output.sqlserver;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
+import org.apache.commons.lang3.StringUtils;
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
@@ -95,24 +96,22 @@ public class SQLServerTests
 
     public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
-//        FileSystem fs = FileSystems.getDefault();
-//        File tempDir = new File(SQLServerTests.class.getResource("/org/embulk/output/sqlserver/test").toURI());
+        Path temp;
+        final String volumeBind = System.getenv("EMBULK_OUTPUT_SQLSERVER_VOLUME_BIND");
+        if (StringUtils.isNotBlank(volumeBind) && volumeBind.contains(":")){
+            //this handle to run docker on github
+            final String[] folderMapping = volumeBind.split(":");
+            temp = new File(folderMapping[1], "temp.txt").toPath();
+            Files.deleteIfExists(temp);
+            execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
+            temp = new File(folderMapping[0], "temp.txt").toPath();
+        }
+        else {
+            temp = embulk.createTempFile("txt");
+            Files.deleteIfExists(temp);
+            execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
+        }
 
-        Path temp = new File("/github/home/tmp", "temp.txt").toPath();
-        Files.deleteIfExists(temp);
-
-        //Path sql = embulk.createTempFile("sql");
-//        Path sql = fs.getPath(new File(tempDir, "temp.sql").getAbsolutePath());
-
-//        File tempFile = File.createTempFile("sqlserver-", ".txt");
-//        Path temp = tempFile.toPath();
-//        tempFile.deleteOnExit();
-
-        // should not use UTF8 because of BOM
-        execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
-
-
-        temp = new File("/home/runner/", "temp.txt").toPath();
         List<String> lines = Files.readAllLines(temp, Charset.forName("MS932"));
         Collections.sort(lines);
         StringBuilder sb = new StringBuilder();
