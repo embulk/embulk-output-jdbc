@@ -1,7 +1,6 @@
 package org.embulk.output.mysql;
 
 import static org.embulk.output.mysql.MySQLTests.execute;
-import static org.embulk.output.mysql.MySQLTests.selectRecords;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -10,8 +9,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Arrays;
 
-import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.output.MySQLOutputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -133,4 +132,8 @@ public class AfterLoadTest
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
+    private String selectRecords(TestingEmbulk embulk, String tableName)
+    {
+        return MySQLTests.selectRecords(tableName, Arrays.asList("id", "int_item", "varchar_item"));
+    }
 }

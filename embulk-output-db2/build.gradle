@@ -4,5 +4,5 @@ dependencies {
     compile project(':embulk-output-jdbc')
 
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
-    testCompile files('test_jdbc_driver/db2jcc4.jar')
+    testCompile "com.ibm.db2.jcc:db2jcc:db2jcc4"
 }

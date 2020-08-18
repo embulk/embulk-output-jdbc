@@ -10,8 +10,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Arrays;
 
-import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.output.MySQLOutputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -76,4 +76,8 @@ public class CreateTableTest
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
+    private String selectRecords(TestingEmbulk embulk, String tableName)
+    {
+        return MySQLTests.selectRecords(tableName, Arrays.asList("id", "value"));
+    }
 }
