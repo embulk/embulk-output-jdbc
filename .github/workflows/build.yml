@@ -35,29 +35,29 @@ jobs:
       run: docker exec db2container su - db2inst1 -c "db2 \"GET DBM CFG\""
     - name: Set env
       run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
-    - name: Install ksh to run installDSDriver
-      run: sudo apt-get install ksh
-    - name: Make working directory
-      run: mkdir "${{ env.workspace }}/clpplus"
-    - name: Download clpplus
-      # https://github.com/rickdesantis/docker-files/tree/e3bbc10080be9e31635223c23091526bc5d9eff6/clpplus
-      run: curl "https://raw.githubusercontent.com/rickdesantis/docker-files/master/clpplus/ibm_data_server_driver_package_linuxx64_v10.5.tar.gz" -o "${{ env.workspace }}/clpplus/ibm_data_server_driver_package_linuxx64_v10.5.tar.gz"
-    - name: Extract clpplus
-      run: tar zxf "${{ env.workspace }}/clpplus/ibm_data_server_driver_package_linuxx64_v10.5.tar.gz" -C "${{ env.workspace }}/clpplus"
-    - name: Make installDSDriver runnable
-      run: chmod +x installDSDriver
-      working-directory: "${{ env.workspace }}/clpplus/dsdriver"
-    - name: Run installDSDriver
-      run: ./installDSDriver
-      working-directory: "${{ env.workspace }}/clpplus/dsdriver"
-    - name: Dump installDSDriver.log
-      run: cat installDSDriver.log
-      working-directory: "${{ env.workspace }}/clpplus/dsdriver"
-    - name: List files
-      run: ls -C -R
-      working-directory: "${{ env.workspace }}"
-    - name: Run clpplus
-      run: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus -verbose 'db2inst1/password@127.0.0.1:50000/testdb' @${{ env.workspace }}/embulk-output-db2/src/test/resources/org/embulk/output/db2/test/expect/basic/setup.sql"
+#    - name: Install ksh to run installDSDriver
+#      run: sudo apt-get install ksh
+#    - name: Make working directory
+#      run: mkdir "${{ env.workspace }}/clpplus"
+#    - name: Download clpplus
+#      # https://github.com/rickdesantis/docker-files/tree/e3bbc10080be9e31635223c23091526bc5d9eff6/clpplus
+#      run: curl "https://raw.githubusercontent.com/rickdesantis/docker-files/master/clpplus/ibm_data_server_driver_package_linuxx64_v10.5.tar.gz" -o "${{ env.workspace }}/clpplus/ibm_data_server_driver_package_linuxx64_v10.5.tar.gz"
+#    - name: Extract clpplus
+#      run: tar zxf "${{ env.workspace }}/clpplus/ibm_data_server_driver_package_linuxx64_v10.5.tar.gz" -C "${{ env.workspace }}/clpplus"
+#    - name: Make installDSDriver runnable
+#      run: chmod +x installDSDriver
+#      working-directory: "${{ env.workspace }}/clpplus/dsdriver"
+#    - name: Run installDSDriver
+#      run: ./installDSDriver
+#      working-directory: "${{ env.workspace }}/clpplus/dsdriver"
+#    - name: Dump installDSDriver.log
+#      run: cat installDSDriver.log
+#      working-directory: "${{ env.workspace }}/clpplus/dsdriver"
+#    - name: List files
+#      run: ls -C -R
+#      working-directory: "${{ env.workspace }}"
+#    - name: Run clpplus
+#      run: "${{ env.workspace }}/clpplus/dsdriver/bin/clpplus -verbose 'db2inst1/password@127.0.0.1:50000/testdb' @${{ env.workspace }}/embulk-output-db2/src/test/resources/org/embulk/output/db2/test/expect/basic/setup.sql"
     - name: Build with testing
       run: ./gradlew --stacktrace :embulk-output-db2:check
       env:
@@ -184,7 +184,7 @@ jobs:
         # To run locallly:
         # docker run -it --name mssqlcontainer -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=somepassword' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
         image: docker://mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
-        options: --name "mssqlcontainer"  --health-cmd "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P P@ssw0rd -Q \"SELECT * FROM sys.objects;\"" --health-interval 20s --health-timeout 30s --health-retries 128
+        options: -${{ env.workspace }}/temp:abc --name "mssqlcontainer"  --health-cmd "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P P@ssw0rd -Q \"SELECT * FROM sys.objects;\"" --health-interval 20s --health-timeout 30s --health-retries 128
         ports:
         - "1433:1433"
         env:

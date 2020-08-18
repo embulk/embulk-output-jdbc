@@ -9,6 +9,8 @@ import org.embulk.test.TestingEmbulk;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -93,9 +95,18 @@ public class SQLServerTests
 
     public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
-        File tempFile = File.createTempFile("sqlserver-", ".txt");
-        Path temp = tempFile.toPath();
-        tempFile.deleteOnExit();
+        FileSystem fs = FileSystems.getDefault();
+        File tempDir = new File(SQLServerTests.class.getResource("/org/embulk/output/sqlserver/test").toURI());
+
+        Path temp = fs.getPath(new File(tempDir, "temp.txt").getAbsolutePath());
+        Files.deleteIfExists(temp);
+
+        //Path sql = embulk.createTempFile("sql");
+//        Path sql = fs.getPath(new File(tempDir, "temp.sql").getAbsolutePath());
+
+//        File tempFile = File.createTempFile("sqlserver-", ".txt");
+//        Path temp = tempFile.toPath();
+//        tempFile.deleteOnExit();
 
         // should not use UTF8 because of BOM
         execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
