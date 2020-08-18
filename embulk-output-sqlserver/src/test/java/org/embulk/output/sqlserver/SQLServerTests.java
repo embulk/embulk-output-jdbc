@@ -95,10 +95,10 @@ public class SQLServerTests
 
     public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
-        FileSystem fs = FileSystems.getDefault();
-        File tempDir = new File(SQLServerTests.class.getResource("/org/embulk/output/sqlserver/test").toURI());
+//        FileSystem fs = FileSystems.getDefault();
+//        File tempDir = new File(SQLServerTests.class.getResource("/org/embulk/output/sqlserver/test").toURI());
 
-        Path temp = fs.getPath(new File(tempDir, "temp.txt").getAbsolutePath());
+        Path temp = new File("/github/home/tmp", "temp.txt").toPath();
         Files.deleteIfExists(temp);
 
         //Path sql = embulk.createTempFile("sql");

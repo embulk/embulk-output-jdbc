@@ -25,8 +25,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     # TODO: Find a better way to wait for completing setup.
-    - name: Sleep for 5 minutes to complete all the DB2 setup process
-      run: sleep 300
+    - name: Sleep for 3 minutes to complete all the DB2 setup process
+      run: sleep 180
     - name: Current path
       run: pwd
     - name: List Docker containers
@@ -186,7 +186,7 @@ jobs:
         # To run locallly:
         # docker run -it --name mssqlcontainer -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=somepassword' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
         image: docker://mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
-        options: -v "/home/runner/":"/github/home" --name "mssqlcontainer"  --health-cmd "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P P@ssw0rd -Q \"SELECT * FROM sys.objects;\"" --health-interval 20s --health-timeout 30s --health-retries 128
+        options: -v "/home/runner/":"/github/home/tmp" --name "mssqlcontainer"  --health-cmd "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P P@ssw0rd -Q \"SELECT * FROM sys.objects;\"" --health-interval 20s --health-timeout 30s --health-retries 128
         ports:
         - "1433:1433"
         env:
