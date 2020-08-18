@@ -2,6 +2,7 @@ package org.embulk.output.sqlserver;
 
 import static java.util.Locale.ENGLISH;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -9,15 +10,17 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 public class SQLServerTests
@@ -46,23 +49,30 @@ public class SQLServerTests
     {
         ConfigSource config = baseConfig();
 
-        ImmutableList.Builder<String> args = ImmutableList.builder();
-        args.add("sqlcmd")
-                .add("-U")
-                .add(config.get(String.class, "user"))
-                .add("-P")
-                .add(config.get(String.class, "password"))
-                .add("-H")
-                .add(config.get(String.class, "host"))
-                .add("-d")
-                .add(config.get(String.class, "database"))
-                .add("-Q")
-                .add(sql);
+        final ArrayList<String> args = new ArrayList<>();
+
+        final String sqlcmdCommand = System.getenv("EMBULK_OUTPUT_SQLSERVER_TEST_SQLCMD_COMMAND");
+        if (sqlcmdCommand == null || sqlcmdCommand.isEmpty()) {
+            args.add("sqlcmd");
+        } else {
+            args.addAll(Arrays.asList(sqlcmdCommand.split(" ")));
+        }
+
+        args.add("-U");
+        args.add(config.get(String.class, "user"));
+        args.add("-P");
+        args.add(config.get(String.class, "password"));
+        args.add("-S");
+        args.add(config.get(String.class, "host"));
+        args.add("-d");
+        args.add(config.get(String.class, "database"));
+        args.add("-Q");
+        args.add(sql);
         for (String option : options) {
             args.add(option);
         }
 
-        ProcessBuilder pb = new ProcessBuilder(args.build());
+        ProcessBuilder pb = new ProcessBuilder(args);
         pb.redirectErrorStream(true);
         int code;
         try {
@@ -78,18 +88,28 @@ public class SQLServerTests
         }
     }
 
-    public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
+    public static String selectRecords(TestingEmbulk embulk, String tableName) throws Exception
     {
         return executeQuery(embulk, "SELECT * FROM " + tableName);
     }
 
-    public static String executeQuery(TestingEmbulk embulk, String query) throws IOException
+    public static String executeQuery(TestingEmbulk embulk, String query) throws Exception
     {
-        Path temp = embulk.createTempFile("txt");
-        Files.delete(temp);
-
-        // should not use UTF8 because of BOM
-        execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
+        Path temp;
+        final String volumeBind = System.getenv("EMBULK_OUTPUT_SQLSERVER_VOLUME_BIND");
+        if (StringUtils.isNotBlank(volumeBind) && volumeBind.contains(":")){
+            //this handle to run docker on github
+            final String[] folderMapping = volumeBind.split(":");
+            temp = new File(folderMapping[1], "temp.txt").toPath();
+            Files.deleteIfExists(temp);
+            execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
+            temp = new File(folderMapping[0], "temp.txt").toPath();
+        }
+        else {
+            temp = embulk.createTempFile("txt");
+            Files.deleteIfExists(temp);
+            execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
+        }
 
         List<String> lines = Files.readAllLines(temp, Charset.forName("MS932"));
         Collections.sort(lines);

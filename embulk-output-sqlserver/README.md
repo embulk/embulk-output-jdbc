@@ -170,5 +170,5 @@ password: pass
 ```
 
 ```
-$ EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG=sqlserver.yml ./gradlew :embulk-output-sqlserver:check --info
+$ EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG=`pwd`/ci/sqlserver.yml ./gradlew :embulk-output-sqlserver:check --info
 ```

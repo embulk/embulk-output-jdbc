@@ -1,3 +1,5 @@
 table: TEST1
 mode: insert_direct
 insert_method: native
+#native_driver: "ODBC Driver 17 for SQL Server"
+#native_driver: "SQL Server Native Client 17.0"

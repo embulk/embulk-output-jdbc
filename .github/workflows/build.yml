@@ -149,3 +149,50 @@ jobs:
           name: redshift
           path: embulk-output-redshift/build/reports/tests/test
           if-no-files-found: ignore
+
+  sqlserver:  # https://hub.docker.com/_/microsoft-mssql-server
+    runs-on: ubuntu-16.04
+    services:
+      sqlserver:
+        # To run local:
+        # docker run -it --name mssqlcontainer -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=P@ssw0rd' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
+        image: docker://mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-16.04
+        options: -v "/home/runner/":"/github/home/tmp" --name "mssqlcontainer"  --health-cmd "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P P@ssw0rd -Q \"SELECT * FROM sys.objects;\"" --health-interval 20s --health-timeout 30s --health-retries 128
+        ports:
+          - "1433:1433"
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: "P@ssw0rd"
+    steps:
+      - uses: actions/checkout@v2
+      # TODO: Find a better way to wait for completing setup.
+      - name: Sleep for 30 seconds to complete all the SQL Server setup process
+        run: sleep 30
+      - name: List Docker containers
+        run: docker ps -a
+      - name: Confirm log
+        run: docker logs mssqlcontainer
+      - name: Set env
+        run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
+      - name: Copy test resources into Docker container
+        run: docker cp ${{ env.workspace }}/embulk-output-sqlserver/src/test/resources/org/embulk/output/sqlserver/test/expect/. mssqlcontainer:/tmp
+      - name: List resource files
+        run: docker exec mssqlcontainer ls -R /tmp
+      - name: Show SQL Server objects
+        run: docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P "P@ssw0rd" -Q "SELECT * FROM sys.objects;"
+      - name: Create testdb
+        run: docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P "P@ssw0rd" -Q "CREATE DATABASE testdb;"
+      - name: Show SQL Server objects in testdb
+        run: docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P "P@ssw0rd" -d testdb -Q "SELECT * FROM sys.objects;"
+      - name: Build with testing
+        run: ./gradlew --stacktrace :embulk-output-sqlserver:check
+        env:
+          _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
+          EMBULK_OUTPUT_SQLSERVER_TEST_CONFIG: "${{ env.workspace }}/ci/sqlserver.yml"
+          EMBULK_OUTPUT_SQLSERVER_TEST_SQLCMD_COMMAND: "docker exec mssqlcontainer /opt/mssql-tools/bin/sqlcmd"
+          EMBULK_OUTPUT_SQLSERVER_VOLUME_BIND: "/home/runner/:/github/home/tmp"
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: sqlserver
+          path: embulk-output-sqlserver/build/reports/tests/test
