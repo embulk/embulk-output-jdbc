@@ -111,6 +111,8 @@ public class SQLServerTests
         // should not use UTF8 because of BOM
         execute("SET NOCOUNT ON; " + query, "-h", "-1", "-s", ",", "-W", "-f", "932", "-o", temp.toString());
 
+
+        temp = new File("/home/runner/", "temp.txt").toPath();
         List<String> lines = Files.readAllLines(temp, Charset.forName("MS932"));
         Collections.sort(lines);
         StringBuilder sb = new StringBuilder();
