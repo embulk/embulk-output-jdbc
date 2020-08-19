@@ -3,8 +3,7 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;

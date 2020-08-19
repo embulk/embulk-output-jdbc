@@ -21,6 +21,8 @@ import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.embulk.spi.util.RetryExecutor;
 import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
@@ -31,9 +33,7 @@ import org.joda.time.DateTimeZone;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Function;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
@@ -549,12 +549,12 @@ public abstract class AbstractJdbcOutputPlugin
 
         Optional<JdbcSchema> initialTargetTableSchema =
             mode.ignoreTargetTableSchema() ?
-                Optional.<JdbcSchema>absent() :
+                Optional.<JdbcSchema>empty() :
                 newJdbcSchemaFromTableIfExists(con, task.getActualTable());
 
         // TODO get CREATE TABLE statement from task if set
         JdbcSchema newTableSchema = applyColumnOptionsToNewTableSchema(
-                initialTargetTableSchema.or(new Supplier<JdbcSchema>() {
+                initialTargetTableSchema.orElseGet(new Supplier<JdbcSchema>() {
                     public JdbcSchema get()
                     {
                         return newJdbcSchemaForNewTable(schema);
@@ -568,7 +568,7 @@ public abstract class AbstractJdbcOutputPlugin
             task.setIntermediateTables(Optional.<List<TableIdentifier>>of(createIntermediateTables(con, task, taskCount, newTableSchema)));
         } else {
             // direct modify mode doesn't need intermediate tables.
-            task.setIntermediateTables(Optional.<List<TableIdentifier>>absent());
+            task.setIntermediateTables(Optional.<List<TableIdentifier>>empty());
             if (task.getBeforeLoad().isPresent()) {
                 con.executeSql(task.getBeforeLoad().get());
             }
@@ -578,7 +578,7 @@ public abstract class AbstractJdbcOutputPlugin
         JdbcSchema targetTableSchema;
         if (initialTargetTableSchema.isPresent()) {
             targetTableSchema = initialTargetTableSchema.get();
-            task.setNewTableSchema(Optional.<JdbcSchema>absent());
+            task.setNewTableSchema(Optional.<JdbcSchema>empty());
         } else if (task.getIntermediateTables().isPresent() && !task.getIntermediateTables().get().isEmpty()) {
             TableIdentifier firstItermTable = task.getIntermediateTables().get().get(0);
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, firstItermTable).get();
@@ -588,7 +588,7 @@ public abstract class AbstractJdbcOutputPlugin
             // CREATE TABLE IF NOT EXISTS xyz
             con.createTableIfNotExists(task.getActualTable(), newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
             targetTableSchema = newJdbcSchemaFromTableIfExists(con, task.getActualTable()).get();
-            task.setNewTableSchema(Optional.<JdbcSchema>absent());
+            task.setNewTableSchema(Optional.<JdbcSchema>empty());
         }
         task.setTargetTableSchema(matchSchemaByColumnNames(schema, targetTableSchema));
 
@@ -629,7 +629,7 @@ public abstract class AbstractJdbcOutputPlugin
             }
             logger.info("Using merge keys: {}", task.getMergeKeys().get());
         } else {
-            task.setMergeKeys(Optional.<List<String>>absent());
+            task.setMergeKeys(Optional.<List<String>>empty());
         }
     }
 
@@ -793,7 +793,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     private static JdbcColumnOption columnOptionOf(Map<String, JdbcColumnOption> columnOptions, String columnName)
     {
-        return Optional.fromNullable(columnOptions.get(columnName)).or(
+        return Optional.ofNullable(columnOptions.get(columnName)).orElseGet(
                     // default column option
                     new Supplier<JdbcColumnOption>()
                     {
@@ -927,7 +927,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         if (!connection.tableExists(table)) {
             // DatabaseMetaData.getPrimaryKeys fails if table does not exist
-            return Optional.absent();
+            return Optional.empty();
         }
 
         DatabaseMetaData dbm = connection.getMetaData();
@@ -974,7 +974,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
         List<JdbcColumn> columns = builder.build();
         if (columns.isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         } else {
             return Optional.of(new JdbcSchema(columns));
         }
@@ -986,7 +986,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         for (Column column : inputSchema.getColumns()) {
             Optional<JdbcColumn> c = targetTableSchema.findColumn(column.getName());
-            jdbcColumns.add(c.or(JdbcColumn.skipColumn()));
+            jdbcColumns.add(c.orElse(JdbcColumn.skipColumn()));
         }
 
         return new JdbcSchema(jdbcColumns.build());
@@ -1000,7 +1000,7 @@ public abstract class AbstractJdbcOutputPlugin
         // instantiate BatchInsert without table name
         BatchInsert batch = null;
         try {
-            Optional<MergeConfig> config = Optional.absent();
+            Optional<MergeConfig> config = Optional.empty();
             if (task.getMode() == Mode.MERGE_DIRECT) {
                 config = Optional.of(new MergeConfig(task.getMergeKeys().get(), task.getMergeRule()));
             }

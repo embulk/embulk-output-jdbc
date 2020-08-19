@@ -3,10 +3,10 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import org.embulk.util.aws.credentials.AwsCredentials;
@@ -201,6 +201,6 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyIamRoleName().orNull(), t.getCopyAwsAccountId().orNull());
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyIamRoleName().orElse(null), t.getCopyAwsAccountId().orElse(null));
     }
 }

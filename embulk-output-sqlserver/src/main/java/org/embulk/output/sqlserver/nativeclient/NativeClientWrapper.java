@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import jnr.ffi.LibraryLoader;
 import jnr.ffi.Platform;
@@ -16,8 +17,6 @@ import jnr.ffi.provider.jffi.ArrayMemoryIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 public class NativeClientWrapper
 {

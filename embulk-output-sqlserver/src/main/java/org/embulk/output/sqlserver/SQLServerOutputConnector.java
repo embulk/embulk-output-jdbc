@@ -6,15 +6,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Optional;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 import org.embulk.output.jdbc.TransactionIsolation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
-
 
 public class SQLServerOutputConnector
         extends AbstractJdbcOutputConnector

@@ -15,7 +15,7 @@ dependencies {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
     }
-    compile("org.embulk.input.s3:embulk-util-aws-credentials:0.2.21") {
+    compile("org.embulk.input.s3:embulk-util-aws-credentials:0.3.5") {
         exclude group: "org.embulk", module: "embulk-core"
         exclude group: "org.slf4j", module: "slf4j-api"
     }

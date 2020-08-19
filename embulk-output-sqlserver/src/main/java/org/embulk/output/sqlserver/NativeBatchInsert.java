@@ -7,6 +7,7 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Optional;
 
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -18,8 +19,6 @@ import org.embulk.output.sqlserver.nativeclient.NativeClientWrapper;
 import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 public class NativeBatchInsert implements BatchInsert
 {

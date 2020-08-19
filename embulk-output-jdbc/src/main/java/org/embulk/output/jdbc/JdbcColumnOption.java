@@ -1,6 +1,6 @@
 package org.embulk.output.jdbc;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import org.joda.time.DateTimeZone;
 import org.embulk.config.Task;
 import org.embulk.config.Config;

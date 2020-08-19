@@ -1,6 +1,5 @@
 package org.embulk.output;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.embulk.config.Config;
@@ -23,6 +22,7 @@ import org.joda.time.DateTimeZone;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Optional;
 
 import static java.util.Locale.ENGLISH;
 
@@ -171,7 +171,7 @@ public class SQLServerOutputPlugin
 
         UrlAndProperties urlProps = getUrlAndProperties(sqlServerTask, useJtdsDriver);
         logConnectionProperties(urlProps.getUrl(), urlProps.getProps());
-        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orNull(),
+        return new SQLServerOutputConnector(urlProps.getUrl(), urlProps.getProps(), sqlServerTask.getSchema().orElse(null),
                 sqlServerTask.getTransactionIsolation());
     }
 

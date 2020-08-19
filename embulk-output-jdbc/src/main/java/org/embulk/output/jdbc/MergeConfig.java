@@ -1,8 +1,7 @@
 package org.embulk.output.jdbc;
 
-import com.google.common.base.Optional;
-
 import java.util.List;
+import java.util.Optional;
 
 public class MergeConfig {
     private final List<String> mergeKeys;
