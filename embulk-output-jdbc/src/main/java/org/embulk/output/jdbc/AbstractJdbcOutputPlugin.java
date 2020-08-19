@@ -414,6 +414,7 @@ public abstract class AbstractJdbcOutputPlugin
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(getTaskClass());
+
         // Invalid timezones should fail immediately when configuring.
         throwAgainstInvalidTimeZone(task.getDefaultTimeZone());
         for (final JdbcColumnOption option : task.getColumnOptions().values()) {

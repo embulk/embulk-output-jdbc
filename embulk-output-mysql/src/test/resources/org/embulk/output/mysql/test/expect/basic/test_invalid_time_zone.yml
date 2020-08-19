@@ -1,0 +1,5 @@
+table: test1
+mode: insert
+default_timezone: "Somewhere/Some_City"
+column_options:
+  id: {type: 'int auto_increment primary key'}
