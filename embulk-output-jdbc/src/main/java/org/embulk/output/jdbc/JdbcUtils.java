@@ -5,11 +5,11 @@ import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
-import org.embulk.spi.Exec;
+import org.slf4j.LoggerFactory;
 
 public class JdbcUtils
 {
-    public final Logger logger = Exec.getLogger(JdbcUtils.class.getName());
+    public static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
 
     private static String[] SEARCH_STRING_SPECIAL_CHARS = new String[] { "_", "%" };
 
@@ -150,4 +150,3 @@ public class JdbcUtils
     //    // TODO any substitute implementations?
     //}
 }
-

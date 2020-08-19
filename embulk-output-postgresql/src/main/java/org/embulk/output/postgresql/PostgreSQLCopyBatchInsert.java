@@ -8,14 +8,14 @@ import java.sql.SQLException;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
-import org.embulk.spi.Exec;
 import org.postgresql.copy.CopyManager;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PostgreSQLCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
 {
-    private final Logger logger = Exec.getLogger(PostgreSQLCopyBatchInsert.class);
+    private static final Logger logger = LoggerFactory.getLogger(PostgreSQLCopyBatchInsert.class);
     private final JdbcOutputConnector connector;
 
     private PostgreSQLOutputConnection connection = null;

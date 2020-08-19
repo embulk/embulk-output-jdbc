@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import org.embulk.spi.util.RetryExecutor;
 import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -66,7 +67,7 @@ import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
 {
-    protected final Logger logger = Exec.getLogger(getClass());
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractJdbcOutputPlugin.class);
 
     public interface PluginTask
             extends Task
@@ -1273,7 +1274,7 @@ public abstract class AbstractJdbcOutputPlugin
         private final String errorMessage;
         private final IdempotentSqlRunnable op;
 
-        private final Logger logger = Exec.getLogger(this.getClass());
+        private final Logger logger = LoggerFactory.getLogger(RetryableSQLExecution.class);
 
         public RetryableSQLExecution(IdempotentSqlRunnable op, String errorMessage) {
             this.errorMessage = errorMessage;

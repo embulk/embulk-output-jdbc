@@ -13,16 +13,15 @@ import jnr.ffi.provider.jffi.ArrayMemoryIO;
 import jnr.ffi.provider.jffi.ByteBufferMemoryIO;
 
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
-
+import org.slf4j.LoggerFactory;
 
 public class OCIWrapper
 {
     private static OCI oci;
     private static BulkOCI bulkOci;
 
-    private final Logger logger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(OCIWrapper.class);
 
     private final Charset systemCharset;
     private Pointer envHandle;

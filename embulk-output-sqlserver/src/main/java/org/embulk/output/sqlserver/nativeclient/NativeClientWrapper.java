@@ -14,8 +14,8 @@ import jnr.ffi.Pointer;
 import jnr.ffi.Runtime;
 import jnr.ffi.provider.jffi.ArrayMemoryIO;
 
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -26,7 +26,7 @@ public class NativeClientWrapper
     private static ODBC odbc;
     private static NativeClient client;
 
-    private final Logger logger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(NativeClientWrapper.class);
 
     private Charset charset;
     private Charset wideCharset;

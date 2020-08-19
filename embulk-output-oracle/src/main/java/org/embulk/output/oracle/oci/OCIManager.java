@@ -4,8 +4,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OCIManager
 {
@@ -14,8 +14,7 @@ public class OCIManager
         public int counter;
     }
 
-
-    private final Logger logger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(OCIManager.class);
 
     private Map<Object, OCIWrapperAndCounter> ociAndCounters = new HashMap<Object, OCIWrapperAndCounter>();
 

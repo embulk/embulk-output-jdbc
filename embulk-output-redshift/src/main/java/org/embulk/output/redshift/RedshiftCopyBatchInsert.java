@@ -21,8 +21,8 @@ import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.postgresql.AbstractPostgreSQLCopyBatchInsert;
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -44,7 +44,7 @@ import com.amazonaws.services.securitytoken.model.GetFederationTokenResult;
 public class RedshiftCopyBatchInsert
         extends AbstractPostgreSQLCopyBatchInsert
 {
-    private final Logger logger = Exec.getLogger(RedshiftCopyBatchInsert.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedshiftCopyBatchInsert.class);
     private final JdbcOutputConnector connector;
     private final String s3BucketName;
     private final String s3KeyPrefix;
