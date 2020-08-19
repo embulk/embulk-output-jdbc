@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.util.timestamp.TimestampFormatter;
 import org.msgpack.value.Value;
 
 public class StringColumnSetter
@@ -55,7 +55,7 @@ public class StringColumnSetter
     @Override
     public void timestampValue(Timestamp v) throws IOException, SQLException
     {
-        batch.setString(timestampFormatter.format(v));
+        batch.setString(timestampFormatter.format(v.getInstant()));
     }
 
     @Override
