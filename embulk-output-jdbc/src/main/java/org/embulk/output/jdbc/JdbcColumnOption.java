@@ -4,8 +4,6 @@ import java.util.Optional;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigInject;
-import org.embulk.spi.time.TimestampFormat;
 
 public interface JdbcColumnOption
         extends Task
@@ -20,7 +18,7 @@ public interface JdbcColumnOption
 
     @Config("timestamp_format")
     @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
-    public TimestampFormat getTimestampFormat();
+    public String getTimestampFormat();
 
     @Config("timezone")
     @ConfigDefault("null")

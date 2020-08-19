@@ -79,7 +79,7 @@ public class ColumnSetterFactory
 
     protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
-        final String format = option.getTimestampFormat().getFormat();
+        final String format = option.getTimestampFormat();
         final String timezone = option.getTimeZone().orElse(this.defaultTimeZone);
         return TimestampFormatter.builder(format, true).setDefaultZoneFromString(timezone).build();
     }
