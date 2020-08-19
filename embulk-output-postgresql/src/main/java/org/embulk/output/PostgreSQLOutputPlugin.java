@@ -16,7 +16,6 @@ import org.embulk.output.postgresql.setter.PostgreSQLColumnSetterFactory;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.Schema;
-import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -192,7 +191,7 @@ public class PostgreSQLOutputPlugin
     }
 
     @Override
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
     {
         return new PostgreSQLColumnSetterFactory(batch, defaultTimeZone);
     }

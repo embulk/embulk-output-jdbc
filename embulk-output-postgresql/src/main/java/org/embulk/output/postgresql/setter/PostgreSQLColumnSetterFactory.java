@@ -6,12 +6,11 @@ import org.embulk.output.jdbc.JdbcColumnOption;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.setter.JsonColumnSetter;
-import org.joda.time.DateTimeZone;
 
 public class PostgreSQLColumnSetterFactory
         extends ColumnSetterFactory
 {
-    public PostgreSQLColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    public PostgreSQLColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
     {
         super(batch, defaultTimeZone);
     }
