@@ -21,6 +21,8 @@ import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -412,6 +414,12 @@ public abstract class AbstractJdbcOutputPlugin
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(getTaskClass());
+        // Invalid timezones should fail immediately when configuring.
+        throwAgainstInvalidTimeZone(task.getDefaultTimeZone());
+        for (final JdbcColumnOption option : task.getColumnOptions().values()) {
+            throwAgainstInvalidTimeZone(option.getTimeZone().orElse(null));
+        }
+
         Features features = getFeatures(task);
         task.setFeatures(features);
 
@@ -1267,6 +1275,17 @@ public abstract class AbstractJdbcOutputPlugin
                 .withRetryLimit(task.getRetryLimit())
                 .withInitialRetryWait(task.getRetryWait())
                 .withMaxRetryWait(task.getMaxRetryWait());
+    }
+
+    private static void throwAgainstInvalidTimeZone(final String timezone) {
+        if (timezone == null) {
+            return;
+        }
+        try {
+            ZoneId.of(timezone);
+        } catch (final DateTimeException ex) {
+            throw new ConfigException("Time zone '" + timezone + "' is not recognised.", ex);
+        }
     }
 
     class RetryableSQLExecution implements Retryable<Void> {
