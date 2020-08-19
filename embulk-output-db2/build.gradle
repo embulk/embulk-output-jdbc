@@ -1,8 +1,12 @@
-[compileTestJava]*.options*.encoding = 'UTF-8'
-
 dependencies {
-    compile project(':embulk-output-jdbc')
+    compile(project(path: ":embulk-output-jdbc", configuration: "runtimeElements"))
 
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
     testCompile "com.ibm.db2.jcc:db2jcc:db2jcc4"
+}
+
+embulkPlugin {
+    mainClass = "org.embulk.output.DB2OutputPlugin"
+    category = "output"
+    type = "db2"
 }

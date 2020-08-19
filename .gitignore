@@ -1,8 +1,6 @@
 *~
-/pkg/
 /tmp/
 .gradle/
-classpath/
 build/
 .idea
 *.iml

@@ -1,6 +1,16 @@
 dependencies {
-    compile project(':embulk-output-jdbc')
+    compile(project(path: ":embulk-output-jdbc", configuration: "runtimeElements")) {
+        exclude group: "org.embulk", module: "embulk-core"
+    }
 
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
     testCompile files('test_jdbc_driver/ojdbc7.jar')
+}
+
+/* TODO: /lib/embulk/native/x86_64-linux/libembulk-output-oracle-oci.so */
+
+embulkPlugin {
+    mainClass = "org.embulk.output.OracleOutputPlugin"
+    category = "output"
+    type = "oracle"
 }
