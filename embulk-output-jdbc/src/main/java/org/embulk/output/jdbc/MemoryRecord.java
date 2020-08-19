@@ -1,9 +1,8 @@
 package org.embulk.output.jdbc;
 
+import java.time.Instant;
 import org.embulk.spi.Column;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
-
 
 public class MemoryRecord implements Record
 {
@@ -40,9 +39,9 @@ public class MemoryRecord implements Record
         return (String)getValue(column);
     }
 
-    public Timestamp getTimestamp(Column column)
+    public Instant getTimestamp(Column column)
     {
-        return (Timestamp)getValue(column);
+        return ((org.embulk.spi.time.Timestamp) getValue(column)).getInstant();
     }
 
     public Value getJson(Column column)
@@ -60,4 +59,3 @@ public class MemoryRecord implements Record
         values[column.getIndex()] = value;
     }
 }
-

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.embulk.spi.time.Timestamp;
+import java.time.Instant;
 
 public interface BatchInsert
 {
@@ -47,9 +47,9 @@ public interface BatchInsert
 
     public void setBytes(byte[] v) throws IOException, SQLException;
 
-    public void setSqlDate(Timestamp v, Calendar cal) throws IOException, SQLException;
+    public void setSqlDate(Instant v, Calendar cal) throws IOException, SQLException;
 
-    public void setSqlTime(Timestamp v, Calendar cal) throws IOException, SQLException;
+    public void setSqlTime(Instant v, Calendar cal) throws IOException, SQLException;
 
-    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException, SQLException;
+    public void setSqlTimestamp(Instant v, Calendar cal) throws IOException, SQLException;
 }

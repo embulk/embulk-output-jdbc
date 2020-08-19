@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -22,7 +23,6 @@ import org.embulk.output.oracle.oci.OCIManager;
 import org.embulk.output.oracle.oci.OCIWrapper;
 import org.embulk.output.oracle.oci.RowBuffer;
 import org.embulk.output.oracle.oci.TableDefinition;
-import org.embulk.spi.time.Timestamp;
 
 public class DirectBatchInsert implements BatchInsert
 {
@@ -260,19 +260,19 @@ public class DirectBatchInsert implements BatchInsert
     }
 
     @Override
-    public void setSqlDate(Timestamp v, Calendar calendar) throws IOException, SQLException
+    public void setSqlDate(final Instant v, final Calendar calendar) throws IOException, SQLException
     {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlTime(Timestamp v, Calendar calendar) throws IOException, SQLException
+    public void setSqlTime(final Instant v, final Calendar calendar) throws IOException, SQLException
     {
         throw new SQLException("Unsupported");
     }
 
     @Override
-    public void setSqlTimestamp(Timestamp v, Calendar calendar) throws IOException, SQLException
+    public void setSqlTimestamp(final Instant v, final Calendar calendar) throws IOException, SQLException
     {
         java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
         t.setNanos(v.getNano());

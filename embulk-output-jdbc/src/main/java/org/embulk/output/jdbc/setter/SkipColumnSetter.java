@@ -1,6 +1,6 @@
 package org.embulk.output.jdbc.setter;
 
-import org.embulk.spi.time.Timestamp;
+import java.time.Instant;
 import org.embulk.output.jdbc.BatchInsert;
 import org.msgpack.value.Value;
 
@@ -33,7 +33,7 @@ public class SkipColumnSetter
     }
 
     @Override
-    public void timestampValue(Timestamp v)
+    public void timestampValue(final Instant v)
     {
     }
 

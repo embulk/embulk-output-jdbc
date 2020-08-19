@@ -1,7 +1,7 @@
 package org.embulk.output.jdbc;
 
+import java.time.Instant;
 import org.embulk.spi.Column;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
 public interface Record
@@ -16,8 +16,7 @@ public interface Record
 
     String getString(Column column);
 
-    Timestamp getTimestamp(Column column);
+    Instant getTimestamp(Column column);
 
     Value getJson(Column column);
 }
-
