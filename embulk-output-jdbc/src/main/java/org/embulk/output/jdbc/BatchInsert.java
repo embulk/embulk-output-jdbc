@@ -1,10 +1,10 @@
 package org.embulk.output.jdbc;
 
 import java.math.BigDecimal;
-import java.util.Calendar;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.time.ZoneId;
 
 public interface BatchInsert
 {
@@ -47,9 +47,9 @@ public interface BatchInsert
 
     public void setBytes(byte[] v) throws IOException, SQLException;
 
-    public void setSqlDate(Instant v, Calendar cal) throws IOException, SQLException;
+    public void setSqlDate(Instant v, ZoneId zone) throws IOException, SQLException;
 
-    public void setSqlTime(Instant v, Calendar cal) throws IOException, SQLException;
+    public void setSqlTime(Instant v, ZoneId zone) throws IOException, SQLException;
 
-    public void setSqlTimestamp(Instant v, Calendar cal) throws IOException, SQLException;
+    public void setSqlTimestamp(Instant v, ZoneId zone) throws IOException, SQLException;
 }

@@ -1,8 +1,6 @@
 package org.embulk.output.jdbc.setter;
 
-import java.util.Calendar;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.sql.Types;
 import org.embulk.config.ConfigSource;
@@ -59,11 +57,11 @@ public class ColumnSetterFactory
         case "nstring":
             return new NStringColumnSetter(batch, column, newDefaultValueSetter(column, option), newTimestampFormatter(option));
         case "date":
-            return new SqlDateColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SqlDateColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
         case "time":
-            return new SqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
         case "timestamp":
-            return new SqlTimestampColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SqlTimestampColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
         case "decimal":
             return new BigDecimalColumnSetter(batch, column, newDefaultValueSetter(column, option));
         case "json":
@@ -71,25 +69,25 @@ public class ColumnSetterFactory
         case "null":
             return new NullColumnSetter(batch, column, newDefaultValueSetter(column, option));
         case "pass":
-            return new PassThroughColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new PassThroughColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
         default:
             throw new ConfigException(String.format("Unknown value_type '%s' for column '%s'", option.getValueType(), column.getName()));
         }
     }
 
-    protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
+    protected final TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
         final String format = option.getTimestampFormat();
         final String timezone = option.getTimeZone().orElse(this.defaultTimeZone);
         return TimestampFormatter.builder(format, true).setDefaultZoneFromString(timezone).build();
     }
 
-    protected Calendar newCalendar(JdbcColumnOption option)
+    protected final ZoneId newZoneId(final JdbcColumnOption option)
     {
-        return Calendar.getInstance(TimeZone.getTimeZone(getTimeZone(option)), Locale.ENGLISH);
+        return ZoneId.of(this.getTimeZone(option));
     }
 
-    protected String getTimeZone(JdbcColumnOption option)
+    protected final String getTimeZone(JdbcColumnOption option)
     {
         return option.getTimeZone().orElse(defaultTimeZone);
     }
@@ -151,11 +149,11 @@ public class ColumnSetterFactory
 
         // Time
         case Types.DATE:
-            return new SqlDateColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SqlDateColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
         case Types.TIME:
-            return new SqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
         case Types.TIMESTAMP:
-            return new SqlTimestampColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SqlTimestampColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
 
         // Null
         case Types.NULL:

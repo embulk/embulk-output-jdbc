@@ -7,9 +7,11 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.Optional;
-
+import java.util.TimeZone;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcSchema;
@@ -192,20 +194,21 @@ public class NativeBatchInsert implements BatchInsert
     }
 
     @Override
-    public void setSqlDate(final Instant v, final Calendar cal) throws IOException, SQLException
+    public void setSqlDate(final Instant v, final ZoneId zone) throws IOException, SQLException
     {
-        setSqlTimestamp(v, cal);
+        setSqlTimestamp(v, zone);
     }
 
     @Override
-    public void setSqlTime(final Instant v, final Calendar cal) throws IOException, SQLException
+    public void setSqlTime(final Instant v, final ZoneId zone) throws IOException, SQLException
     {
-        setSqlTimestamp(v, cal);
+        setSqlTimestamp(v, zone);
     }
 
     @Override
-    public void setSqlTimestamp(final Instant v, final Calendar cal) throws IOException, SQLException
+    public void setSqlTimestamp(final Instant v, final ZoneId zone) throws IOException, SQLException
     {
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         int columnIndex = nextColumnIndex();
         DateFormat format = formats[columnIndex - 1];
         format.setCalendar(cal);
