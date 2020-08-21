@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
+import java.util.Optional;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -17,7 +18,6 @@ import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.Schema;
 import org.joda.time.DateTimeZone;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 

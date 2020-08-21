@@ -2,12 +2,11 @@ package org.embulk.output.db2;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.StandardBatchInsert;
-
-import com.google.common.base.Optional;
 
 public class DB2BatchInsert
         extends StandardBatchInsert

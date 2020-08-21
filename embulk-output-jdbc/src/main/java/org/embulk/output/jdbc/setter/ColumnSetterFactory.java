@@ -1,8 +1,8 @@
 package org.embulk.output.jdbc.setter;
 
-import com.google.common.base.Optional;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Optional;
 import java.sql.Types;
 import org.joda.time.DateTimeZone;
 import org.embulk.config.ConfigSource;
@@ -87,9 +87,18 @@ public class ColumnSetterFactory
         final ConfigSource configSource = Exec.newConfigSource();
         configSource.set("format", option.getTimestampFormat().getFormat());
         configSource.set("timezone", getTimeZone(option));
-        return new TimestampFormatter(
-            Exec.newConfigSource().loadConfig(FormatterIntlTask.class),
-            Optional.fromNullable(configSource.loadConfig(FormatterIntlColumnOption.class)));
+
+        final FormatterIntlTask task = Exec.newConfigSource().loadConfig(FormatterIntlTask.class);
+        final Optional<? extends TimestampFormatter.TimestampColumnOption> columnOption =
+                Optional.ofNullable(configSource.loadConfig(FormatterIntlColumnOption.class));
+
+        return TimestampFormatter.of(
+                columnOption.isPresent()
+                        ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
+                        : task.getDefaultTimestampFormat(),
+                columnOption.isPresent()
+                        ? columnOption.get().getTimeZoneId().or(task.getDefaultTimeZoneId())
+                        : task.getDefaultTimeZoneId());
     }
 
     protected Calendar newCalendar(JdbcColumnOption option)
@@ -99,7 +108,7 @@ public class ColumnSetterFactory
 
     protected DateTimeZone getTimeZone(JdbcColumnOption option)
     {
-        return option.getTimeZone().or(defaultTimeZone);
+        return option.getTimeZone().orElse(defaultTimeZone);
     }
 
     public ColumnSetter newCoalesceColumnSetter(JdbcColumn column, JdbcColumnOption option)
@@ -204,7 +213,7 @@ public class ColumnSetterFactory
     {
         throw new UnsupportedOperationException(
                 String.format("Unsupported type %s (sqlType=%d, size=%d, scale=%d)",
-                    column.getDeclaredType().or(column.getSimpleTypeName()),
+                    column.getDeclaredType().orElse(column.getSimpleTypeName()),
                     column.getSqlType(), column.getSizeTypeParameter(), column.getScaleTypeParameter()));
     }
 }

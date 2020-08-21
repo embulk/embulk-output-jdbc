@@ -4,12 +4,11 @@ import java.util.Properties;
 import java.sql.Driver;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.TransactionIsolation;
-
-import com.google.common.base.Optional;
 
 public class RedshiftOutputConnector
         extends AbstractJdbcOutputConnector

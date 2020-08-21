@@ -4,12 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Optional;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 import org.embulk.output.jdbc.TransactionIsolation;
-
-import com.google.common.base.Optional;
 
 public class OracleOutputConnector
         extends AbstractJdbcOutputConnector

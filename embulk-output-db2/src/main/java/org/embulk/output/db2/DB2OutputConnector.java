@@ -3,13 +3,12 @@ package org.embulk.output.db2;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 import org.embulk.output.jdbc.TransactionIsolation;
-
-import com.google.common.base.Optional;
 
 public class DB2OutputConnector
         extends AbstractJdbcOutputConnector

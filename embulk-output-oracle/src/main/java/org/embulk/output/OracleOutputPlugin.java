@@ -3,8 +3,8 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.embulk.config.Config;
@@ -123,7 +123,7 @@ public class OracleOutputPlugin
         props.setProperty("password", oracleTask.getPassword());
         logConnectionProperties(url, props);
 
-        return new OracleOutputConnector(url, props, oracleTask.getSchema().orNull(), oracleTask.getInsertMethod() == InsertMethod.direct,
+        return new OracleOutputConnector(url, props, oracleTask.getSchema().orElse(null), oracleTask.getInsertMethod() == InsertMethod.direct,
                 oracleTask.getTransactionIsolation());
     }
 

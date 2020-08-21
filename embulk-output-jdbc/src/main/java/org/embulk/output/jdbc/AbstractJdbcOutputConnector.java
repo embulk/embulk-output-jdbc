@@ -1,8 +1,7 @@
 package org.embulk.output.jdbc;
 
 import java.sql.SQLException;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public abstract class AbstractJdbcOutputConnector implements JdbcOutputConnector
 {

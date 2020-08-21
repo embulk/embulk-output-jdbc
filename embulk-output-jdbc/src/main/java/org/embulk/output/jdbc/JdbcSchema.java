@@ -1,10 +1,10 @@
 package org.embulk.output.jdbc;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.embulk.config.ConfigException;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -48,7 +48,7 @@ public class JdbcSchema
         if (foundColumn != null) {
             return Optional.of(foundColumn);
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public int getCount()

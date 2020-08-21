@@ -5,8 +5,8 @@ import java.sql.Driver;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
@@ -83,7 +83,7 @@ public class JdbcOutputPlugin
         logConnectionProperties(t.getUrl(), props);
 
         return new GenericOutputConnector(t.getUrl(), props, t.getDriverClass(),
-                t.getSchema().orNull());
+                t.getSchema().orElse(null));
     }
 
     private static class GenericOutputConnector

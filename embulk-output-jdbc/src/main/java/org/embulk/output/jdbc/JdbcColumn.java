@@ -1,9 +1,9 @@
 package org.embulk.output.jdbc;
 
-import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Optional;
 
 public class JdbcColumn
 {
@@ -46,7 +46,7 @@ public class JdbcColumn
     {
         return new JdbcColumn(name, sqlType,
                 simpleTypeName, sizeTypeParameter, scaleTypeParameter, dataLength,
-                Optional.<String>absent(), isNotNull, isUniqueKey);
+                Optional.<String>empty(), isNotNull, isUniqueKey);
     }
 
     public static JdbcColumn newGenericTypeColumn(String name, int sqlType,
@@ -55,7 +55,7 @@ public class JdbcColumn
     {
         return new JdbcColumn(name, sqlType,
                 simpleTypeName, sizeTypeParameter, scaleTypeParameter, sizeTypeParameter,
-                Optional.<String>absent(), isNotNull, isUniqueKey);
+                Optional.<String>empty(), isNotNull, isUniqueKey);
     }
 
     public static JdbcColumn newTypeDeclaredColumn(String name, int sqlType,
@@ -69,7 +69,7 @@ public class JdbcColumn
     @JsonIgnore
     public static JdbcColumn skipColumn()
     {
-        return new JdbcColumn(null, 0, null, 0, 0, 0, Optional.<String>absent(), false, false);
+        return new JdbcColumn(null, 0, null, 0, 0, 0, Optional.<String>empty(), false, false);
     }
 
     @JsonIgnore
