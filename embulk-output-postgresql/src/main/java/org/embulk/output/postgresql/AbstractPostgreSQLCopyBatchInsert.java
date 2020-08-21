@@ -9,7 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.math.BigDecimal;
-import org.embulk.spi.time.Timestamp;
+import java.time.Instant;
 import org.embulk.output.jdbc.BatchInsert;
 
 public abstract class AbstractPostgreSQLCopyBatchInsert
@@ -157,7 +157,7 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         setEscapedString(String.valueOf(v));
     }
 
-    public void setSqlDate(Timestamp v, Calendar cal) throws IOException
+    public void setSqlDate(final Instant v, final Calendar cal) throws IOException
     {
         appendDelimiter();
         cal.setTimeInMillis(v.getEpochSecond() * 1000);
@@ -168,7 +168,7 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         writer.write(f);
     }
 
-    public void setSqlTime(Timestamp v, Calendar cal) throws IOException
+    public void setSqlTime(final Instant v, final Calendar cal) throws IOException
     {
         appendDelimiter();
         cal.setTimeInMillis(v.getEpochSecond() * 1000);
@@ -180,7 +180,7 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         writer.write(f);
     }
 
-    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException
+    public void setSqlTimestamp(final Instant v, final Calendar cal) throws IOException
     {
         appendDelimiter();
         cal.setTimeInMillis(v.getEpochSecond() * 1000);

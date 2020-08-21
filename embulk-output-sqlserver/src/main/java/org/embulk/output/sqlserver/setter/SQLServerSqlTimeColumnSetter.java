@@ -3,12 +3,12 @@ package org.embulk.output.sqlserver.setter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Calendar;
+import java.time.Instant;
 
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.setter.DefaultValueSetter;
 import org.embulk.output.jdbc.setter.SqlTimeColumnSetter;
-import org.embulk.spi.time.Timestamp;
 
 public class SQLServerSqlTimeColumnSetter
         extends SqlTimeColumnSetter
@@ -21,7 +21,7 @@ public class SQLServerSqlTimeColumnSetter
     }
 
     @Override
-    public void timestampValue(Timestamp v) throws IOException, SQLException
+    public void timestampValue(final Instant v) throws IOException, SQLException
     {
         // fractional precision of SQLServer TIME is 7, but that of java.sql.Time is only 3.
         batch.setSqlTimestamp(v, calendar);

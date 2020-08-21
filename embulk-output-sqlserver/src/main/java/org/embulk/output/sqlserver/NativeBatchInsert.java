@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Optional;
 
@@ -16,7 +17,6 @@ import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.TimestampFormat;
 import org.embulk.output.sqlserver.nativeclient.NativeClientWrapper;
-import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,19 +192,19 @@ public class NativeBatchInsert implements BatchInsert
     }
 
     @Override
-    public void setSqlDate(Timestamp v, Calendar cal) throws IOException, SQLException
+    public void setSqlDate(final Instant v, final Calendar cal) throws IOException, SQLException
     {
         setSqlTimestamp(v, cal);
     }
 
     @Override
-    public void setSqlTime(Timestamp v, Calendar cal) throws IOException, SQLException
+    public void setSqlTime(final Instant v, final Calendar cal) throws IOException, SQLException
     {
         setSqlTimestamp(v, cal);
     }
 
     @Override
-    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException, SQLException
+    public void setSqlTimestamp(final Instant v, final Calendar cal) throws IOException, SQLException
     {
         int columnIndex = nextColumnIndex();
         DateFormat format = formats[columnIndex - 1];

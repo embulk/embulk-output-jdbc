@@ -8,10 +8,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Date;
 import java.sql.Time;
+import java.time.Instant;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.embulk.spi.time.Timestamp;
 
 public class StandardBatchInsert
         implements BatchInsert
@@ -184,7 +184,7 @@ public class StandardBatchInsert
         nextColumn(v.length + 4);
     }
 
-    public void setSqlDate(Timestamp v, Calendar cal) throws IOException, SQLException
+    public void setSqlDate(final Instant v, final Calendar cal) throws IOException, SQLException
     {
         // JavaDoc of java.sql.Time says:
         // >> To conform with the definition of SQL DATE, the millisecond values wrapped by a java.sql.Date instance must be 'normalized' by setting the hours, minutes, seconds, and milliseconds to zero in the particular time zone with which the instance is associated.
@@ -197,14 +197,14 @@ public class StandardBatchInsert
         nextColumn(32);
     }
 
-    public void setSqlTime(Timestamp v, Calendar cal) throws IOException, SQLException
+    public void setSqlTime(final Instant v, final Calendar cal) throws IOException, SQLException
     {
         Time t = new Time(v.toEpochMilli());
         batch.setTime(index, t, cal);
         nextColumn(32);
     }
 
-    public void setSqlTimestamp(Timestamp v, Calendar cal) throws IOException, SQLException
+    public void setSqlTimestamp(final Instant v, final Calendar cal) throws IOException, SQLException
     {
         java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
         t.setNanos(v.getNano());

@@ -2,11 +2,11 @@ package org.embulk.output.jdbc.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Instant;
 
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
+import org.embulk.util.timestamp.TimestampFormatter;
 import org.msgpack.value.Value;
 
 public class NStringColumnSetter
@@ -53,7 +53,7 @@ public class NStringColumnSetter
     }
 
     @Override
-    public void timestampValue(Timestamp v) throws IOException, SQLException
+    public void timestampValue(final Instant v) throws IOException, SQLException
     {
         batch.setNString(timestampFormatter.format(v));
     }

@@ -1,14 +1,13 @@
 package org.embulk.output.jdbc;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.embulk.spi.Column;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
-
 
 /**
  * Record read by PageReader.
@@ -62,9 +61,9 @@ public class PageReaderRecord implements Record
         return save(column, pageReader.getString(column));
     }
 
-    public Timestamp getTimestamp(Column column)
+    public Instant getTimestamp(Column column)
     {
-        return save(column, pageReader.getTimestamp(column));
+        return save(column, pageReader.getTimestamp(column).getInstant());
     }
 
     public Value getJson(Column column)
@@ -93,4 +92,3 @@ public class PageReaderRecord implements Record
         return value;
     }
 }
-

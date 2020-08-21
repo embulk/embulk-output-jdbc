@@ -8,11 +8,11 @@ import java.sql.Types;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.spi.Exec;
-import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcColumnOption;
 import org.embulk.config.ConfigException;
+import org.embulk.util.timestamp.TimestampFormatter;
 
 public class ColumnSetterFactory
 {
@@ -77,28 +77,11 @@ public class ColumnSetterFactory
         }
     }
 
-    private static interface FormatterIntlTask extends Task, TimestampFormatter.Task {}
-    private static interface FormatterIntlColumnOption extends Task, TimestampFormatter.TimestampColumnOption {}
-
     protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
-        // TODO: Switch to a newer TimestampFormatter constructor after a reasonable interval.
-        // Traditional constructor is used here for compatibility.
-        final ConfigSource configSource = Exec.newConfigSource();
-        configSource.set("format", option.getTimestampFormat().getFormat());
-        configSource.set("timezone", getTimeZone(option));
-
-        final FormatterIntlTask task = Exec.newConfigSource().loadConfig(FormatterIntlTask.class);
-        final Optional<? extends TimestampFormatter.TimestampColumnOption> columnOption =
-                Optional.ofNullable(configSource.loadConfig(FormatterIntlColumnOption.class));
-
-        return TimestampFormatter.of(
-                columnOption.isPresent()
-                        ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
-                        : task.getDefaultTimestampFormat(),
-                columnOption.isPresent()
-                        ? columnOption.get().getTimeZoneId().or(task.getDefaultTimeZoneId())
-                        : task.getDefaultTimeZoneId());
+        final String format = option.getTimestampFormat();
+        final String timezone = option.getTimeZone().orElse(this.defaultTimeZone);
+        return TimestampFormatter.builder(format, true).setDefaultZoneFromString(timezone).build();
     }
 
     protected Calendar newCalendar(JdbcColumnOption option)
