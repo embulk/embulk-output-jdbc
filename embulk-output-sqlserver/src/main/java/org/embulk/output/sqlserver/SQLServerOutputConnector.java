@@ -10,8 +10,8 @@ import java.util.Properties;
 import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.AbstractJdbcOutputConnector;
 import org.embulk.output.jdbc.TransactionIsolation;
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -19,7 +19,7 @@ import com.google.common.base.Optional;
 public class SQLServerOutputConnector
         extends AbstractJdbcOutputConnector
 {
-    private final Logger logger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(SQLServerOutputConnector.class);
 
     private final String url;
     private final Properties properties;

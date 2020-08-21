@@ -12,15 +12,14 @@ import java.sql.Statement;
 import java.util.Locale;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-
-import org.embulk.spi.Exec;
 
 public class JdbcOutputConnection
         implements AutoCloseable
 {
-    protected final Logger logger = Exec.getLogger(JdbcOutputConnection.class);
+    protected static final Logger logger = LoggerFactory.getLogger(JdbcOutputConnection.class);
     protected final Connection connection;
     protected final String schemaName;
     protected final DatabaseMetaData databaseMetaData;

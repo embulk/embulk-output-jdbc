@@ -11,13 +11,13 @@ import org.embulk.output.jdbc.JdbcOutputConnection;
 import org.embulk.output.jdbc.JdbcSchema;
 import org.embulk.output.jdbc.MergeConfig;
 import org.embulk.output.jdbc.TableIdentifier;
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RedshiftOutputConnection
         extends JdbcOutputConnection
 {
-    private final Logger logger = Exec.getLogger(RedshiftOutputConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedshiftOutputConnection.class);
 
     public RedshiftOutputConnection(Connection connection, String schemaName)
             throws SQLException

@@ -15,15 +15,15 @@ import org.embulk.output.jdbc.StandardBatchInsert;
 import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.TimestampFormat;
 import org.embulk.output.sqlserver.nativeclient.NativeClientWrapper;
-import org.embulk.spi.Exec;
 import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
 public class NativeBatchInsert implements BatchInsert
 {
-    private final Logger logger = Exec.getLogger(StandardBatchInsert.class);
+    private static final Logger logger = LoggerFactory.getLogger(StandardBatchInsert.class);
 
     private NativeClientWrapper client = new NativeClientWrapper();
 

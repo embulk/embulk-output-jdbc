@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import org.embulk.spi.Exec;
 import org.embulk.util.aws.credentials.AwsCredentials;
 import org.embulk.util.aws.credentials.AwsCredentialsTaskWithPrefix;
 import org.embulk.config.Config;
@@ -26,7 +26,7 @@ import org.embulk.output.redshift.RedshiftCopyBatchInsert;
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
 {
-    private final Logger logger = Exec.getLogger(RedshiftOutputPlugin.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedshiftOutputPlugin.class);
 
     public interface RedshiftPluginTask extends AwsCredentialsTaskWithPrefix, PluginTask
     {

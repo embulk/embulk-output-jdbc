@@ -1,8 +1,7 @@
 package org.embulk.output;
 
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
-
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -19,7 +18,7 @@ public class MySQLTimeZoneComparison {
 
     private Connection connection;
 
-    private final Logger logger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(MySQLTimeZoneComparison.class);
 
     public MySQLTimeZoneComparison(Connection connection)
     {
