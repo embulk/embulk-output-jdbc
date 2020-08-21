@@ -17,7 +17,6 @@ import org.embulk.output.sqlserver.InsertMethod;
 import org.embulk.output.sqlserver.NativeBatchInsert;
 import org.embulk.output.sqlserver.SQLServerOutputConnector;
 import org.embulk.output.sqlserver.setter.SQLServerColumnSetterFactory;
-import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -300,7 +299,7 @@ public class SQLServerOutputPlugin
     }
 
     @Override
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
     {
         return new SQLServerColumnSetterFactory(batch, defaultTimeZone);
     }

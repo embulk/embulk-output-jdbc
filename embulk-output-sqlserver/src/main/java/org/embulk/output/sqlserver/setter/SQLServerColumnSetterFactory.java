@@ -8,12 +8,11 @@ import org.embulk.output.jdbc.JdbcColumnOption;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.setter.StringColumnSetter;
-import org.joda.time.DateTimeZone;
 
 public class SQLServerColumnSetterFactory
         extends ColumnSetterFactory
 {
-    public SQLServerColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    public SQLServerColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
     {
         super(batch, defaultTimeZone);
     }

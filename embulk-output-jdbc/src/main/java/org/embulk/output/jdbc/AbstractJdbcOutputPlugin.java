@@ -21,6 +21,8 @@ import java.sql.Types;
 import java.sql.ResultSet;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -28,7 +30,6 @@ import org.embulk.spi.util.RetryExecutor;
 import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -105,7 +106,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public DateTimeZone getDefaultTimeZone();
+        public String getDefaultTimeZone();
 
         @Config("retry_limit")
         @ConfigDefault("12")
@@ -413,6 +414,13 @@ public abstract class AbstractJdbcOutputPlugin
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(getTaskClass());
+
+        // Invalid timezones should fail immediately when configuring.
+        throwAgainstInvalidTimeZone(task.getDefaultTimeZone());
+        for (final JdbcColumnOption option : task.getColumnOptions().values()) {
+            throwAgainstInvalidTimeZone(option.getTimeZone().orElse(null));
+        }
+
         Features features = getFeatures(task);
         task.setFeatures(features);
 
@@ -633,7 +641,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected ColumnSetterFactory newColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
     {
         return new ColumnSetterFactory(batch, defaultTimeZone);
     }
@@ -1268,6 +1276,17 @@ public abstract class AbstractJdbcOutputPlugin
                 .withRetryLimit(task.getRetryLimit())
                 .withInitialRetryWait(task.getRetryWait())
                 .withMaxRetryWait(task.getMaxRetryWait());
+    }
+
+    private static void throwAgainstInvalidTimeZone(final String timezone) {
+        if (timezone == null) {
+            return;
+        }
+        try {
+            ZoneId.of(timezone);
+        } catch (final DateTimeException ex) {
+            throw new ConfigException("Time zone '" + timezone + "' is not recognised.", ex);
+        }
     }
 
     class RetryableSQLExecution implements Retryable<Void> {

@@ -2,9 +2,9 @@ package org.embulk.output.jdbc.setter;
 
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.Optional;
 import java.sql.Types;
-import org.joda.time.DateTimeZone;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.spi.Exec;
@@ -17,9 +17,9 @@ import org.embulk.config.ConfigException;
 public class ColumnSetterFactory
 {
     protected final BatchInsert batch;
-    protected final DateTimeZone defaultTimeZone;
+    protected final String defaultTimeZone;
 
-    public ColumnSetterFactory(BatchInsert batch, DateTimeZone defaultTimeZone)
+    public ColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
     {
         this.batch = batch;
         this.defaultTimeZone = defaultTimeZone;
@@ -103,10 +103,10 @@ public class ColumnSetterFactory
 
     protected Calendar newCalendar(JdbcColumnOption option)
     {
-        return Calendar.getInstance(getTimeZone(option).toTimeZone(), Locale.ENGLISH);
+        return Calendar.getInstance(TimeZone.getTimeZone(getTimeZone(option)), Locale.ENGLISH);
     }
 
-    protected DateTimeZone getTimeZone(JdbcColumnOption option)
+    protected String getTimeZone(JdbcColumnOption option)
     {
         return option.getTimeZone().orElse(defaultTimeZone);
     }
