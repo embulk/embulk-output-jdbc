@@ -1,22 +1,17 @@
 package org.embulk.output.mysql;
 
-import static java.util.Locale.ENGLISH;
-import static org.embulk.test.EmbulkTests.readSortedFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
+import org.apache.commons.lang3.StringUtils;
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
-import org.embulk.test.TestingEmbulk;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import static java.util.stream.Collectors.joining;
 
 public class MySQLTests
 {
@@ -36,48 +31,47 @@ public class MySQLTests
         return DriverManager.getConnection(url, config.get(String.class, "user"), config.get(String.class, "password"));
     }
 
-    public static void execute(String sql)
+    public static String executeQuery(String sql)
     {
-        ConfigSource config = baseConfig();
+        StringBuilder result = new StringBuilder();
+        try (Connection conn = connect();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery();
+        ) {
+            while (resultSet.next()) {
+                result.append(resultSet.getString(1)).append(System.lineSeparator());
+            }
 
-        ImmutableList.Builder<String> args = ImmutableList.builder();
-        args.add("mysql")
-                .add("-u")
-                .add(config.get(String.class, "user"));
-        if (!config.get(String.class, "password").isEmpty()) {
-            args.add("-p" + config.get(String.class, "password"));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        args
-                .add("-h")
-                .add(config.get(String.class, "host"))
-                .add("-P")
-                .add(config.get(String.class, "port", "3306"))
-                .add(config.get(String.class, "database"))
-                .add("-e")
-                .add(sql);
+        return result.toString();
+    }
 
-        ProcessBuilder pb = new ProcessBuilder(args.build());
-        pb.redirectErrorStream(true);
-        int code;
-        try {
-            Process process = pb.start();
-            ByteStreams.copy(process.getInputStream(), System.out);
-            code = process.waitFor();
-        } catch (IOException | InterruptedException ex) {
-            throw Throwables.propagate(ex);
-        }
-        if (code != 0) {
-            throw new RuntimeException(String.format(ENGLISH,
-                    "Command finished with non-zero exit code. Exit code is %d.", code));
+    /**
+     * execute sql content file
+     *
+     * @param sqlContent
+     */
+    public static void execute(String sqlContent)
+    {
+        try (Connection conn = connect()) {
+            for (String s : sqlContent.split(";")) {
+                if (StringUtils.isBlank(s)) {
+                    continue;
+                }
+                try (PreparedStatement preparedStatement = conn.prepareStatement(s)) {
+                    preparedStatement.execute();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
+    public static String selectRecords(String tableName, List<String> columnList)
     {
-        Path temp = embulk.createTempFile("txt");
-        Files.delete(temp);
-        // test user needs FILE privilege
-        execute("select * from " + tableName + " into outfile '" + temp.toString().replace("\\", "\\\\") + "' fields terminated by ','");
-        return readSortedFile(temp);
+        final String cols = columnList.stream().collect((joining(",")));
+        return executeQuery(String.format("SELECT concat(CONCAT_WS(',', %s)) from %s", cols, tableName));
     }
 }

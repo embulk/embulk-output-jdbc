@@ -121,3 +121,7 @@ out:
 ```
 $ ./gradlew gem
 ```
+
+```
+$ EMBULK_OUTPUT_DB2_TEST_CONFIG=`pwd`/ci/db2.yml ./gradlew :embulk-output-db2:check --info
+```

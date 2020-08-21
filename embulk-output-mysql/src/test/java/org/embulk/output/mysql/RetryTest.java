@@ -14,6 +14,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -377,4 +378,8 @@ public class RetryTest
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
+    private String selectRecords(TestingEmbulk embulk, String tableName)
+    {
+        return MySQLTests.selectRecords(tableName, Arrays.asList("id", "num"));
+    }
 }

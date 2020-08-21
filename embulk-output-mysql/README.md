@@ -149,5 +149,5 @@ password: pass
 ```
 
 ```
-$ EMBULK_OUTPUT_MYSQL_TEST_CONFIG=mysql.yml ./gradlew :embulk-output-mysql:check --info
+$ EMBULK_OUTPUT_MYSQL_TEST_CONFIG=`pwd`/ci/mysql.yml ./gradlew :embulk-output-mysql:check --info
 ```

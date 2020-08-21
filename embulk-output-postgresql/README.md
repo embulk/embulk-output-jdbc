@@ -127,3 +127,7 @@ out:
 ```
 $ ./gradlew gem
 ```
+
+```
+$ EMBULK_OUTPUT_POSTGRESQL_TEST_CONFIG=`pwd`/ci/postgresql.yml ./gradlew :embulk-output-postgresql:check --info
+```
