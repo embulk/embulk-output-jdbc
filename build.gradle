@@ -2,12 +2,12 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'com.jfrog.bintray' version '1.8.4'
-    id 'com.github.jruby-gradle.base' version '1.6.0'
+    id "com.jfrog.bintray" version "1.8.4" apply false
     id 'java'
+    id "maven-publish"
     id 'checkstyle'
+    id "org.embulk.embulk-plugins" version "0.4.2" apply false
 }
-import com.github.jrubygradle.JRubyExec
 
 def bintrayReleaseProjects = [
     project(":embulk-output-jdbc"),
@@ -15,48 +15,16 @@ def bintrayReleaseProjects = [
 
 allprojects {
     group = 'org.embulk.output.jdbc'
-    version = '0.8.7'
-
-    apply plugin: 'com.jfrog.bintray'
-    apply plugin: 'maven-publish'
-
-    bintray {
-        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
-        // bintray_user=frsyuki
-        // bintray_api_key=xxxxxxxxxxx
-        user = project.hasProperty('bintray_user') ? bintray_user : ''
-        key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
-
-        publications = ['bintrayMavenRelease']
-
-        dryRun = !bintrayReleaseProjects.contains(project)
-        publish = true
-
-        pkg {
-            userOrg = 'embulk-output-jdbc'
-            repo = 'maven'
-            name = project.name
-            desc = 'MySQL, PostgreSQL, Redshift and generic JDBC output plugins for Embulk'
-            websiteUrl = 'https://github.com/embulk/embulk-output-jdbc'
-            issueTrackerUrl = 'https://github.com/embulk/embulk-output-jdbc/issues'
-            vcsUrl = 'https://github.com/embulk/embulk-output-jdbc.git'
-            licenses = ['Apache-2.0']
-            labels = ['embulk', 'java']
-            publicDownloadNumbers = true
-
-            version {
-                name = project.version
-            }
-        }
-    }
+    version = "0.9.0"
+    description = "Inserts or updates records to a table."
 }
 
 subprojects {
-    apply plugin: 'maven'  // install jar files to the local repo: $ gradle install
     apply plugin: 'java'
-    apply plugin: 'findbugs'
+    apply plugin: "maven-publish"
+    apply plugin: "com.jfrog.bintray"
+    apply plugin: "org.embulk.embulk-plugins"
     //apply plugin: 'jacoco'
-    apply plugin: 'com.github.jruby-gradle.base'
 
     repositories {
         mavenCentral()
@@ -68,7 +36,6 @@ subprojects {
     }
 
     configurations {
-        provided
         defaultJdbcDriver
     }
 
@@ -76,25 +43,21 @@ subprojects {
     targetCompatibility = 1.8
 
     dependencies {
-        compile  'org.embulk:embulk-core:0.9.20'
-        provided 'org.embulk:embulk-core:0.9.20'
-        testCompile 'org.embulk:embulk-test:0.9.20'
-        testCompile 'org.embulk:embulk-standards:0.9.20'
+        compileOnly "org.embulk:embulk-core:0.9.23"
+
+        testCompile "org.embulk:embulk-core:0.9.23"
+        testCompile "org.embulk:embulk-test:0.9.23"
+        testCompile "org.embulk:embulk-standards:0.9.23"
+        testCompile "org.embulk:embulk-deps-buffer:0.9.23"
+        testCompile "org.embulk:embulk-deps-config:0.9.23"
     }
 
     tasks.withType(JavaCompile) {
-        options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
         options.encoding = 'UTF-8'
     }
-    tasks.withType(FindBugs) {
-        reports {
-            xml.enabled = false
-            html.enabled = true
-        }
-    }
 
-    findbugs {
-        ignoreFailures = true
+    test {
     }
 
     javadoc {
@@ -102,21 +65,6 @@ subprojects {
             locale = 'en_US'
             encoding = 'UTF-8'
         }
-    }
-
-    task classpath(type: Copy, dependsOn: ["jar"]) {
-        doFirst { file('classpath').deleteDir() }
-        from (configurations.runtime - configurations.provided - configurations.defaultJdbcDriver + files(jar.archivePath))
-        into 'classpath'
-    }
-    task defaultJdbcDriver(type: Copy, dependsOn: ["jar"]) {
-        doFirst { file('default_jdbc_driver').deleteDir() }
-        from (configurations.defaultJdbcDriver)
-        into 'default_jdbc_driver'
-    }
-    clean {
-        delete 'classpath'
-        delete 'default_jdbc_driver'
     }
 
     checkstyle {
@@ -136,11 +84,21 @@ subprojects {
         source = sourceSets.main.allJava + sourceSets.test.allJava
     }
 
-    task gem(type: JRubyExec, dependsOn: ['build', 'gemspec', 'classpath', 'defaultJdbcDriver']) {
-        jrubyArgs '-rrubygems/gem_runner', "-eGem::GemRunner.new.run(ARGV)", 'build'
-        scriptArgs "${project.projectDir.absolutePath}/build/gemspec"
-        doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "${parent.projectDir}/pkg") }
+    gem {
+        authors = [ "Sadayuki Furuhashi" ]
+        email = [ "frsyuki@gmail.com" ]
+        summary = "JDBC output plugin for Embulk"
+        homepage = "https://github.com/embulk/embulk-output-jdbc"
+        licenses = [ "Apache-2.0" ]
+
+        into("default_jdbc_driver") {
+            from configurations.defaultJdbcDriver
+        }
     }
+
+    gemPush {
+        host = "https://rubygems.org"
+     }
 
     // add tests/javadoc/source jar tasks as artifacts to be released
     task testsJar(type: Jar, dependsOn: classes) {
@@ -161,11 +119,44 @@ subprojects {
 
     publishing {
         publications {
-            bintrayMavenRelease(MavenPublication) {
-                from components.java
+            embulkPluginMaven(MavenPublication) {  // Publish it with "publishEmbulkPluginMavenPublicationTo???Repository".
+                from components.java  // Must be "components.java". The dependency modification works only for it.
                 artifact testsJar
                 artifact sourcesJar
                 artifact javadocJar
+            }
+        }
+        repositories {
+            // TODO: Configure some public Maven repo(s).
+        }
+    }
+
+    bintray {
+        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
+        // bintray_user=frsyuki
+        // bintray_api_key=xxxxxxxxxxx
+        user = project.hasProperty('bintray_user') ? bintray_user : ''
+        key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
+
+        publications = [ "embulkPluginMaven" ]
+
+        dryRun = !bintrayReleaseProjects.contains(project)
+        publish = true
+
+        pkg {
+            userOrg = 'embulk-output-jdbc'
+            repo = 'maven'
+            name = project.name
+            desc = 'MySQL, PostgreSQL, Redshift and generic JDBC output plugins for Embulk'
+            websiteUrl = 'https://github.com/embulk/embulk-output-jdbc'
+            issueTrackerUrl = 'https://github.com/embulk/embulk-output-jdbc/issues'
+            vcsUrl = 'https://github.com/embulk/embulk-output-jdbc.git'
+            licenses = ['Apache-2.0']
+            labels = ['embulk', 'java']
+            publicDownloadNumbers = true
+
+            version {
+                name = project.version
             }
         }
     }
@@ -189,39 +180,5 @@ subprojects {
                 }
             }
         }
-    }
-
-    task gemspec {
-        doLast {
-            file('build').mkdirs();
-            file('build/gemspec').write($/
-Gem::Specification.new do |spec|
-  spec.name          = "${project.name}"
-  spec.version       = "${project.version}"
-  spec.authors       = ["Sadayuki Furuhashi"]
-  spec.summary       = %[JDBC output plugin for Embulk]
-  spec.description   = %[Inserts or updates records to a table.]
-  spec.email         = ["frsyuki@gmail.com"]
-  spec.licenses      = ["Apache 2.0"]
-  spec.homepage      = "https://github.com/embulk/embulk-output-jdbc"
-
-  spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"] + Dir["default_jdbc_driver/*.jar"]
-  spec.test_files    = spec.files.grep(%r"^(test|spec)/")
-  spec.require_paths = ["lib"]
-end
-/$)
-        }
-    }
-}
-
-task gempush {
-    doLast {
-        "gem push pkg/embulk-output-jdbc-${project.version}.gem".execute().waitFor()
-        "gem push pkg/embulk-output-mysql-${project.version}.gem".execute().waitFor()
-        "gem push pkg/embulk-output-postgresql-${project.version}.gem".execute().waitFor()
-        "gem push pkg/embulk-output-redshift-${project.version}.gem".execute().waitFor()
-        "gem push pkg/embulk-output-oracle-${project.version}.gem".execute().waitFor()
-        "gem push pkg/embulk-output-sqlserver-${project.version}.gem".execute().waitFor()
-        "gem push pkg/embulk-output-db2-${project.version}.gem".execute().waitFor()
     }
 }

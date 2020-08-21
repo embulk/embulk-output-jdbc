@@ -1,6 +1,14 @@
 dependencies {
-    compile project(':embulk-output-jdbc')
-    compile 'mysql:mysql-connector-java:5.1.44'
+    compile(project(path: ":embulk-output-jdbc", configuration: "runtimeElements"))
+
+    compileOnly "mysql:mysql-connector-java:5.1.44"
     defaultJdbcDriver 'mysql:mysql-connector-java:5.1.44'
 
+    testCompile "mysql:mysql-connector-java:5.1.44"
+}
+
+embulkPlugin {
+    mainClass = "org.embulk.output.MySQLOutputPlugin"
+    category = "output"
+    type = "mysql"
 }

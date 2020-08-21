@@ -1,10 +1,30 @@
 dependencies {
-    compile project(':embulk-output-jdbc')
-    compile project(':embulk-output-postgresql')
+    compile(project(path: ":embulk-output-jdbc", configuration: "runtimeElements"))
+    compile(project(path: ":embulk-output-postgresql", configuration: "runtimeElements"))
+    compile "org.postgresql:postgresql:9.4-1205-jdbc41"
 
-    compile "com.amazonaws:aws-java-sdk-s3:1.11.523"
-    compile "com.amazonaws:aws-java-sdk-sts:1.11.523"
-    compile 'org.embulk.input.s3:embulk-util-aws-credentials:0.2.21'
+    compile("com.amazonaws:aws-java-sdk-s3:1.11.523") {
+        exclude group: "joda-time", module: "joda-time"
+        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
+        exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
+        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
+    }
+    compile("com.amazonaws:aws-java-sdk-sts:1.11.523") {
+        exclude group: "joda-time", module: "joda-time"
+        exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
+        exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
+        exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
+    }
+    compile("org.embulk.input.s3:embulk-util-aws-credentials:0.2.21") {
+        exclude group: "org.embulk", module: "embulk-core"
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
 
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
+}
+
+embulkPlugin {
+    mainClass = "org.embulk.output.RedshiftOutputPlugin"
+    category = "output"
+    type = "redshift"
 }
