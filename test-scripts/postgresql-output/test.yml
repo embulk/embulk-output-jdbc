@@ -1,0 +1,25 @@
+in:
+  type: file
+  path_prefix: 'data/test.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    header_line: true
+    columns:
+    - {name: id, type: long}
+    - {name: num, type: string}
+    - {name: str, type: string}
+    - {name: varstr, type: string}
+    - {name: dt, type: timestamp, format: '%Y-%m-%d', timezone: "+0900"}
+    - {name: dttm0, type: timestamp, format: '%Y-%m-%d %H:%M:%S', timezone: "+0900"}
+    - {name: dttm3, type: timestamp, format: '%Y-%m-%d %H:%M:%S.%N', timezone: "+0900"}
+out:
+    type: postgresql
+    host: localhost
+    database: testdb
+    user: test_user
+    password: XXXXXXXX
+    table: embulk_output
+    mode: insert
