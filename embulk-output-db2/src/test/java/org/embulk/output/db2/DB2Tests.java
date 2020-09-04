@@ -61,13 +61,13 @@ public class DB2Tests
                 result.append(metaData.getColumnName(i)).append(" ");
             }
             result.setLength(result.length() - 1);
-            result.append(System.lineSeparator());
+            result.append("\n");
             while (resultSet.next()) {
                 for (int i = 1; i <= columnCount; i++) {
                     result.append(resultSet.getString(i)).append(" ");
                 }
                 result.setLength(result.length() - 1);
-                result.append(System.lineSeparator());
+                result.append("\n");
             }
 
         } catch (SQLException e) {
