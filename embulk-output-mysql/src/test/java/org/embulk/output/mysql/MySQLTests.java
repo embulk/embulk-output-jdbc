@@ -39,7 +39,7 @@ public class MySQLTests
              ResultSet resultSet = preparedStatement.executeQuery();
         ) {
             while (resultSet.next()) {
-                result.append(resultSet.getString(1)).append(System.lineSeparator());
+                result.append(resultSet.getString(1)).append("\n");
             }
 
         } catch (SQLException e) {
