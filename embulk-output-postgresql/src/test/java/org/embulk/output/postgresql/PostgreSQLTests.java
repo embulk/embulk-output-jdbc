@@ -10,9 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import jnr.ffi.Platform;
-import jnr.ffi.Platform.OS;
-
 import org.embulk.config.ConfigSource;
 
 import static java.util.Locale.ENGLISH;
@@ -35,7 +32,7 @@ public class PostgreSQLTests
                 "--host", config.get(String.class, "host"),
                 "--username", config.get(String.class, "user"),
                 "--dbname", config.get(String.class, "database"),
-                "-c", convert(sql));
+                "-c", sql);
         pb.environment().put("PGPASSWORD", config.get(String.class, "password"));
         pb.redirectErrorStream(true);
         int code;
@@ -50,15 +47,6 @@ public class PostgreSQLTests
             throw new RuntimeException(String.format(ENGLISH,
                         "Command finished with non-zero exit code. Exit code is %d.", code));
         }
-    }
-
-    private static String convert(String sql)
-    {
-        if (Platform.getNativePlatform().getOS().equals(OS.WINDOWS)) {
-            // '"' should be '\"' and '\' should be '\\' in Windows
-            return sql.replace("\\\\", "\\").replace("\\", "\\\\").replace("\"", "\\\"");
-        }
-        return sql;
     }
 
     public static String selectRecords(TestingEmbulk embulk, String tableName) throws IOException
