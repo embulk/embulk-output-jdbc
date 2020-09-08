@@ -64,10 +64,6 @@ echo "sqlserver-output/test-jtds.bat"
 call test-jtds.bat >> %LOG%
 echo "sqlserver-output/test-native.bat"
 call test-native.bat >> %LOG%
-echo "sqlserver-output/test-merge1.bat"
-call test-merge1.bat >> %LOG%
-echo "sqlserver-output/test-merge2.bat"
-call test-merge2.bat >> %LOG%
 echo "sqlserver-output/test-temp-schema.bat"
 call test-temp-schema.bat >> %LOG%
 echo "sqlserver-output/test-replace-temp-schema.bat"
