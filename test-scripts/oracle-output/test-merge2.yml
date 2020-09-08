@@ -1,0 +1,23 @@
+in:
+  type: file
+  path_prefix: 'data/test-merge2.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    header_line: true
+    columns:
+    - {name: ID, type: long}
+    - {name: CODE, type: string}
+    - {name: VALUE, type: string}
+out:
+  type: oracle
+  driver_path: 'driver/ojdbc7.jar'
+  host: localhost
+  database: TESTDB
+  user: TEST_USER
+  password: XXXXXXXX
+  table: EMBULK_OUTPUT
+  mode: merge
+  merge_keys: [CODE]

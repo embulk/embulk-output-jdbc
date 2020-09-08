@@ -1,0 +1,30 @@
+in:
+  type: file
+  path_prefix: 'data/test.csv'
+  parser:
+    charset: UTF-8
+    newline: CRLF
+    type: csv
+    delimiter: ','
+    header_line: true
+    columns:
+    - {name: ID, type: long}
+    - {name: NUM, type: string}
+    - {name: STR, type: string}
+    - {name: VARSTR, type: string}
+    - {name: DT, type: timestamp, format: '%Y-%m-%d', timezone: "+0900"}
+    - {name: DTTM, type: timestamp, format: '%Y-%m-%d %H:%M:%S.%N', timezone: "+0900"}
+    - {name: DTTM2, type: timestamp, format: '%Y-%m-%d %H:%M:%S.%N', timezone: "+0900"}
+    - {name: SDTTM, type: timestamp, format: '%Y-%m-%d %H:%M:%S', timezone: "+0900"}
+out:
+  type: sqlserver
+  host: localhost
+  driver_path: driver/sqljdbc41.jar
+  host: localhost
+  port: 1433
+  database: TESTDB
+  user: TEST_USER
+  password: XXXXXXXX
+  table: EMBULK_OUTPUT
+  schema: test
+  mode: replace
