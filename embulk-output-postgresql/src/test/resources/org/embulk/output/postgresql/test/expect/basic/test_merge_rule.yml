@@ -1,0 +1,4 @@
+table: test_merge
+mode: merge
+merge_rule: ["value1 = S.value1", "value2 = test_merge.value2 || S.value2"]
+

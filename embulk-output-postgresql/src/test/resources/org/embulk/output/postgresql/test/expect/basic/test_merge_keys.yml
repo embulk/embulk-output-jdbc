@@ -1,0 +1,4 @@
+table: test_merge
+mode: merge
+merge_keys:
+- value1
