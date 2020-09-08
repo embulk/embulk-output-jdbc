@@ -9,10 +9,6 @@ echo "mysql-output/test_replace.bat"
 call test_replace.bat >> %LOG%
 echo "mysql-output/test_merge.bat"
 call test_merge.bat >> %LOG%
-echo "mysql-output/test_after_load.bat"
-call test_after_load.bat >> %LOG%
-echo "mysql-output/test_before_load.bat"
-call test_before_load.bat >> %LOG%
 echo "mysql-output/test_temp_database.bat"
 call test_temp_database.bat >> %LOG%
 echo "mysql-output/test_temp_database-replace.bat"
