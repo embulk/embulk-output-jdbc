@@ -5,8 +5,6 @@ del %LOG%
 cd mysql-output
 echo "mysql-output/test.bat"
 call test.bat >> %LOG%
-echo "mysql-output/test_replace.bat"
-call test_replace.bat >> %LOG%
 echo "mysql-output/test_merge.bat"
 call test_merge.bat >> %LOG%
 echo "mysql-output/test_temp_database.bat"
