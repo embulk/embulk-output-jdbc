@@ -56,8 +56,6 @@ cd ..
 cd sqlserver-output
 echo "sqlserver-output/test.bat"
 call test.bat >> %LOG%
-echo "sqlserver-output/test-replace.bat"
-call test-replace.bat >> %LOG%
 echo "sqlserver-output/test-jtds.bat"
 call test-jtds.bat >> %LOG%
 echo "sqlserver-output/test-native.bat"
