@@ -30,10 +30,6 @@ echo "oracle-output/test-case.bat"
 call test-case.bat >> %LOG%
 echo "oracle-output/test-oci-case.bat"
 call test-oci-case.bat >> %LOG%
-echo "oracle-output/test-merge1.bat"
-call test-merge1.bat >> %LOG%
-echo "oracle-output/test-merge2.bat"
-call test-merge2.bat >> %LOG%
 echo "oracle-output/test-schema.bat"
 call test-schema.bat >> %LOG%
 echo "oracle-output/test-schema-oci.bat"
