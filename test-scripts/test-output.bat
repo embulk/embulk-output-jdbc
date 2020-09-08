@@ -18,8 +18,6 @@ echo "oracle-output/test-direct.bat"
 call test-direct.bat >> %LOG%
 echo "oracle-output/test-oci.bat"
 call test-oci.bat >> %LOG%
-echo "oracle-output/test-oci-n.bat"
-call test-oci-n.bat >> %LOG%
 echo "oracle-output/test-case.bat"
 call test-case.bat >> %LOG%
 echo "oracle-output/test-oci-case.bat"
