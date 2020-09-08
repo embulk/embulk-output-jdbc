@@ -39,8 +39,6 @@ cd ..
 cd postgresql-output
 echo "postgresql-output/test.bat"
 call test.bat >> %LOG%
-echo "postgresql-output/test-replace.bat"
-call test-replace.bat >> %LOG%
 echo "postgresql-output/test-temp-schema.bat"
 call test-temp-schema.bat >> %LOG%
 echo "postgresql-output/test-temp-schema-replace.bat"
