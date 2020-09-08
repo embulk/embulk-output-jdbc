@@ -20,8 +20,6 @@ echo "oracle-output/test.bat"
 call test.bat >> %LOG%
 echo "oracle-output/test-direct.bat"
 call test-direct.bat >> %LOG%
-echo "oracle-output/test-replace.bat"
-call test-replace.bat >> %LOG%
 echo "oracle-output/test-oci.bat"
 call test-oci.bat >> %LOG%
 echo "oracle-output/test-oci-n.bat"
