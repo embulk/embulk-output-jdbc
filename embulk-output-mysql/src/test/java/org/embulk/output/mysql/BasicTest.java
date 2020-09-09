@@ -60,7 +60,8 @@ public class BasicTest
     {
         Path in1 = toPath("test1.csv");
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
-        assertThat(selectRecords("test1", Arrays.asList("id", "num", "str", "varstr", "dt", "dttm0", "dttm3")), is(readResource("test_replace_expected.csv")));
+        // Multiple timestamp columns will cause the error "Invalid default value for <second timestamp column>".
+        assertThat(selectRecords("test1", Arrays.asList("id", "num", "str", "varstr", "dttm3")), is(readResource("test_replace_expected.csv")));
     }
 
     @Test
