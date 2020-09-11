@@ -1,7 +1,0 @@
-
-        ID CODE     VALUE                                                       
----------- -------- ----------------                                            
-         1 AAAA     aaa                                                         
-         2 XXXX     xxx                                                         
-         3 YYYY     yyy                                                         
-

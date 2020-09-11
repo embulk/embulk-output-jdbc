@@ -93,6 +93,39 @@ public class BasicTest
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
+    @Test
+    public void testMerge() throws Exception
+    {
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge.yml")), in1);
+        assertThat(selectRecords(embulk, "test_merge"), is(readResource("test_merge_expected.csv")));
+    }
+
+    @Test
+    public void testMergeWithKeys() throws Exception
+    {
+        Path in1 = toPath("test_merge_keys.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_keys.yml")), in1);
+        assertThat(selectRecords(embulk, "test_merge"), is(readResource("test_merge_keys_expected.csv")));
+    }
+
+    @Test
+    public void testMergeRule() throws Exception
+    {
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge_rule.yml")), in1);
+        assertThat(selectRecords(embulk, "test_merge"), is(readResource("test_merge_rule_expected.csv")));
+    }
+
+    @Test
+    public void testReplace() throws Exception
+    {
+        Path in1 = toPath("test_string.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        assertThat(selectRecords(embulk, "test_string"), is(readResource("test_replace_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
 
     private Path toPath(String fileName) throws URISyntaxException
     {

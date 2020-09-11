@@ -1,6 +1,7 @@
 package org.embulk.output.mysql;
 
 import static org.embulk.output.mysql.MySQLTests.execute;
+import static org.embulk.output.mysql.MySQLTests.selectRecords;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
@@ -52,6 +53,23 @@ public class BasicTest
     {
         baseConfig = MySQLTests.baseConfig();
         execute(readResource("setup.sql")); // setup rows
+    }
+
+    @Test
+    public void testReplace() throws Exception
+    {
+        Path in1 = toPath("test1.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_replace.yml")), in1);
+        // Multiple timestamp columns will cause the error "Invalid default value for <second timestamp column>".
+        assertThat(selectRecords("test1", Arrays.asList("id", "num", "str", "varstr", "dttm3")), is(readResource("test_replace_expected.csv")));
+    }
+
+    @Test
+    public void testMerge() throws Exception
+    {
+        Path in1 = toPath("test_merge.csv");
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_merge.yml")), in1);
+        assertThat(selectRecords("test_merge", Arrays.asList("id", "value1", "value2")), is(readResource("test_merge_expected.csv")));
     }
 
     @Test
