@@ -18,10 +18,18 @@ public class PostgreSQLOutputConnection
 {
     private static final int MAX_NUMERIC_PRECISION = 1000;
 
-    public PostgreSQLOutputConnection(Connection connection, String schemaName)
+    public PostgreSQLOutputConnection(Connection connection, String schemaName, String roleName)
             throws SQLException
     {
         super(connection, schemaName);
+
+        // SET ROLE changes execution role of the session. The same syntax is available
+        // in DB2. MySQL and Oracle support SET ROLE with some extensions. Redshift
+        // supports SET SESSION AUTHORIZATION for a similar but different purpose.
+        // SQL Server doesn't support SET ROLE.
+        if (roleName != null) {
+            setRole(roleName);
+        }
     }
 
     public String buildCopySql(TableIdentifier toTable, JdbcSchema toTableSchema)
@@ -279,4 +287,15 @@ public class PostgreSQLOutputConnection
         return sb.toString();
     }
 
+    protected void setRole(String roleName) throws SQLException
+    {
+        // Same procedure with JdbcOutputConnection.setSearchPath
+        Statement stmt = connection.createStatement();
+        try {
+            String sql = "SET ROLE " + quoteIdentifierString(roleName);
+            executeUpdate(stmt, sql);
+        } finally {
+            stmt.close();
+        }
+    }
 }

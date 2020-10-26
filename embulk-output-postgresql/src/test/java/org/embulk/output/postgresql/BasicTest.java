@@ -133,4 +133,14 @@ public class BasicTest
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
+    @Test
+    public void testSetRole() throws Exception
+    {
+        Path in1 = toPath("test_string.csv");
+        baseConfig.set("set_role", baseConfig.get(String.class, "user"));
+        TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig, in1);
+        assertThat(selectRecords(embulk, "test_string"), is(readResource("test_replace_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
+    }
+
 }

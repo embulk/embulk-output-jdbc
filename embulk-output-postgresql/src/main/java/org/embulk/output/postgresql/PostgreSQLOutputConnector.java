@@ -16,14 +16,16 @@ public class PostgreSQLOutputConnector
     private final String url;
     private final Properties properties;
     private final String schemaName;
+    private final String roleName;
 
     public PostgreSQLOutputConnector(String url, Properties properties, String schemaName,
-            Optional<TransactionIsolation> transactionIsolation)
+            Optional<TransactionIsolation> transactionIsolation, String roleName)
     {
         super(transactionIsolation);
         this.url = url;
         this.properties = properties;
         this.schemaName = schemaName;
+        this.roleName = roleName;
     }
 
     @Override
@@ -31,7 +33,7 @@ public class PostgreSQLOutputConnector
     {
         Connection c = DriverManager.getConnection(url, properties);
         try {
-            PostgreSQLOutputConnection con = new PostgreSQLOutputConnection(c, schemaName);
+            PostgreSQLOutputConnection con = new PostgreSQLOutputConnection(c, schemaName, roleName);
             c = null;
             return con;
         } finally {

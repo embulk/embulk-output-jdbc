@@ -58,6 +58,10 @@ public class PostgreSQLOutputPlugin
         @Config("ssl")
         @ConfigDefault("false")
         public boolean getSsl();
+
+        @Config("set_role")
+        @ConfigDefault("null")
+        public Optional<String> getSetRole();
     }
 
     @Override
@@ -113,7 +117,8 @@ public class PostgreSQLOutputPlugin
         props.setProperty("password", t.getPassword());
         logConnectionProperties(url, props);
 
-        return new PostgreSQLOutputConnector(url, props, t.getSchema(), t.getTransactionIsolation());
+        return new PostgreSQLOutputConnector(url, props, t.getSchema(), t.getTransactionIsolation(),
+                t.getSetRole().orElse(null));
     }
 
     @Override
