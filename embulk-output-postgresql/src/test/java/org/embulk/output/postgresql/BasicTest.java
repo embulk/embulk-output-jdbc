@@ -134,11 +134,11 @@ public class BasicTest
     }
 
     @Test
-    public void testSetRole() throws Exception
+    public void testRoleName() throws Exception
     {
         Path in1 = toPath("test_string.csv");
         ConfigSource config = baseConfig.merge(loadYamlResource(embulk, "test_string.yml"));
-        config.set("set_role", baseConfig.get(String.class, "user"));
+        config.set("role_name", baseConfig.get(String.class, "user"));
         TestingEmbulk.RunResult result1 = embulk.runOutput(config, in1);
         assertThat(selectRecords(embulk, "test_string"), is(readResource("test_string_expected.csv")));
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
