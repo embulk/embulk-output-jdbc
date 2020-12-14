@@ -4,3 +4,12 @@
 build/
 .idea
 *.iml
+
+
+# TODO: weida delete everything changed in gitignore
+embulk-output-redshift/**/*.yaml
+embulk-output-redshift/**/*.csv
+embulk-output-redshift/.java-version
+embulk-output-redshift/errors/**
+embulk-output-redshift/tmp/**
+**/.DS_Store

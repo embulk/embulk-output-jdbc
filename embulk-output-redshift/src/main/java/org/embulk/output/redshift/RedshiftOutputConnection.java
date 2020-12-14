@@ -75,6 +75,7 @@ public class RedshiftOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
+            logger.warn("UUID weida sql: {}", sql); // TODO: weida revert here
             stmt.executeUpdate(sql);
         } finally {
             stmt.close();
