@@ -80,7 +80,7 @@ public class RedshiftCopyBatchInsert
         this.iamReaderUserName = iamReaderUserName;
         this.deleteS3TempFile = deleteS3TempFile;
         this.credentialsProvider = credentialsProvider;
-        this.s3 = new AmazonS3Client(credentialsProvider);
+        this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
         this.executorService = Executors.newFixedThreadPool(threadMaximum);
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
