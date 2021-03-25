@@ -67,7 +67,7 @@ public class RedshiftCopyBatchInsert
 
     public RedshiftCopyBatchInsert(JdbcOutputConnector connector,
             AWSCredentialsProvider credentialsProvider, String s3BucketName, String s3KeyPrefix,
-            String iamReaderUserName, boolean deleteS3TempFile, String copyIamRoleName, String copyAwsAccountId) throws IOException, SQLException
+            String iamReaderUserName, boolean deleteS3TempFile, String copyIamRoleName, String copyAwsAccountId, int threadMaximum) throws IOException, SQLException
     {
         super();
         this.connector = connector;
@@ -80,9 +80,9 @@ public class RedshiftCopyBatchInsert
         this.iamReaderUserName = iamReaderUserName;
         this.deleteS3TempFile = deleteS3TempFile;
         this.credentialsProvider = credentialsProvider;
-        this.s3 = new AmazonS3Client(credentialsProvider);  // TODO options
+        this.s3 = new AmazonS3Client(credentialsProvider);
         this.sts = new AWSSecurityTokenServiceClient(credentialsProvider);  // options
-        this.executorService = Executors.newCachedThreadPool();
+        this.executorService = Executors.newFixedThreadPool(threadMaximum);
         this.uploadAndCopyFutures = new ArrayList<Future<Void>>();
 
         String s3RegionName = null;
