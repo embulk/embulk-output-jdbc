@@ -1,15 +1,17 @@
 package org.embulk.output.jdbc;
 
-import java.util.Calendar;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.BatchUpdateException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Date;
 import java.sql.Time;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,28 +186,31 @@ public class StandardBatchInsert
         nextColumn(v.length + 4);
     }
 
-    public void setSqlDate(final Instant v, final Calendar cal) throws IOException, SQLException
+    public void setSqlDate(final Instant v, final ZoneId zone) throws IOException, SQLException
     {
         // JavaDoc of java.sql.Time says:
         // >> To conform with the definition of SQL DATE, the millisecond values wrapped by a java.sql.Date instance must be 'normalized' by setting the hours, minutes, seconds, and milliseconds to zero in the particular time zone with which the instance is associated.
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         cal.setTimeInMillis(v.getEpochSecond() * 1000);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.HOUR_OF_DAY, 0);
-        Date normalized = new Date(cal.getTimeInMillis());
+        final java.sql.Date normalized = new java.sql.Date(cal.getTimeInMillis());
         batch.setDate(index, normalized, cal);
         nextColumn(32);
     }
 
-    public void setSqlTime(final Instant v, final Calendar cal) throws IOException, SQLException
+    public void setSqlTime(final Instant v, final ZoneId zone) throws IOException, SQLException
     {
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         Time t = new Time(v.toEpochMilli());
         batch.setTime(index, t, cal);
         nextColumn(32);
     }
 
-    public void setSqlTimestamp(final Instant v, final Calendar cal) throws IOException, SQLException
+    public void setSqlTimestamp(final Instant v, final ZoneId zone) throws IOException, SQLException
     {
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         java.sql.Timestamp t = new java.sql.Timestamp(v.toEpochMilli());
         t.setNanos(v.getNano());
         batch.setTimestamp(index, t, cal);

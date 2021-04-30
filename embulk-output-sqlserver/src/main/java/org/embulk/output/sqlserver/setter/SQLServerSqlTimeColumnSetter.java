@@ -2,8 +2,8 @@ package org.embulk.output.sqlserver.setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.time.Instant;
+import java.time.ZoneId;
 
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -15,15 +15,15 @@ public class SQLServerSqlTimeColumnSetter
 {
     public SQLServerSqlTimeColumnSetter(BatchInsert batch, JdbcColumn column,
             DefaultValueSetter defaultValue,
-            Calendar calendar)
+            ZoneId zone)
     {
-        super(batch, column, defaultValue, calendar);
+        super(batch, column, defaultValue, zone);
     }
 
     @Override
     public void timestampValue(final Instant v) throws IOException, SQLException
     {
         // fractional precision of SQLServer TIME is 7, but that of java.sql.Time is only 3.
-        batch.setSqlTimestamp(v, calendar);
+        batch.setSqlTimestamp(v, this.zone);
     }
 }

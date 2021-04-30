@@ -1,6 +1,5 @@
 package org.embulk.output.postgresql;
 
-import java.util.Calendar;
 import java.util.Locale;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -10,7 +9,16 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.TimeZone;
 import org.embulk.output.jdbc.BatchInsert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractPostgreSQLCopyBatchInsert
         implements BatchInsert
@@ -25,6 +33,14 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
     protected BufferedWriter writer;
     protected int index;
     protected int batchRows;
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractPostgreSQLCopyBatchInsert.class);
+
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(
+            "HH':'mm':'ss'.'SSSSSS", Locale.ROOT);
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern(
+            "uuuu'/'MM'/'dd' 'HH':'mm':'ss'.'SSSSSSZZZ", Locale.ROOT);
+
 
     protected AbstractPostgreSQLCopyBatchInsert() throws IOException
     {
@@ -157,32 +173,64 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
         setEscapedString(String.valueOf(v));
     }
 
-    public void setSqlDate(final Instant v, final Calendar cal) throws IOException
+    public void setSqlDate(final Instant v, final ZoneId zone) throws IOException
     {
         appendDelimiter();
+
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         cal.setTimeInMillis(v.getEpochSecond() * 1000);
         String f = String.format(Locale.ENGLISH, "%02d-%02d-%02d",
                 cal.get(Calendar.YEAR),
                 cal.get(Calendar.MONTH) + 1,
                 cal.get(Calendar.DAY_OF_MONTH));
+
+        // Creating another formatted string based on java.time. It will replace the java-util-based one once confirmed.
+        final String formatted;
+        final ZoneId zoneNormalized = zone.normalized();
+        if (zoneNormalized instanceof ZoneOffset) {
+            formatted = OffsetDateTime.ofInstant(v, (ZoneOffset) zoneNormalized).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        } else {
+            formatted = ZonedDateTime.ofInstant(v, zone).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+        if (!f.equals(formatted)) {
+            logger.warn("Different formatted date from java.time-based one: '{}' v.s. '{}'", f, formatted);
+        }
+
         writer.write(f);
     }
 
-    public void setSqlTime(final Instant v, final Calendar cal) throws IOException
+    public void setSqlTime(final Instant v, final ZoneId zone) throws IOException
     {
         appendDelimiter();
+
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         cal.setTimeInMillis(v.getEpochSecond() * 1000);
         String f = String.format(Locale.ENGLISH, "%02d:%02d:%02d.%06d",
                 cal.get(Calendar.HOUR_OF_DAY),
                 cal.get(Calendar.MINUTE),
                 cal.get(Calendar.SECOND),
                 v.getNano() / 1000);
+
+        // Creating another formatted string based on java.time. It will replace the java-util-based one once confirmed.
+        final String formatted;
+        final ZoneId zoneNormalized = zone.normalized();
+        if (zoneNormalized instanceof ZoneOffset) {
+            formatted = OffsetDateTime.ofInstant(v, (ZoneOffset) zoneNormalized).format(TIME_FORMATTER);
+        } else {
+            formatted = ZonedDateTime.ofInstant(v, zone).format(TIME_FORMATTER);
+        }
+        if (!f.equals(formatted)) {
+            logger.warn("Different formatted time from java.time-based one: '{}' v.s. '{}'", f, formatted);
+        }
+
         writer.write(f);
     }
 
-    public void setSqlTimestamp(final Instant v, final Calendar cal) throws IOException
+    public void setSqlTimestamp(final Instant v, final ZoneId zone) throws IOException
     {
         appendDelimiter();
+
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(zone), Locale.ENGLISH);
         cal.setTimeInMillis(v.getEpochSecond() * 1000);
         int zoneOffset = cal.get(Calendar.ZONE_OFFSET) / 1000 / 60;  // zone offset considering DST in minute
         String offset;
@@ -200,6 +248,19 @@ public abstract class AbstractPostgreSQLCopyBatchInsert
                 cal.get(Calendar.SECOND),
                 v.getNano() / 1000,
                 offset);
+
+        // Creating another formatted string based on java.time. It will replace the java-util-based one once confirmed.
+        final String formatted;
+        final ZoneId zoneNormalized = zone.normalized();
+        if (zoneNormalized instanceof ZoneOffset) {
+            formatted = OffsetDateTime.ofInstant(v, (ZoneOffset) zoneNormalized).format(TIMESTAMP_FORMATTER);
+        } else {
+            formatted = ZonedDateTime.ofInstant(v, zone).format(TIMESTAMP_FORMATTER);
+        }
+        if (!f.equals(formatted)) {
+            logger.warn("Different formatted time from java.time-based one: '{}' v.s. '{}'", f, formatted);
+        }
+
         writer.write(f);
     }
 

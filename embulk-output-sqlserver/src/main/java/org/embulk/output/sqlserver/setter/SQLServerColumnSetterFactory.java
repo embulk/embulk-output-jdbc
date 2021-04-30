@@ -25,7 +25,7 @@ public class SQLServerColumnSetterFactory
             return new SQLServerByteColumnSetter(batch, column, newDefaultValueSetter(column, option));
 
         case Types.TIME:
-            return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
 
         default:
             return super.newCoalesceColumnSetter(column, option);
@@ -40,7 +40,7 @@ public class SQLServerColumnSetterFactory
             return new SQLServerByteColumnSetter(batch, column, newDefaultValueSetter(column, option));
 
         case "time":
-            return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newCalendar(option));
+            return new SQLServerSqlTimeColumnSetter(batch, column, newDefaultValueSetter(column, option), newZoneId(option));
 
         case "coerce":
             switch (column.getSimpleTypeName().toLowerCase()) {
