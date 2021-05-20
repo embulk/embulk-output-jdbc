@@ -15,7 +15,7 @@ def bintrayReleaseProjects = [
 
 allprojects {
     group = 'org.embulk.output.jdbc'
-    version = "0.9.0"
+    version = "0.10.0"
     description = "Inserts or updates records to a table."
 }
 
