@@ -6,7 +6,6 @@ import java.util.TimeZone;
 import java.util.Optional;
 import java.sql.Types;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;

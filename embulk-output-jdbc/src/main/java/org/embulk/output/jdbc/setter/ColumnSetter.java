@@ -45,4 +45,16 @@ public abstract class ColumnSetter
     public abstract void timestampValue(final Instant v) throws IOException, SQLException;
 
     public abstract void jsonValue(Value v) throws IOException, SQLException;
+
+    final long roundDoubleToLong(final double v) {
+        if (Math.getExponent(v) > Double.MAX_EXPONENT) {
+            throw new ArithmeticException("input is infinite or NaN");
+        }
+        final double z = Math.rint(v);
+        if (Math.abs(v - z) == 0.5) {
+            return (long) (v + Math.copySign(0.5, v));
+        } else {
+            return (long) z;
+        }
+    }
 }

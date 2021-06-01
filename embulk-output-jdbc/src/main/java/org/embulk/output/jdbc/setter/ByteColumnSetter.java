@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.math.RoundingMode;
 import java.time.Instant;
-
-import com.google.common.math.DoubleMath;
-
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.BatchInsert;
 import org.msgpack.value.Value;
@@ -48,7 +45,7 @@ public class ByteColumnSetter
         long lv;
         try {
             // TODO configurable rounding mode
-            lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
+            lv = roundDoubleToLong(v);
         } catch (ArithmeticException ex) {
             // NaN / Infinite / -Infinite
             defaultValue.setByte();

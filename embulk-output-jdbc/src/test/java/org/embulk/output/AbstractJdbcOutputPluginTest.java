@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -23,8 +27,6 @@ import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.tester.EmbulkPluginTester;
 import org.embulk.output.tester.EmbulkPluginTester.PluginDefinition;
 import org.yaml.snakeyaml.Yaml;
-
-import com.google.common.io.Files;
 
 import static java.util.Locale.ENGLISH;
 
@@ -54,7 +56,7 @@ public abstract class AbstractJdbcOutputPluginTest
     private Map<String, ?> getTestConfigs()
     {
         if (testConfigurations == null) {
-            for (PluginDefinition pluginDefinition : tester.getPlugins()) {
+            for (PluginDefinition pluginDefinition : tester.getOutputPlugins()) {
                 if (AbstractJdbcOutputPlugin.class.isAssignableFrom(pluginDefinition.impl)) {
                     pluginName = pluginDefinition.name;
                     break;
@@ -206,13 +208,13 @@ public abstract class AbstractJdbcOutputPluginTest
     {
         StringBuilder builder = new StringBuilder();
         Pattern pathPrefixPattern = Pattern.compile("^ *path(_prefix)?: '(.*)'$");
-        for (String line : Files.readLines(convertPath(ymlName), Charset.forName("UTF8"))) {
+        for (String line : Files.readAllLines(convertPath(ymlName), StandardCharsets.UTF_8)) {
             line = convertYmlLine(line);
             Matcher matcher = pathPrefixPattern.matcher(line);
             if (matcher.matches()) {
                 int group = 2;
                 builder.append(line.substring(0, matcher.start(group)));
-                builder.append(convertPath(matcher.group(group)).getAbsolutePath());
+                builder.append(convertPath(matcher.group(group)).toAbsolutePath().toString());
                 builder.append(line.substring(matcher.end(group)));
             } else {
                 builder.append(line);
@@ -232,9 +234,9 @@ public abstract class AbstractJdbcOutputPluginTest
         return line;
     }
 
-    protected File convertPath(String name) throws URISyntaxException
+    protected Path convertPath(String name) throws URISyntaxException
     {
-        return new File(getClass().getResource(name).toURI());
+        return Paths.get(getClass().getResource(name).toURI());
     }
 
     protected abstract Connection connect() throws SQLException;

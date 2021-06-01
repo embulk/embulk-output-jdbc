@@ -3,16 +3,17 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.collect.ImmutableSet;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import org.embulk.util.aws.credentials.AwsCredentials;
 import org.embulk.util.aws.credentials.AwsCredentialsTaskWithPrefix;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcOutputConnection;
@@ -22,6 +23,8 @@ import org.embulk.output.jdbc.TableIdentifier;
 import org.embulk.output.jdbc.Ssl;
 import org.embulk.output.redshift.RedshiftOutputConnector;
 import org.embulk.output.redshift.RedshiftCopyBatchInsert;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 
 public class RedshiftOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -104,7 +107,8 @@ public class RedshiftOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(127)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE, Mode.MERGE))
+            .setSupportedModes(Collections.unmodifiableSet(new HashSet<Mode>(Arrays.asList(
+                    Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE, Mode.MERGE))))
             .setIgnoreMergeKeys(false);
     }
 

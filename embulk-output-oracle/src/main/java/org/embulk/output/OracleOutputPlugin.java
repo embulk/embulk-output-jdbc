@@ -3,18 +3,20 @@ package org.embulk.output;
 import java.util.Properties;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Optional;
 
-import com.google.common.collect.ImmutableSet;
-
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.*;
 import org.embulk.output.oracle.DirectBatchInsert;
 import org.embulk.output.oracle.InsertMethod;
 import org.embulk.output.oracle.OracleCharset;
 import org.embulk.output.oracle.OracleOutputConnection;
 import org.embulk.output.oracle.OracleOutputConnector;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 
 public class OracleOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -73,7 +75,8 @@ public class OracleOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(30)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(Collections.unmodifiableSet(new HashSet<Mode>(Arrays.asList(
+                    Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))))
             .setIgnoreMergeKeys(false);
     }
 

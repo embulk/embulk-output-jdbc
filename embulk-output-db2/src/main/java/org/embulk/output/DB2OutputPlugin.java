@@ -2,19 +2,22 @@ package org.embulk.output;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Properties;
 import java.util.Optional;
 
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.output.db2.DB2BatchInsert;
 import org.embulk.output.db2.DB2OutputConnector;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.JdbcOutputConnector;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.MergeConfig;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 
-import com.google.common.collect.ImmutableSet;
 import static java.util.Locale.ENGLISH;
 
 public class DB2OutputPlugin
@@ -56,7 +59,8 @@ public class DB2OutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(128) // http://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0001029.html
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(Collections.unmodifiableSet(new HashSet<Mode>(Arrays.asList(
+                    Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))))
             .setIgnoreMergeKeys(false);
     }
 
