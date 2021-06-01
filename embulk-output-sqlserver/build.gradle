@@ -26,3 +26,38 @@ embulkPlugin {
     category = "output"
     type = "sqlserver"
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                developers {
+                    developer {
+                        name = "Hitoshi Tanaka"
+                        email = "thitoshi@cac.co.jp"
+                    }
+                    developer {
+                        name = "Megumi Tomita"
+                        email = "tomykaira@gmail.com"
+                    }
+                    developer {
+                        name = "uu59"
+                        email = "k@uu59.org"
+                    }
+                    developer {
+                        name = "kitsuy"
+                        email = "kitsuy@eac.ne.jp"
+                    }
+                    developer {
+                        name = "Hieu Duong"
+                        email = "duongminhhieu89@gmail.com"
+                    }
+                    developer {
+                        name = "Dai MIKURUBE"
+                        email = "dmikurube@treasure-data.com"
+                    }
+                }
+            }
+        }
+    }
+}

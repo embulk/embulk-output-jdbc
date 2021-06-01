@@ -31,3 +31,62 @@ embulkPlugin {
     category = "output"
     type = "redshift"
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                developers {
+                    developer {
+                        name = "Sadayuki Furuhashi"
+                        email = "frsyuki@gmail.com"
+                    }
+                    developer {
+                        name = "Hitoshi Tanaka"
+                        email = "thitoshi@cac.co.jp"
+                    }
+                    developer {
+                        name = "Hiroyuki Sato"
+                        email = "hiroysato@gmail.com"
+                    }
+                    // developer {  // https://github.com/embulk/embulk-output-jdbc/commit/97f3a4ba14ecb99b9bdfa03831a84cb7e1a8e970
+                    //     name = "Lance Norskog"
+                    //     email = "lance@edmodo.com"
+                    // }
+                    developer {
+                        name = "Roland Rifandi Utama"
+                        email = "roland_hawk@yahoo.com"
+                    }
+                    developer {
+                        name = "Megumi Tomita"
+                        email = "tomykaira@gmail.com"
+                    }
+                    developer {
+                        name = "Antoine Augusti"
+                        email = "antoine@drivy.com"
+                    }
+                    // developer {  // https://github.com/embulk/embulk-output-jdbc/pull/142
+                    //     name = "Vincent Martinez"
+                    //     email = ""
+                    // }
+                    developer {
+                        name = "Toyama Hiroshi"
+                        email = "toyama0919@gmail.com"
+                    }
+                    developer {
+                        name = "Michael Jalkio"
+                        email = "mjalkio@classy.org"
+                    }
+                    developer {
+                        name = "Yutaka Nishimura"
+                        email = "ytk.nishimura@gmail.com"
+                    }
+                    developer {
+                        name = "Dai MIKURUBE"
+                        email = "dmikurube@treasure-data.com"
+                    }
+                }
+            }
+        }
+    }
+}
