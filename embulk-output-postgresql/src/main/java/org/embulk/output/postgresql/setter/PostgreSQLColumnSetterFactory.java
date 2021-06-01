@@ -1,5 +1,6 @@
 package org.embulk.output.postgresql.setter;
 
+import java.time.ZoneId;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcColumnOption;
@@ -10,7 +11,7 @@ import org.embulk.output.jdbc.setter.JsonColumnSetter;
 public class PostgreSQLColumnSetterFactory
         extends ColumnSetterFactory
 {
-    public PostgreSQLColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    public PostgreSQLColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         super(batch, defaultTimeZone);
     }

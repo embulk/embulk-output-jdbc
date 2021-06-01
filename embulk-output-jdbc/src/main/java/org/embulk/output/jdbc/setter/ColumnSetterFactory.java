@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Optional;
 import java.sql.Types;
+import java.time.ZoneId;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Exec;
 import org.embulk.output.jdbc.BatchInsert;
@@ -16,9 +17,9 @@ import org.embulk.util.timestamp.TimestampFormatter;
 public class ColumnSetterFactory
 {
     protected final BatchInsert batch;
-    protected final String defaultTimeZone;
+    protected final ZoneId defaultTimeZone;
 
-    public ColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    public ColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         this.batch = batch;
         this.defaultTimeZone = defaultTimeZone;
@@ -79,8 +80,8 @@ public class ColumnSetterFactory
     protected TimestampFormatter newTimestampFormatter(JdbcColumnOption option)
     {
         final String format = option.getTimestampFormat();
-        final String timezone = option.getTimeZone().orElse(this.defaultTimeZone);
-        return TimestampFormatter.builder(format, true).setDefaultZoneFromString(timezone).build();
+        final ZoneId timezone = option.getTimeZone().orElse(this.defaultTimeZone);
+        return TimestampFormatter.builder(format, true).setDefaultZoneId(timezone).build();
     }
 
     protected Calendar newCalendar(JdbcColumnOption option)
@@ -88,7 +89,7 @@ public class ColumnSetterFactory
         return Calendar.getInstance(TimeZone.getTimeZone(getTimeZone(option)), Locale.ENGLISH);
     }
 
-    protected String getTimeZone(JdbcColumnOption option)
+    protected ZoneId getTimeZone(JdbcColumnOption option)
     {
         return option.getTimeZone().orElse(defaultTimeZone);
     }
