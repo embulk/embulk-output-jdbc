@@ -10,7 +10,7 @@ plugins {
 }
 
 allprojects {
-    group = 'org.embulk.output.jdbc'
+    group = "org.embulk"
     version = "0.10.0"
     description = "Inserts or updates records to a table."
 }
@@ -32,6 +32,16 @@ subprojects {
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        options.encoding = "UTF-8"
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
 
     dependencies {
         compileOnly "org.embulk:embulk-api:0.10.31"
@@ -62,11 +72,6 @@ subprojects {
         testCompile "org.embulk:embulk-junit4:0.10.31"
         testCompile "org.embulk:embulk-core:0.10.31"
         testCompile "org.embulk:embulk-deps:0.10.31"
-    }
-
-    tasks.withType(JavaCompile) {
-        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-        options.encoding = 'UTF-8'
     }
 
     test {
@@ -112,23 +117,6 @@ subprojects {
         host = "https://rubygems.org"
     }
 
-    // add tests/javadoc/source jar tasks as artifacts to be released
-    task testsJar(type: Jar, dependsOn: classes) {
-        classifier = 'tests'
-        from sourceSets.test.output
-    }
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-    artifacts {
-        archives testsJar, sourcesJar, javadocJar
-    }
-
     publishing {
         publications {
             maven(MavenPublication) {
@@ -155,6 +143,8 @@ subprojects {
                             url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
                         }
                     }
+
+                    // "developers" section is written in each subproject.
 
                     scm {
                         connection = "scm:git:git://github.com/embulk/embulk-output-jdbc.git"
