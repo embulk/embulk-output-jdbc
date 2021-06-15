@@ -37,16 +37,8 @@ publishing {
                         email = "thitoshi@cac.co.jp"
                     }
                     developer {
-                        name = "Megumi Tomita"
-                        email = "tomykaira@gmail.com"
-                    }
-                    developer {
-                        name = "uu59"
-                        email = "k@uu59.org"
-                    }
-                    developer {
-                        name = "kitsuy"
-                        email = "kitsuy@eac.ne.jp"
+                        name = "Yui Kitsu"
+                        email = "kitsuyui@kitsuyui.com"
                     }
                     developer {
                         name = "Hieu Duong"

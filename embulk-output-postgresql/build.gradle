@@ -37,10 +37,6 @@ publishing {
                         email = "thitoshi@cac.co.jp"
                     }
                     developer {
-                        name = "Megumi Tomita"
-                        email = "tomykaira@gmail.com"
-                    }
-                    developer {
                         name = "Hiroyuki Sato"
                         email = "hiroysato@gmail.com"
                     }
