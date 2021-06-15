@@ -3,6 +3,7 @@ package org.embulk.output;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.ZoneId;
 import java.util.Properties;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,7 +200,7 @@ public class PostgreSQLOutputPlugin
     }
 
     @Override
-    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         return new PostgreSQLColumnSetterFactory(batch, defaultTimeZone);
     }

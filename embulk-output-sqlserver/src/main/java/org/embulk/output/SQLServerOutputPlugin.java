@@ -18,6 +18,7 @@ import org.embulk.util.config.ConfigDefault;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.ZoneId;
 import java.util.Properties;
 import java.util.Arrays;
 import java.util.Collections;
@@ -302,7 +303,7 @@ public class SQLServerOutputPlugin
     }
 
     @Override
-    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         return new SQLServerColumnSetterFactory(batch, defaultTimeZone);
     }

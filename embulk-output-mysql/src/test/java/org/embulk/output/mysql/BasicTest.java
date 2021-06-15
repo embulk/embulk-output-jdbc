@@ -91,12 +91,16 @@ public class BasicTest
         try {
             embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_invalid_time_zone.yml")), in1);
         } catch (final PartialExecutionException ex) {
-            final Throwable cause = ex.getCause();
-            assertThat(cause, instanceOf(ConfigException.class));
-            assertThat(cause.getMessage(), is("Time zone 'Somewhere/Some_City' is not recognised."));
-            return;
+            Throwable cause = ex.getCause();
+            while (cause != null) {
+                if (cause.getMessage() != null
+                            && cause.getMessage().contains("\"Somewhere/Some_City\" is not recognized as a timezone name.")) {
+                    return;
+                }
+                cause = cause.getCause();
+            }
         }
-        fail();
+        fail("It did not throw an expected Exception.");
     }
 
     private Path toPath(String fileName) throws URISyntaxException

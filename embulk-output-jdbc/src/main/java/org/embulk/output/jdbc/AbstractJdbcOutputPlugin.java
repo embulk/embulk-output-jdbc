@@ -66,6 +66,7 @@ import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
 import org.embulk.util.config.TaskMapper;
+import org.embulk.util.config.modules.ZoneIdModule;
 
 import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 
@@ -74,7 +75,8 @@ public abstract class AbstractJdbcOutputPlugin
 {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractJdbcOutputPlugin.class);
 
-    protected static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
+    protected static final ConfigMapperFactory CONFIG_MAPPER_FACTORY =
+            ConfigMapperFactory.builder().addDefaultModules().addModule(ZoneIdModule.withLegacyNames()).build();
 
     protected static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
     protected static final TaskMapper TASK_MAPPER = CONFIG_MAPPER_FACTORY.createTaskMapper();
@@ -115,7 +117,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public String getDefaultTimeZone();
+        public ZoneId getDefaultTimeZone();
 
         @Config("retry_limit")
         @ConfigDefault("12")
@@ -449,12 +451,6 @@ public abstract class AbstractJdbcOutputPlugin
     {
         PluginTask task = CONFIG_MAPPER.map(config, this.getTaskClass());
 
-        // Invalid timezones should fail immediately when configuring.
-        throwAgainstInvalidTimeZone(task.getDefaultTimeZone());
-        for (final JdbcColumnOption option : task.getColumnOptions().values()) {
-            throwAgainstInvalidTimeZone(option.getTimeZone().orElse(null));
-        }
-
         Features features = getFeatures(task);
         task.setFeatures(features);
 
@@ -675,7 +671,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         return new ColumnSetterFactory(batch, defaultTimeZone);
     }
@@ -1311,17 +1307,6 @@ public abstract class AbstractJdbcOutputPlugin
                 .withRetryLimit(task.getRetryLimit())
                 .withInitialRetryWait(task.getRetryWait())
                 .withMaxRetryWait(task.getMaxRetryWait());
-    }
-
-    private static void throwAgainstInvalidTimeZone(final String timezone) {
-        if (timezone == null) {
-            return;
-        }
-        try {
-            ZoneId.of(timezone);
-        } catch (final DateTimeException ex) {
-            throw new ConfigException("Time zone '" + timezone + "' is not recognised.", ex);
-        }
     }
 
     class RetryableSQLExecution implements Retryable<Void> {
