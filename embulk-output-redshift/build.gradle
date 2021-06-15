@@ -15,10 +15,13 @@ dependencies {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
     }
-    compile("org.embulk.input.s3:embulk-util-aws-credentials:0.3.5") {
-        exclude group: "org.embulk", module: "embulk-core"
+    compile("org.embulk:embulk-util-aws-credentials:0.4.0") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
+
+    // Joda-Time has been removed from Embulk since v0.10.30.
+    // Ordinary plugins no longer need Joda-Time, but embulk-output-redshift depends on Joda-Time as aws-java-sdk-s3 depends.
+    compile "joda-time:joda-time:2.9.2"
 
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
 }

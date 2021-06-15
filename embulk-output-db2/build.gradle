@@ -9,6 +9,11 @@ dependencies {
     // Its license is, however, not a common open-sourcing one.
     // So, we use it only in tests. The plugin artifact does not depend on nor contain it.
     testCompile "com.ibm.db2.jcc:db2jcc:db2jcc4"
+
+    testCompile "org.embulk:embulk-formatter-csv:0.10.31"
+    testCompile "org.embulk:embulk-input-file:0.10.31"
+    testCompile "org.embulk:embulk-output-file:0.10.31"
+    testCompile "org.embulk:embulk-parser-csv:0.10.31"
 }
 
 embulkPlugin {

@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Optional;
 
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.*;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.postgresql.PostgreSQLCopyBatchInsert;
@@ -16,9 +19,8 @@ import org.embulk.output.postgresql.setter.PostgreSQLColumnSetterFactory;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.Schema;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 
 public class PostgreSQLOutputPlugin
         extends AbstractJdbcOutputPlugin
@@ -75,7 +77,8 @@ public class PostgreSQLOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(63)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.MERGE_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(Collections.unmodifiableSet(new HashSet<Mode>(Arrays.asList(
+                    Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.MERGE_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))))
             .setIgnoreMergeKeys(false);
     }
 
@@ -145,7 +148,7 @@ public class PostgreSQLOutputPlugin
     @Override
     protected JdbcSchema newJdbcSchemaForNewTable(Schema schema)
     {
-        final ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
+        final ArrayList<JdbcColumn> columns = new ArrayList<>();
         for (Column c : schema.getColumns()) {
             final String columnName = c.getName();
             c.visit(new ColumnVisitor() {
@@ -192,7 +195,7 @@ public class PostgreSQLOutputPlugin
                 }
             });
         }
-        return new JdbcSchema(columns.build());
+        return new JdbcSchema(Collections.unmodifiableList(columns));
     }
 
     @Override

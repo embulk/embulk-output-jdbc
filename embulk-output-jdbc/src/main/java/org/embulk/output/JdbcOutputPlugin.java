@@ -5,13 +5,12 @@ import java.sql.Driver;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
-
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 import org.embulk.output.jdbc.*;
 
 public class JdbcOutputPlugin
@@ -58,7 +57,8 @@ public class JdbcOutputPlugin
         GenericPluginTask t = (GenericPluginTask) task;
         return new Features()
             .setMaxTableNameLength(t.getMaxTableNameLength())
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE));
+            .setSupportedModes(Collections.unmodifiableSet(
+                    new HashSet<>(Arrays.asList(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))));
     }
 
     @Override
@@ -101,8 +101,10 @@ public class JdbcOutputPlugin
                 // TODO check Class.forName(driverClass) is a Driver before newInstance
                 //      for security
                 this.driver = (Driver) Class.forName(driverClass).newInstance();
-            } catch (Exception ex) {
-                throw Throwables.propagate(ex);
+            } catch (final RuntimeException ex) {
+                throw ex;
+            } catch (final Exception ex) {
+                throw new RuntimeException(ex);
             }
             this.url = url;
             this.properties = properties;

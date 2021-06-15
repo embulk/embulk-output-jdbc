@@ -20,7 +20,11 @@ jobs:
           SAMPLEDB: true
     steps:
       - uses: actions/checkout@v2
-      # TODO: Find a better way to wait for completing setup.
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: 8
+          distribution: 'zulu'
       - name: Sleep for 3 minutes to complete all the DB2 setup process
         run: sleep 180
       - name: List Docker containers
@@ -29,13 +33,11 @@ jobs:
         run: docker logs db2container
       - name: Show DB2 configs
         run: docker exec db2container su - db2inst1 -c "db2 \"GET DBM CFG\""
-      - name: Set env
-        run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
       - name: Build with testing
         run: ./gradlew --stacktrace :embulk-output-db2:check
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-          EMBULK_OUTPUT_DB2_TEST_CONFIG: "${{ env.workspace }}/ci/db2.yml"
+          EMBULK_OUTPUT_DB2_TEST_CONFIG: "${{ github.workspace }}/ci/db2.yml"
       - uses: actions/upload-artifact@v2
         if: always()
         with:
@@ -57,21 +59,20 @@ jobs:
           MYSQL_PASSWORD: password
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
         with:
-          java-version: 1.8
+          java-version: 8
+          distribution: 'zulu'
       - name: Connect
         run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show databases;"
       - name: Create database
         run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "create database ci_test;"
-      - name: Set env
-        run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
       - name: Build with testing
         run: ./gradlew --stacktrace :embulk-output-mysql:check
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-          EMBULK_OUTPUT_MYSQL_TEST_CONFIG: "${{ env.workspace }}/ci/mysql.yml"
+          EMBULK_OUTPUT_MYSQL_TEST_CONFIG: "${{ github.workspace }}/ci/mysql.yml"
       - uses: actions/upload-artifact@v2
         if: always()
         with:
@@ -95,6 +96,11 @@ jobs:
           POSTGRES_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v2
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: 8
+          distribution: 'zulu'
       - name: Connect
         run: psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c "\l"
         env:
@@ -103,13 +109,11 @@ jobs:
         run: psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c "create database ci_test;"
         env:
           PGPASSWORD: postgres
-      - name: Set env
-        run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
       - name: Build with testing
         run: ./gradlew --stacktrace :embulk-output-postgresql:check
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-          EMBULK_OUTPUT_POSTGRESQL_TEST_CONFIG: "${{ env.workspace }}/ci/postgresql.yml"
+          EMBULK_OUTPUT_POSTGRESQL_TEST_CONFIG: "${{ github.workspace }}/ci/postgresql.yml"
       - uses: actions/upload-artifact@v2
         if: always()
         with:
@@ -128,6 +132,11 @@ jobs:
           POSTGRES_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v2
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: 8
+          distribution: 'zulu'
       - name: Connect
         run: psql -h 127.0.0.1 -p 5439 -U postgres -d postgres -c "\l"
         env:
@@ -136,13 +145,11 @@ jobs:
         run: psql -h 127.0.0.1 -p 5439 -U postgres -d postgres -c "create database ci_test;"
         env:
           PGPASSWORD: postgres
-      - name: Set env
-        run: echo ::set-env name=workspace::$GITHUB_WORKSPACE
       - name: Build with testing
         run: ./gradlew --stacktrace :embulk-output-redshift:check
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
-          EMBULK_OUTPUT_REDSHIFT_TEST_CONFIG: "${{ env.workspace }}/ci/redshift.yml"
+          EMBULK_OUTPUT_REDSHIFT_TEST_CONFIG: "${{ github.workspace }}/ci/redshift.yml"
       - uses: actions/upload-artifact@v2
         if: always()
         with:

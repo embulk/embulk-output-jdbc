@@ -1,9 +1,5 @@
 package org.embulk.output;
 
-import com.google.common.collect.ImmutableSet;
-
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.BatchInsert;
@@ -17,11 +13,17 @@ import org.embulk.output.sqlserver.InsertMethod;
 import org.embulk.output.sqlserver.NativeBatchInsert;
 import org.embulk.output.sqlserver.SQLServerOutputConnector;
 import org.embulk.output.sqlserver.setter.SQLServerColumnSetterFactory;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.Locale.ENGLISH;
 
@@ -134,7 +136,8 @@ public class SQLServerOutputPlugin
     {
         return new Features()
             .setMaxTableNameLength(128)
-            .setSupportedModes(ImmutableSet.of(Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))
+            .setSupportedModes(Collections.unmodifiableSet(new HashSet<Mode>(Arrays.asList(
+                    Mode.INSERT, Mode.INSERT_DIRECT, Mode.MERGE, Mode.TRUNCATE_INSERT, Mode.REPLACE))))
             .setIgnoreMergeKeys(false);
     }
 
