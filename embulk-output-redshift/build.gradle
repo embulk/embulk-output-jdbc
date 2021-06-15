@@ -31,3 +31,42 @@ embulkPlugin {
     category = "output"
     type = "redshift"
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                developers {
+                    developer {
+                        name = "Sadayuki Furuhashi"
+                        email = "frsyuki@gmail.com"
+                    }
+                    developer {
+                        name = "Hitoshi Tanaka"
+                        email = "thitoshi@cac.co.jp"
+                    }
+                    developer {
+                        name = "Hiroyuki Sato"
+                        email = "hiroysato@gmail.com"
+                    }
+                    developer {
+                        name = "Antoine Augusti"
+                        email = "hi@antoine-augusti.fr"
+                    }
+                    developer {
+                        name = "Michael Jalkio"
+                        email = "mjalkio@gmail.com"
+                    }
+                    developer {
+                        name = "Yutaka Nishimura"
+                        email = "ytk.nishimura@gmail.com"
+                    }
+                    developer {
+                        name = "Dai MIKURUBE"
+                        email = "dmikurube@treasure-data.com"
+                    }
+                }
+            }
+        }
+    }
+}
