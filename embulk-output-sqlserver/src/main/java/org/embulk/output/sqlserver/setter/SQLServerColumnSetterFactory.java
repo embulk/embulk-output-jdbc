@@ -1,7 +1,7 @@
 package org.embulk.output.sqlserver.setter;
 
 import java.sql.Types;
-
+import java.time.ZoneId;
 import org.embulk.output.jdbc.BatchInsert;
 import org.embulk.output.jdbc.JdbcColumn;
 import org.embulk.output.jdbc.JdbcColumnOption;
@@ -12,7 +12,7 @@ import org.embulk.output.jdbc.setter.StringColumnSetter;
 public class SQLServerColumnSetterFactory
         extends ColumnSetterFactory
 {
-    public SQLServerColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    public SQLServerColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         super(batch, defaultTimeZone);
     }
