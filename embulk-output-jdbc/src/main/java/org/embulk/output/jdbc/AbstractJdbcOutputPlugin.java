@@ -46,7 +46,6 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.Exec;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.OutputPlugin;
@@ -520,7 +519,7 @@ public abstract class AbstractJdbcOutputPlugin
                 throw new RuntimeException(ex);
             }
         }
-        return Exec.newConfigDiff();
+        return CONFIG_MAPPER_FACTORY.newConfigDiff();
     }
 
     public void cleanup(TaskSource taskSource,
@@ -1221,7 +1220,7 @@ public abstract class AbstractJdbcOutputPlugin
         @Override
         public TaskReport commit()
         {
-            return Exec.newTaskReport();
+            return CONFIG_MAPPER_FACTORY.newTaskReport();
         }
 
         protected void handleColumnsSetters()
