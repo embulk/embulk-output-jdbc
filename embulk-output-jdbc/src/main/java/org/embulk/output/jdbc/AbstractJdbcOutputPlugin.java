@@ -693,10 +693,12 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     intermTables = new ArrayList<>();
                     if (task.getMode().tempTablePerTask()) {
-                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 3,
+                        int suffixLength = String.valueOf(taskCount - 1).length();
+                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, suffixLength,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
+                        String suffixFormat = "%0" + suffixLength + "d";
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + String.format("%03d", taskIndex % 1000);
+                            String tableName = namePrefix + String.format(suffixFormat, taskIndex);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
