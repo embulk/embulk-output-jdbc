@@ -59,6 +59,7 @@ import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
 import org.embulk.util.retryhelper.RetryExecutor;
 import org.embulk.util.retryhelper.RetryGiveupException;
 import org.embulk.util.retryhelper.Retryable;
+import org.msgpack.core.annotations.VisibleForTesting;
 import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapper;
@@ -696,9 +697,8 @@ public abstract class AbstractJdbcOutputPlugin
                         int suffixLength = String.valueOf(taskCount - 1).length();
                         String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, suffixLength,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
-                        String suffixFormat = "%0" + suffixLength + "d";
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + String.format(suffixFormat, taskIndex);
+                            String tableName = namePrefix + buildFormattedTaskIndex(suffixLength, taskIndex);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
@@ -760,6 +760,13 @@ public abstract class AbstractJdbcOutputPlugin
         } catch (RetryGiveupException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @VisibleForTesting
+    static String buildFormattedTaskIndex(int length, int taskIndex)
+    {
+        String format = "%0" + length + "d";
+        return String.format(format, taskIndex);
     }
 
     protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
