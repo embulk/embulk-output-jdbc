@@ -694,11 +694,10 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     intermTables = new ArrayList<>();
                     if (task.getMode().tempTablePerTask()) {
-                        int suffixLength = Math.max(1, String.valueOf(taskCount - 1).length());
-                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, suffixLength,
+                        String namePrefix = generateIntermediateTableNamePrefixByTaskCount(task.getActualTable().getTableName(), con, taskCount,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + buildFormattedTaskIndex(suffixLength, taskIndex);
+                            String tableName = namePrefix + buildFormattedTaskIndexSuffix(taskCount, taskIndex);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
@@ -763,10 +762,25 @@ public abstract class AbstractJdbcOutputPlugin
     }
 
     @VisibleForTesting
-    static String buildFormattedTaskIndex(int length, int taskIndex)
+    static String buildFormattedTaskIndexSuffix(int taskCount, int taskIndex)
     {
-        String format = "%0" + length + "d";
+        int suffixLength = calculateSuffixLength(taskCount);
+        String format = "%0" + suffixLength + "d";
         return String.format(format, taskIndex);
+    }
+
+    @VisibleForTesting
+    static int calculateSuffixLength(int taskCount)
+    {
+        assert(taskCount >= 0);
+        return Math.max(1, String.valueOf(taskCount - 1).length());
+    }
+
+    protected String generateIntermediateTableNamePrefixByTaskCount(String baseTableName, JdbcOutputConnection con,
+            int taskCount, int maxLength, LengthSemantics lengthSemantics) throws SQLException
+    {
+        int suffixLength = calculateSuffixLength(taskCount);
+        return generateIntermediateTableNamePrefix(baseTableName, con, suffixLength, maxLength, lengthSemantics);
     }
 
     protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
