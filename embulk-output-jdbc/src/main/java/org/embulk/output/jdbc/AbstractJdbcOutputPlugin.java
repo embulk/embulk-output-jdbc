@@ -694,7 +694,7 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     intermTables = new ArrayList<>();
                     if (task.getMode().tempTablePerTask()) {
-                        int suffixLength = String.valueOf(taskCount - 1).length();
+                        int suffixLength = Math.max(1, String.valueOf(taskCount - 1).length());
                         String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, suffixLength,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
