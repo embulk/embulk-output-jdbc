@@ -1,4 +1,4 @@
-package org.embulk.output;
+package org.embulk.output.jdbc;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 
 import org.embulk.config.ConfigException;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
-import org.embulk.output.tester.EmbulkPluginTester;
-import org.embulk.output.tester.EmbulkPluginTester.PluginDefinition;
+import org.embulk.output.jdbc.tester.EmbulkPluginTester;
+import org.embulk.output.jdbc.tester.EmbulkPluginTester.PluginDefinition;
 import org.yaml.snakeyaml.Yaml;
 
 import static java.util.Locale.ENGLISH;

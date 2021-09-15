@@ -1,4 +1,4 @@
-package org.embulk.output;
+package org.embulk.output.jdbc;
 
 public class TestJdbcOutputPlugin
 {
