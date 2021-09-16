@@ -7,45 +7,6 @@ import org.junit.Test;
 public class TestJdbcOutputPlugin
 {
     @Test
-    public void testBuildFormattedTaskIndex()
-    {
-        {
-            try {
-                AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(-1, 5);
-            } catch (java.lang.AssertionError e) {
-                assert(true);
-            }
-        }
-        {
-            try {
-                AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(0, 5);
-            } catch (java.lang.AssertionError e) {
-                assert(true);
-            }
-        }
-        {
-            String s = AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(1, 5);
-            assertEquals("5", s);
-        }
-        {
-            String s = AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(10, 5);
-            assertEquals("5", s);
-        }
-        {
-            String s = AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(11, 5);
-            assertEquals("05", s);
-        }
-        {
-            String s = AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(100, 5);
-            assertEquals("05", s);
-        }
-        {
-            String s = AbstractJdbcOutputPlugin.buildFormattedTaskIndexSuffix(101, 5);
-            assertEquals("005", s);
-        }
-    }
-
-    @Test
     public void testCalculateSuffixLength()
     {
         {
