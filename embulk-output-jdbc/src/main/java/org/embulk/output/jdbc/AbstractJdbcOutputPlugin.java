@@ -765,7 +765,7 @@ public abstract class AbstractJdbcOutputPlugin
     static int calculateSuffixLength(int taskCount)
     {
         assert(taskCount >= 0);
-        return Math.max(1, String.valueOf(taskCount - 1).length());
+        return Math.max(3, String.valueOf(taskCount - 1).length());
     }
 
     protected String generateIntermediateTableNameFormat(String baseTableName, JdbcOutputConnection con,
