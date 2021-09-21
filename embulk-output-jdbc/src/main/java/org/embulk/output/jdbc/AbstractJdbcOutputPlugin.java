@@ -765,7 +765,10 @@ public abstract class AbstractJdbcOutputPlugin
     static int calculateSuffixLength(int taskCount)
     {
         assert(taskCount >= 0);
-        return Math.max(3, String.valueOf(taskCount - 1).length());
+        // NOTE: for backward compatibility
+        //       See. https://github.com/embulk/embulk-output-jdbc/pull/301
+        int minimumLength = 3;
+        return Math.max(minimumLength, String.valueOf(taskCount - 1).length());
     }
 
     protected String generateIntermediateTableNameFormat(String baseTableName, JdbcOutputConnection con,
