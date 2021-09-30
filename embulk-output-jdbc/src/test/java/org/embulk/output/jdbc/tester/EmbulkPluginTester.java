@@ -1,4 +1,4 @@
-package org.embulk.output.tester;
+package org.embulk.output.jdbc.tester;
 
 import java.util.ArrayList;
 import java.util.Collections;

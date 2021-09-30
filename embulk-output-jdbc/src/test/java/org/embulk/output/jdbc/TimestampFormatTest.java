@@ -1,4 +1,4 @@
-package org.embulk.output;
+package org.embulk.output.jdbc;
 
 import java.sql.Timestamp;
 import java.text.ParseException;

@@ -59,6 +59,7 @@ import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
 import org.embulk.util.retryhelper.RetryExecutor;
 import org.embulk.util.retryhelper.RetryGiveupException;
 import org.embulk.util.retryhelper.Retryable;
+import org.msgpack.core.annotations.VisibleForTesting;
 import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapper;
@@ -693,10 +694,10 @@ public abstract class AbstractJdbcOutputPlugin
                 {
                     intermTables = new ArrayList<>();
                     if (task.getMode().tempTablePerTask()) {
-                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 3,
+                        String tableNameFormat = generateIntermediateTableNameFormat(task.getActualTable().getTableName(), con, taskCount,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + String.format("%03d", taskIndex % 1000);
+                            String tableName = String.format(tableNameFormat, taskIndex);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
@@ -758,6 +759,25 @@ public abstract class AbstractJdbcOutputPlugin
         } catch (RetryGiveupException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @VisibleForTesting
+    static int calculateSuffixLength(int taskCount)
+    {
+        assert(taskCount >= 0);
+        // NOTE: for backward compatibility
+        //       See. https://github.com/embulk/embulk-output-jdbc/pull/301
+        int minimumLength = 3;
+        return Math.max(minimumLength, String.valueOf(taskCount - 1).length());
+    }
+
+    protected String generateIntermediateTableNameFormat(String baseTableName, JdbcOutputConnection con,
+            int taskCount, int maxLength, LengthSemantics lengthSemantics) throws SQLException
+    {
+        int suffixLength = calculateSuffixLength(taskCount);
+        String prefix = generateIntermediateTableNamePrefix(baseTableName, con, suffixLength, maxLength, lengthSemantics);
+        String suffixFormat = "%0" + suffixLength + "d";
+        return prefix + suffixFormat;
     }
 
     protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
