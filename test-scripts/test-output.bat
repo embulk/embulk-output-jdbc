@@ -11,23 +11,6 @@ echo "mysql-output/test_temp_database-replace.bat"
 call test_temp_database_replace.bat >> %LOG%
 cd ..
 
-cd oracle-output
-echo "oracle-output/test.bat"
-call test.bat >> %LOG%
-echo "oracle-output/test-oci.bat"
-call test-oci.bat >> %LOG%
-echo "oracle-output/test-schema.bat"
-call test-schema.bat >> %LOG%
-echo "oracle-output/test-schema-oci.bat"
-call test-schema-oci.bat >> %LOG%
-echo "oracle-output/test-schema-oci-direct.bat"
-call test-schema-oci-direct.bat >> %LOG%
-echo "oracle-output/test-temp-schema.bat"
-call test-temp-schema.bat >> %LOG%
-echo "oracle-output/test-temp-schema-replace.bat"
-call test-temp-schema-replace.bat >> %LOG%
-cd ..
-
 cd postgresql-output
 echo "postgresql-output/test.bat"
 call test.bat >> %LOG%
@@ -48,11 +31,6 @@ echo "sqlserver-output/test-temp-schema.bat"
 call test-temp-schema.bat >> %LOG%
 echo "sqlserver-output/test-replace-temp-schema.bat"
 call test-replace-temp-schema.bat >> %LOG%
-cd ..
-
-cd db2-output
-echo "db2-output/test.bat"
-call test.bat >> %LOG%
 cd ..
 
 grep "FAILED" %LOG%
