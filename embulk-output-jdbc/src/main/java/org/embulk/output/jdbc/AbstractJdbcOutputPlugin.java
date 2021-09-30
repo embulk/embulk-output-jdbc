@@ -59,7 +59,6 @@ import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
 import org.embulk.util.retryhelper.RetryExecutor;
 import org.embulk.util.retryhelper.RetryGiveupException;
 import org.embulk.util.retryhelper.Retryable;
-import org.msgpack.core.annotations.VisibleForTesting;
 import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapper;
@@ -174,6 +173,38 @@ public abstract class AbstractJdbcOutputPlugin
             {
                 return charset.encode(s).remaining();
             }
+
+            @Override
+            public String buildIntermediateTableNameTruncated(
+                    final String baseName, final Charset tableNameCharset, final long timeMillis, final int maxLength)
+            {
+                String tableName = baseTableName;
+                String uniqueSuffix = String.format("%016x", timeMillis) + COMMON_SUFFIX;
+
+                // way to count length of table name varies by DBMSs (bytes or characters),
+                // so truncate swap table name by one character.
+                while (this.countLength(tableNameCharset, tableName + "_" + uniqueSuffix) + suffixLength > maxLength) {
+                    if (uniqueSuffix.length() > 8 + suffix.length()) {
+                        // truncate transaction unique name
+                        // (include 8 characters of the transaction name at least)
+                        uniqueSuffix = uniqueSuffix.substring(1);
+                    } else {
+                        if (tableName.isEmpty()) {
+                            throw new ConfigException("Table name is too long to generate temporary table name");
+                        }
+                        // truncate table name
+                        tableName = tableName.substring(0, tableName.length() - 1);
+                        //if (!connection.tableExists(tableName)) {
+                        // TODO this doesn't help. Rather than truncating more characters,
+                        //      here needs to replace characters with random characters. But
+                        //      to make the result deterministic. So, an idea is replacing
+                        //      the last character to the first (second, third, ... for each loop)
+                        //      of md5(original table name).
+                        //}
+                    }
+                }
+                return tableName + "_" + uniqueSuffix;
+            }
         },
         CHARACTERS {
             @Override
@@ -181,9 +212,42 @@ public abstract class AbstractJdbcOutputPlugin
             {
                 return s.length();
             }
+
+            @Override
+            public String buildIntermediateTableNameTruncated(
+                    final String baseName, final Charset tableNameCharset, final long timeMillis, final int maxLength)
+            {
+                // <baseName> + "_" + <timeMillis> + "_embulk"
+                final int baseLength = baseName.length();
+
+                final int timeDigitsTruncated = Math.max(8, Math.min(16, maxLength - (baseLength + 1 + COMMON_SUFFIX_LENGTH)));
+                assert timeDigitsTruncated >= 8 : "The time-based part in suffix is unexpectedly truncated shorter than 8.";
+                assert timeDigitsTruncated <= 16 : "The time-based part in suffix is unexpectedly truncated longer than 16.";
+
+                final int baseLengthTruncated = Math.min(baseLength, maxLength - (1 + timeDigitsTruncated + COMMON_SUFFIX_LENGTH));
+                if (baseLengthTruncated <= 0) {
+                    throw new ConfigException("Table name is too long to generate temporary table name");
+                }
+
+                assert baseLengthTruncated + 1 + timeDigitsTruncated + COMMON_SUFFIX_LENGTH <= maxLength
+                        : "The built intermediate table name is unexpectedly longer than maxLength : " + maxLength;
+
+                final StringBuilder builder = new StringBuilder();
+                builder.append(baseName.substring(0, baseLengthTruncated));
+                builder.append("_");
+                builder.append(String.format("%016x", timeMillis).substring(16 - timeDigitsTruncated));
+                builder.append(COMMON_SUFFIX);
+                return builder.toString();
+            }
         };
 
+        private static final String COMMON_SUFFIX = "_embulk";
+        private static final int COMMON_SUFFIX_LENGTH = COMMON_SUFFIX.length();
+
         public abstract int countLength(Charset charset, String s);
+
+        public abstract String buildIntermediateTableNameTruncated(
+                String baseName, Charset tableNameCharset, long timeMillis, int maxLength);
     }
 
     public static class Features
@@ -761,7 +825,6 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    @VisibleForTesting
     static int calculateSuffixLength(int taskCount)
     {
         assert(taskCount >= 0);

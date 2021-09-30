@@ -179,7 +179,9 @@ subprojects {
         testLogging {
             // set options for log level LIFECYCLE
             events TestLogEvent.FAILED,
-                    TestLogEvent.SKIPPED
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_OUT
             exceptionFormat TestExceptionFormat.FULL
             showExceptions true
             showCauses true
