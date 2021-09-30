@@ -12,10 +12,6 @@ See [embulk-output-mysql](embulk-output-mysql/).
 
 See [embulk-output-postgresql](embulk-output-postgresql/).
 
-## Oracle
-
-See [embulk-output-oracle](embulk-output-oracle/).
-
 ## Redshift
 
 See [embulk-output-redshift](embulk-output-redshift/).
@@ -24,11 +20,6 @@ See [embulk-output-redshift](embulk-output-redshift/).
 
 See [embulk-output-sqlserver](embulk-output-sqlserver/).
 
-## DB2
-
-See [embulk-output-db2](embulk-output-db2/).
-
 ## Others (generic JDBC)
 
 See [embulk-output-jdbc](embulk-output-jdbc/).
-

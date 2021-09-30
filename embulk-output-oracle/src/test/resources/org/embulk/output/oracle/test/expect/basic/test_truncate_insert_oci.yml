@@ -1,3 +1,0 @@
-table: TEST1
-mode: truncate_insert
-insert_method: oci

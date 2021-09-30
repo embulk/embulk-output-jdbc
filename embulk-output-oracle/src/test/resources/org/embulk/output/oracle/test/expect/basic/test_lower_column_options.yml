@@ -1,5 +1,0 @@
-table: TEST1
-mode: insert_direct
-column_options:
-  date_item: {value_type: pass}
-  timestamp_item: {value_type: pass}
