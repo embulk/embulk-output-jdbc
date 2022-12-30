@@ -47,6 +47,10 @@ public class RedshiftOutputPlugin
         @Config("database")
         public String getDatabase();
 
+        @Config("thread_maximum")
+        @ConfigDefault("5")
+        public int getThreadMaximum();
+
         @Config("schema")
         @ConfigDefault("\"public\"")
         public String getSchema();
@@ -201,6 +205,6 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyIamRoleName().orElse(null), t.getCopyAwsAccountId().orElse(null));
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyIamRoleName().orElse(null), t.getCopyAwsAccountId().orElse(null), t.getThreadMaximum());
     }
 }
