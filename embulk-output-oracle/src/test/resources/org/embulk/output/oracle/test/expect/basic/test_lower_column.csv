@@ -1,4 +1,0 @@
-id:string,varchar2_item:string,nvarchar2_item:string,integer_item:long,number_item:string,date_item:timestamp,timestamp_item:timestamp
-A001,ABCDE,abcde,0,123.45,2015-03-05 00:00:00.000 +0900,2015-03-05 12:34:56.000 +0900
-A002,ＡＢ,ａｂｃｄｅｆ,-9999,-99999999.99,2015-03-06 00:00:00.000 +0900,2015-03-06 23:59:59.000 +0900
-A003,,,,,,

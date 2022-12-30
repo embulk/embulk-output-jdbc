@@ -1,6 +1,0 @@
-ID:string,VARCHAR2_ITEM:string,NUMBER_ITEM:double
-A001,aaa,99.99
-A002,bbb,88.88
-A003,ccc,77.77
-A004,,
-A005,,

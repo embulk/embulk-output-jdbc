@@ -5,10 +5,50 @@ dependencies {
     defaultJdbcDriver 'mysql:mysql-connector-java:5.1.44'
 
     testCompile "mysql:mysql-connector-java:5.1.44"
+
+    testCompile "org.embulk:embulk-formatter-csv:0.10.31"
+    testCompile "org.embulk:embulk-input-file:0.10.31"
+    testCompile "org.embulk:embulk-output-file:0.10.31"
+    testCompile "org.embulk:embulk-parser-csv:0.10.31"
 }
 
 embulkPlugin {
     mainClass = "org.embulk.output.MySQLOutputPlugin"
     category = "output"
     type = "mysql"
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                developers {
+                    developer {
+                        name = "Sadayuki Furuhashi"
+                        email = "frsyuki@gmail.com"
+                    }
+                    developer {
+                        name = "takumakanari"
+                        email = "chemtrails.t@gmail.com"
+                    }
+                    developer {
+                        name = "Hitoshi Tanaka"
+                        email = "thitoshi@cac.co.jp"
+                    }
+                    developer {
+                        name = "Tomohiro Hashidate"
+                        email = "kakyoin.hierophant@gmail.com"
+                    }
+                    developer {
+                        name = "Hiroyuki Sato"
+                        email = "hiroysato@gmail.com"
+                    }
+                    developer {
+                        name = "Dai MIKURUBE"
+                        email = "dmikurube@treasure-data.com"
+                    }
+                }
+            }
+        }
+    }
 }

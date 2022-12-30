@@ -1,3 +1,19 @@
+Release 0.10.2 - 2021-09-30
+
+* Make temp tables suffix length flexible
+* Remove embulk-output-db2 and embulk-output-oracle to be externalized in other repositories
+
+Release 0.10.1 - 2021-06-16
+
+* Fix Exec.newSomething() to CONFIG_MAPPER_FACTORY.newSomething()
+
+Release 0.10.0 - 2021-06-16
+
+* Catch up with Embulk v0.10 API/SPI
+* Map an Embulk config directly to java.time.ZoneId with embulk-util-config's ZoneIdModule
+* Release for Maven Central
+* Fix a compile error in embulk-output-sqlserver
+
 Release 0.9.0 - 2020-09-04
 
 * Updated the whole build process -- using the "org.embulk.embulk-plugins" Gradle plugin, and else.

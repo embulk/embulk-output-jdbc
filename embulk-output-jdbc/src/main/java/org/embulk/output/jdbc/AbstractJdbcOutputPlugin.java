@@ -1,5 +1,9 @@
 package org.embulk.output.jdbc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -7,12 +11,16 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,30 +34,18 @@ import java.time.ZoneId;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.embulk.spi.util.RetryExecutor;
-import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.plugin.PluginClassLoader;
-import org.embulk.spi.Exec;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.OutputPlugin;
@@ -60,15 +56,30 @@ import org.embulk.spi.PageReader;
 import org.embulk.output.jdbc.setter.ColumnSetter;
 import org.embulk.output.jdbc.setter.ColumnSetterFactory;
 import org.embulk.output.jdbc.setter.ColumnSetterVisitor;
-import org.embulk.spi.util.RetryExecutor.Retryable;
+import org.embulk.util.retryhelper.RetryExecutor;
+import org.embulk.util.retryhelper.RetryGiveupException;
+import org.embulk.util.retryhelper.Retryable;
+import org.msgpack.core.annotations.VisibleForTesting;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapper;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
+import org.embulk.util.config.TaskMapper;
+import org.embulk.util.config.modules.ZoneIdModule;
 
-import static org.embulk.spi.util.RetryExecutor.retryExecutor;
 import static org.embulk.output.jdbc.JdbcSchema.filterSkipColumns;
 
 public abstract class AbstractJdbcOutputPlugin
         implements OutputPlugin
 {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractJdbcOutputPlugin.class);
+
+    protected static final ConfigMapperFactory CONFIG_MAPPER_FACTORY =
+            ConfigMapperFactory.builder().addDefaultModules().addModule(ZoneIdModule.withLegacyNames()).build();
+
+    protected static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
+    protected static final TaskMapper TASK_MAPPER = CONFIG_MAPPER_FACTORY.createTaskMapper();
 
     public interface PluginTask
             extends Task
@@ -106,7 +117,7 @@ public abstract class AbstractJdbcOutputPlugin
 
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public String getDefaultTimeZone();
+        public ZoneId getDefaultTimeZone();
 
         @Config("retry_limit")
         @ConfigDefault("12")
@@ -179,7 +190,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         private int maxTableNameLength = 64;
         private LengthSemantics tableNameLengthSemantics = LengthSemantics.BYTES;
-        private Set<Mode> supportedModes = ImmutableSet.copyOf(Mode.values());
+        private Set<Mode> supportedModes = Collections.unmodifiableSet(new HashSet<Mode>(Arrays.asList(Mode.values())));
         private boolean ignoreMergeKeys = false;
 
         public Features()
@@ -240,12 +251,37 @@ public abstract class AbstractJdbcOutputPlugin
     protected void addDriverJarToClasspath(String glob)
     {
         // TODO match glob
-        PluginClassLoader loader = (PluginClassLoader) getClass().getClassLoader();
+        final ClassLoader loader = getClass().getClassLoader();
+        if (!(loader instanceof URLClassLoader)) {
+            throw new RuntimeException("Plugin is not loaded by URLClassLoader unexpectedly.");
+        }
+        if (!"org.embulk.plugin.PluginClassLoader".equals(loader.getClass().getName())) {
+            throw new RuntimeException("Plugin is not loaded by PluginClassLoader unexpectedly.");
+        }
         Path path = Paths.get(glob);
         if (!path.toFile().exists()) {
              throw new ConfigException("The specified driver jar doesn't exist: " + glob);
         }
-        loader.addPath(Paths.get(glob));
+        final Method addPathMethod;
+        try {
+            addPathMethod = loader.getClass().getMethod("addPath", Path.class);
+        } catch (final NoSuchMethodException ex) {
+            throw new RuntimeException("Plugin is not loaded a ClassLoader which has addPath(Path), unexpectedly.");
+        }
+        try {
+            addPathMethod.invoke(loader, Paths.get(glob));
+        } catch (final IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (final InvocationTargetException ex) {
+            final Throwable targetException = ex.getTargetException();
+            if (targetException instanceof MalformedURLException) {
+                throw new IllegalArgumentException(targetException);
+            } else if (targetException instanceof RuntimeException) {
+                throw (RuntimeException) targetException;
+            } else {
+                throw new RuntimeException(targetException);
+            }
+        }
     }
 
     protected void loadDriver(String className, Optional<String> driverPath)
@@ -413,13 +449,7 @@ public abstract class AbstractJdbcOutputPlugin
             Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
-        PluginTask task = config.loadConfig(getTaskClass());
-
-        // Invalid timezones should fail immediately when configuring.
-        throwAgainstInvalidTimeZone(task.getDefaultTimeZone());
-        for (final JdbcColumnOption option : task.getColumnOptions().values()) {
-            throwAgainstInvalidTimeZone(option.getTimeZone().orElse(null));
-        }
+        PluginTask task = CONFIG_MAPPER.map(config, this.getTaskClass());
 
         Features features = getFeatures(task);
         task.setFeatures(features);
@@ -437,7 +467,7 @@ public abstract class AbstractJdbcOutputPlugin
             Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
-        PluginTask task = taskSource.loadTask(getTaskClass());
+        PluginTask task = TASK_MAPPER.map(taskSource, this.getTaskClass());
 
         if (!task.getMode().tempTablePerTask()) {
             throw new UnsupportedOperationException("inplace mode is not resumable. You need to delete partially-loaded records from the database and restart the entire transaction.");
@@ -490,14 +520,14 @@ public abstract class AbstractJdbcOutputPlugin
                 throw new RuntimeException(ex);
             }
         }
-        return Exec.newConfigDiff();
+        return CONFIG_MAPPER_FACTORY.newConfigDiff();
     }
 
     public void cleanup(TaskSource taskSource,
             Schema schema, final int taskCount,
             final List<TaskReport> successTaskReports)
     {
-        final PluginTask task = taskSource.loadTask(getTaskClass());
+        final PluginTask task = TASK_MAPPER.map(taskSource, this.getTaskClass());
 
         if (!task.getMode().isDirectModify()) {  // no intermediate data if isDirectModify == true
             try {
@@ -613,7 +643,7 @@ public abstract class AbstractJdbcOutputPlugin
                 if (mergeKeys.isPresent()) {
                     throw new ConfigException("This output type does not accept 'merge_key' option.");
                 }
-                task.setMergeKeys(Optional.<List<String>>of(ImmutableList.<String>of()));
+                task.setMergeKeys(Optional.<List<String>>of(Collections.emptyList()));
             } else if (mergeKeys.isPresent()) {
                 if (task.getMergeKeys().get().isEmpty()) {
                     throw new ConfigException("Empty 'merge_keys' option is invalid.");
@@ -624,13 +654,13 @@ public abstract class AbstractJdbcOutputPlugin
                     }
                 }
             } else {
-                ImmutableList.Builder<String> builder = ImmutableList.builder();
+                final ArrayList<String> builder = new ArrayList<>();
                 for (JdbcColumn column : targetTableSchema.getColumns()) {
                     if (column.isUniqueKey()) {
                         builder.add(column.getName());
                     }
                 }
-                task.setMergeKeys(Optional.<List<String>>of(builder.build()));
+                task.setMergeKeys(Optional.<List<String>>of(Collections.unmodifiableList(builder)));
                 if (task.getMergeKeys().get().isEmpty()) {
                     throw new ConfigException("Merging mode is used but the target table does not have primary keys. Please set merge_keys option.");
                 }
@@ -641,7 +671,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
     }
 
-    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final String defaultTimeZone)
+    protected ColumnSetterFactory newColumnSetterFactory(final BatchInsert batch, final ZoneId defaultTimeZone)
     {
         return new ColumnSetterFactory(batch, defaultTimeZone);
     }
@@ -657,17 +687,17 @@ public abstract class AbstractJdbcOutputPlugin
         try {
             return buildRetryExecutor(task).run(new Retryable<List<TableIdentifier>>() {
                 private TableIdentifier table;
-                private ImmutableList.Builder<TableIdentifier> intermTables;
+                private ArrayList<TableIdentifier> intermTables;
 
                 @Override
                 public List<TableIdentifier> call() throws Exception
                 {
-                    intermTables = ImmutableList.builder();
+                    intermTables = new ArrayList<>();
                     if (task.getMode().tempTablePerTask()) {
-                        String namePrefix = generateIntermediateTableNamePrefix(task.getActualTable().getTableName(), con, 3,
+                        String tableNameFormat = generateIntermediateTableNameFormat(task.getActualTable().getTableName(), con, taskCount,
                                 task.getFeatures().getMaxTableNameLength(), task.getFeatures().getTableNameLengthSemantics());
                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            String tableName = namePrefix + String.format("%03d", taskIndex % 1000);
+                            String tableName = String.format(tableNameFormat, taskIndex);
                             table = buildIntermediateTableId(con, task, tableName);
                             // if table already exists, SQLException will be thrown
                             con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
@@ -680,7 +710,7 @@ public abstract class AbstractJdbcOutputPlugin
                         con.createTable(table, newTableSchema, task.getCreateTableConstraint(), task.getCreateTableOption());
                         intermTables.add(table);
                     }
-                    return intermTables.build();
+                    return Collections.unmodifiableList(intermTables);
                 }
 
                 @Override
@@ -721,7 +751,7 @@ public abstract class AbstractJdbcOutputPlugin
 
                 private void dropTables() throws SQLException
                 {
-                    for (TableIdentifier table : intermTables.build()) {
+                    for (TableIdentifier table : intermTables) {
                         con.dropTableIfExists(table);
                     }
                 }
@@ -729,6 +759,25 @@ public abstract class AbstractJdbcOutputPlugin
         } catch (RetryGiveupException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @VisibleForTesting
+    static int calculateSuffixLength(int taskCount)
+    {
+        assert(taskCount >= 0);
+        // NOTE: for backward compatibility
+        //       See. https://github.com/embulk/embulk-output-jdbc/pull/301
+        int minimumLength = 3;
+        return Math.max(minimumLength, String.valueOf(taskCount - 1).length());
+    }
+
+    protected String generateIntermediateTableNameFormat(String baseTableName, JdbcOutputConnection con,
+            int taskCount, int maxLength, LengthSemantics lengthSemantics) throws SQLException
+    {
+        int suffixLength = calculateSuffixLength(taskCount);
+        String prefix = generateIntermediateTableNamePrefix(baseTableName, con, suffixLength, maxLength, lengthSemantics);
+        String suffixFormat = "%0" + suffixLength + "d";
+        return prefix + suffixFormat;
     }
 
     protected String generateIntermediateTableNamePrefix(String baseTableName, JdbcOutputConnection con,
@@ -767,9 +816,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     private static JdbcSchema applyColumnOptionsToNewTableSchema(JdbcSchema schema, final Map<String, JdbcColumnOption> columnOptions)
     {
-        return new JdbcSchema(Lists.transform(schema.getColumns(), new Function<JdbcColumn, JdbcColumn>() {
-            public JdbcColumn apply(JdbcColumn c)
-            {
+        return new JdbcSchema(schema.getColumns().stream().map(c -> {
                 JdbcColumnOption option = columnOptionOf(columnOptions, c.getName());
                 if (option.getType().isPresent()) {
                     return JdbcColumn.newTypeDeclaredColumn(
@@ -777,15 +824,14 @@ public abstract class AbstractJdbcOutputPlugin
                             option.getType().get(), false, false);
                 }
                 return c;
-            }
-        }));
+            }).collect(Collectors.toList()));
     }
 
     protected static List<ColumnSetter> newColumnSetters(ColumnSetterFactory factory,
             JdbcSchema targetTableSchema, Schema inputValueSchema,
             Map<String, JdbcColumnOption> columnOptions)
     {
-        ImmutableList.Builder<ColumnSetter> builder = ImmutableList.builder();
+        final ArrayList<ColumnSetter> builder = new ArrayList<>();
         for (int schemaColumnIndex = 0; schemaColumnIndex < targetTableSchema.getCount(); schemaColumnIndex++) {
             JdbcColumn targetColumn = targetTableSchema.getColumn(schemaColumnIndex);
             Column inputColumn = inputValueSchema.getColumn(schemaColumnIndex);
@@ -796,7 +842,7 @@ public abstract class AbstractJdbcOutputPlugin
                 builder.add(factory.newColumnSetter(targetColumn, option));
             }
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     private static JdbcColumnOption columnOptionOf(Map<String, JdbcColumnOption> columnOptions, String columnName)
@@ -807,7 +853,7 @@ public abstract class AbstractJdbcOutputPlugin
                     {
                         public JdbcColumnOption get()
                         {
-                            return Exec.newConfigSource().loadConfig(JdbcColumnOption.class);
+                            return CONFIG_MAPPER.map(CONFIG_MAPPER_FACTORY.newConfigSource(), JdbcColumnOption.class);
                         }
                     });
     }
@@ -880,7 +926,7 @@ public abstract class AbstractJdbcOutputPlugin
 
     protected JdbcSchema newJdbcSchemaForNewTable(Schema schema)
     {
-        final ImmutableList.Builder<JdbcColumn> columns = ImmutableList.builder();
+        final ArrayList<JdbcColumn> columns = new ArrayList<>();
         for (Column c : schema.getColumns()) {
             final String columnName = c.getName();
             c.visit(new ColumnVisitor() {
@@ -927,7 +973,7 @@ public abstract class AbstractJdbcOutputPlugin
                 }
             });
         }
-        return new JdbcSchema(columns.build());
+        return new JdbcSchema(Collections.unmodifiableList(columns));
     }
 
     public Optional<JdbcSchema> newJdbcSchemaFromTableIfExists(JdbcOutputConnection connection,
@@ -942,7 +988,7 @@ public abstract class AbstractJdbcOutputPlugin
         String escape = dbm.getSearchStringEscape();
 
         ResultSet rs = dbm.getPrimaryKeys(table.getDatabase(), table.getSchemaName(), table.getTableName());
-        ImmutableSet.Builder<String> primaryKeysBuilder = ImmutableSet.builder();
+        final HashSet<String> primaryKeysBuilder = new HashSet<>();
         try {
             while(rs.next()) {
                 primaryKeysBuilder.add(rs.getString("COLUMN_NAME"));
@@ -950,9 +996,9 @@ public abstract class AbstractJdbcOutputPlugin
         } finally {
             rs.close();
         }
-        ImmutableSet<String> primaryKeys = primaryKeysBuilder.build();
+        final Set<String> primaryKeys = Collections.unmodifiableSet(primaryKeysBuilder);
 
-        ImmutableList.Builder<JdbcColumn> builder = ImmutableList.builder();
+        final ArrayList<JdbcColumn> builder = new ArrayList<>();
         rs = dbm.getColumns(
                 JdbcUtils.escapeSearchString(table.getDatabase(), escape),
                 JdbcUtils.escapeSearchString(table.getSchemaName(), escape),
@@ -980,7 +1026,7 @@ public abstract class AbstractJdbcOutputPlugin
         } finally {
             rs.close();
         }
-        List<JdbcColumn> columns = builder.build();
+        final List<JdbcColumn> columns = Collections.unmodifiableList(builder);
         if (columns.isEmpty()) {
             return Optional.empty();
         } else {
@@ -990,19 +1036,19 @@ public abstract class AbstractJdbcOutputPlugin
 
     private JdbcSchema matchSchemaByColumnNames(Schema inputSchema, JdbcSchema targetTableSchema)
     {
-        ImmutableList.Builder<JdbcColumn> jdbcColumns = ImmutableList.builder();
+        final ArrayList<JdbcColumn> jdbcColumns = new ArrayList<>();
 
         for (Column column : inputSchema.getColumns()) {
             Optional<JdbcColumn> c = targetTableSchema.findColumn(column.getName());
             jdbcColumns.add(c.orElse(JdbcColumn.skipColumn()));
         }
 
-        return new JdbcSchema(jdbcColumns.build());
+        return new JdbcSchema(Collections.unmodifiableList(jdbcColumns));
     }
 
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, final int taskIndex)
     {
-        final PluginTask task = taskSource.loadTask(getTaskClass());
+        final PluginTask task = TASK_MAPPER.map(taskSource, this.getTaskClass());
         final Mode mode = task.getMode();
 
         // instantiate BatchInsert without table name
@@ -1102,13 +1148,10 @@ public abstract class AbstractJdbcOutputPlugin
             this.batch = batch;
             this.columns = pageReader.getSchema().getColumns();
             this.columnSetters = columnSetters;
-            this.columnVisitors = ImmutableList.copyOf(Lists.transform(
-                        columnSetters, new Function<ColumnSetter, ColumnSetterVisitor>() {
-                            public ColumnSetterVisitor apply(ColumnSetter setter)
-                            {
+
+            this.columnVisitors = Collections.unmodifiableList((ArrayList<ColumnSetterVisitor>) columnSetters.stream().map(setter -> {
                                 return new ColumnSetterVisitor(PluginPageOutput.this.pageReader, setter);
-                            }
-                        }));
+                    }).collect(Collectors.toCollection(ArrayList::new)));
             this.batchSize = batchSize;
             this.task = task;
             this.forceBatchFlushSize = batchSize * 2;
@@ -1197,7 +1240,7 @@ public abstract class AbstractJdbcOutputPlugin
         @Override
         public TaskReport commit()
         {
-            return Exec.newTaskReport();
+            return CONFIG_MAPPER_FACTORY.newTaskReport();
         }
 
         protected void handleColumnsSetters()
@@ -1266,27 +1309,23 @@ public abstract class AbstractJdbcOutputPlugin
                 .runInterruptible(new RetryableSQLExecution(op, errorMessage));
         } catch (ExecutionException ex) {
             Throwable cause = ex.getCause();
-            Throwables.propagateIfInstanceOf(cause, SQLException.class);
-            throw Throwables.propagate(cause);
+            if (cause instanceof SQLException) {
+                throw (SQLException) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else if (cause instanceof Error) {
+                throw (Error) cause;
+            } else {
+                throw new RuntimeException(cause);
+            }
         }
     }
 
     private static RetryExecutor buildRetryExecutor(PluginTask task) {
-        return retryExecutor()
+        return RetryExecutor.retryExecutor()
                 .withRetryLimit(task.getRetryLimit())
                 .withInitialRetryWait(task.getRetryWait())
                 .withMaxRetryWait(task.getMaxRetryWait());
-    }
-
-    private static void throwAgainstInvalidTimeZone(final String timezone) {
-        if (timezone == null) {
-            return;
-        }
-        try {
-            ZoneId.of(timezone);
-        } catch (final DateTimeException ex) {
-            throw new ConfigException("Time zone '" + timezone + "' is not recognised.", ex);
-        }
     }
 
     class RetryableSQLExecution implements Retryable<Void> {

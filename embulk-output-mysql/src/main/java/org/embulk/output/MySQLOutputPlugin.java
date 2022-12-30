@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.output.jdbc.AbstractJdbcOutputPlugin;
 import org.embulk.output.jdbc.Ssl;
 import org.embulk.output.jdbc.BatchInsert;
@@ -18,6 +16,8 @@ import org.embulk.output.mysql.MySQLOutputConnection;
 import org.embulk.output.mysql.MySQLOutputConnector;
 import org.embulk.output.mysql.MySQLBatchInsert;
 import org.embulk.spi.Schema;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
 
 public class MySQLOutputPlugin
         extends AbstractJdbcOutputPlugin

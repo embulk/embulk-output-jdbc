@@ -3,6 +3,21 @@ dependencies {
     compile 'com.microsoft.sqlserver:mssql-jdbc:7.2.2.jre8'
     compile 'net.sourceforge.jtds:jtds:1.3.1'
 
+    // embulk-output-oracle has used jnr-ffi included in JRuby, which had been embedded with Embulk till v0.10.20.
+    // JRuby is, however, no longer loaded in Embulk's top-level class loader, nor built-in in Embulk since v0.10.21.
+    //
+    // Here, it is including dependencies on jnr-ffi and its transitive dependencies, instead of JRuby embedded in Embulk.
+    // The versions are the same as JRuby 9.1.15.0, which were embedded in Embulk v0.10.20 and earlier for a long time.
+    compile "com.github.jnr:jnr-ffi:2.1.7"
+
+    compile "com.github.jnr:jnr-x86asm:1.0.2"
+    compile "com.github.jnr:jffi:1.2.16"
+    compile "org.ow2.asm:asm-analysis:5.0.4"
+    compile "org.ow2.asm:asm-commons:5.0.4"
+    compile "org.ow2.asm:asm-tree:5.0.4"
+    compile "org.ow2.asm:asm-util:5.0.4"
+    compile "org.ow2.asm:asm:5.0.4"
+
     testCompile project(':embulk-output-jdbc').sourceSets.test.output
 }
 
@@ -10,4 +25,31 @@ embulkPlugin {
     mainClass = "org.embulk.output.SQLServerOutputPlugin"
     category = "output"
     type = "sqlserver"
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                developers {
+                    developer {
+                        name = "Hitoshi Tanaka"
+                        email = "thitoshi@cac.co.jp"
+                    }
+                    developer {
+                        name = "Yui Kitsu"
+                        email = "kitsuyui@kitsuyui.com"
+                    }
+                    developer {
+                        name = "Hieu Duong"
+                        email = "duongminhhieu89@gmail.com"
+                    }
+                    developer {
+                        name = "Dai MIKURUBE"
+                        email = "dmikurube@treasure-data.com"
+                    }
+                }
+            }
+        }
+    }
 }

@@ -14,8 +14,16 @@ import java.nio.file.Path;
 
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
+import org.embulk.formatter.csv.CsvFormatterPlugin;
+import org.embulk.input.file.LocalFileInputPlugin;
 import org.embulk.output.PostgreSQLOutputPlugin;
+import org.embulk.output.file.LocalFileOutputPlugin;
+import org.embulk.parser.csv.CsvParserPlugin;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.FileOutputPlugin;
+import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.ParserPlugin;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Before;
@@ -40,6 +48,10 @@ public class BasicTest
 
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()
+            .registerPlugin(FileInputPlugin.class, "file", LocalFileInputPlugin.class)
+            .registerPlugin(ParserPlugin.class, "csv", CsvParserPlugin.class)
+            .registerPlugin(FormatterPlugin.class, "csv", CsvFormatterPlugin.class)
+            .registerPlugin(FileOutputPlugin.class, "file", LocalFileOutputPlugin.class)
             .registerPlugin(OutputPlugin.class, "postgresql", PostgreSQLOutputPlugin.class)
             .build();
 
@@ -131,6 +143,17 @@ public class BasicTest
     {
         URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
+    }
+
+    @Test
+    public void testRoleName() throws Exception
+    {
+        Path in1 = toPath("test_string.csv");
+        ConfigSource config = baseConfig.merge(loadYamlResource(embulk, "test_string.yml"));
+        config.set("role_name", baseConfig.get(String.class, "user"));
+        TestingEmbulk.RunResult result1 = embulk.runOutput(config, in1);
+        assertThat(selectRecords(embulk, "test_string"), is(readResource("test_string_expected.csv")));
+        //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
     }
 
 }

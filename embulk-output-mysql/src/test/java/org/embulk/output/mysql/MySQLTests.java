@@ -24,7 +24,7 @@ public class MySQLTests
     {
         ConfigSource config = baseConfig();
 
-        String url = String.format("jdbc:mysql://%s:%s/%s",
+        String url = String.format("jdbc:mysql://%s:%s/%s?enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2",
                 config.get(String.class, "host"),
                 config.get(String.class, "port", "3306"),
                 config.get(String.class, "database"));

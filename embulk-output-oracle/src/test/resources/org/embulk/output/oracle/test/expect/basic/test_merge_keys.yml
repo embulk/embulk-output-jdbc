@@ -1,3 +1,0 @@
-table: TEST_MERGE1
-mode: merge
-merge_keys: [VARCHAR2_ITEM,NUMBER_ITEM]

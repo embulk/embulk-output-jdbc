@@ -1,5 +1,0 @@
-table: ＴＥＳＴ１
-mode: insert_direct
-insert_method: oci
-column_options:
-  INTEGER_ITEM: {value_type: pass}

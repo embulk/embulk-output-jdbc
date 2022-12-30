@@ -1,11 +1,12 @@
 package org.embulk.output.jdbc;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.embulk.config.ConfigException;
 
-import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -68,12 +69,12 @@ public class JdbcSchema
 
     public static JdbcSchema filterSkipColumns(JdbcSchema schema)
     {
-        ImmutableList.Builder<JdbcColumn> builder = ImmutableList.builder();
+        final ArrayList<JdbcColumn> builder = new ArrayList<>();
         for (JdbcColumn c : schema.getColumns()) {
             if (!c.isSkipColumn()) {
                 builder.add(c);
             }
         }
-        return new JdbcSchema(builder.build());
+        return new JdbcSchema(Collections.unmodifiableList(builder));
     }
 }
