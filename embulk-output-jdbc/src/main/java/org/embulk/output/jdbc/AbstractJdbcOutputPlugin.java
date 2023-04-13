@@ -608,7 +608,7 @@ public abstract class AbstractJdbcOutputPlugin
             // direct modify mode doesn't need intermediate tables.
             task.setIntermediateTables(Optional.<List<TableIdentifier>>empty());
             if (task.getBeforeLoad().isPresent()) {
-                con.executeSql(task.getBeforeLoad().get());
+                con.executeSqlStatement(task.getBeforeLoad().get());
             }
         }
 
@@ -874,7 +874,7 @@ public abstract class AbstractJdbcOutputPlugin
         case MERGE_DIRECT:
             // already loaded
             if (task.getAfterLoad().isPresent()) {
-                con.executeSql(task.getAfterLoad().get());
+                con.executeSqlStatement(task.getAfterLoad().get());
             }
             break;
 
