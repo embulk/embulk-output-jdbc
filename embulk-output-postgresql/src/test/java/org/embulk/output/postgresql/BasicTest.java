@@ -3,7 +3,7 @@ package org.embulk.output.postgresql;
 import static org.embulk.output.postgresql.PostgreSQLTests.execute;
 import static org.embulk.output.postgresql.PostgreSQLTests.selectRecords;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +34,8 @@ import com.google.common.io.Resources;
 
 public class BasicTest
 {
-    private static final String BASIC_RESOURCE_PATH = "org/embulk/output/postgresql/test/expect/basic/";
+    private static final String BASIC_RESOURCE_NAME = "org/embulk/output/postgresql/test/expect/basic/";
+    private static final String BASIC_RESOURCE_PATH = "/" + BASIC_RESOURCE_NAME;
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
     {
@@ -43,7 +44,8 @@ public class BasicTest
 
     private static String readResource(String fileName)
     {
-        return EmbulkTests.readResource(BASIC_RESOURCE_PATH + fileName);
+        String ret = EmbulkTests.readResource(BASIC_RESOURCE_PATH + fileName);
+        return ret;
     }
 
     @Rule
@@ -141,7 +143,7 @@ public class BasicTest
 
     private Path toPath(String fileName) throws URISyntaxException
     {
-        URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
+        URL url = Resources.getResource(BASIC_RESOURCE_NAME + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 

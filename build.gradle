@@ -6,7 +6,7 @@ plugins {
     id "maven-publish"
     id "signing"
     id 'checkstyle'
-    id "org.embulk.embulk-plugins" version "0.4.2" apply false
+    id "org.embulk.embulk-plugins" version "0.5.5" apply false
 }
 
 allprojects {
@@ -30,24 +30,23 @@ subprojects {
         defaultJdbcDriver
     }
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
         options.encoding = "UTF-8"
     }
 
     java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(8)
+        }
         withJavadocJar()
         withSourcesJar()
     }
 
     dependencies {
-        compileOnly "org.embulk:embulk-api:0.10.31"
-        compileOnly "org.embulk:embulk-spi:0.10.31"
+        compileOnly "org.embulk:embulk-spi:0.10.49"
 
-        compile("org.embulk:embulk-util-config:0.3.0") {
+        implementation("org.embulk:embulk-util-config:0.3.3") {
             // They conflict with embulk-core. They are once excluded here,
             // and added explicitly with versions exactly the same with embulk-core:0.10.31.
             exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
@@ -59,19 +58,20 @@ subprojects {
 
         // They are once excluded from transitive dependencies of other dependencies,
         // and added explicitly with versions exactly the same with embulk-core:0.10.31.
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
-        compile "com.fasterxml.jackson.core:jackson-core:2.6.7"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.6.7"
-        compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
-        compile "javax.validation:validation-api:1.1.0.Final"
+        implementation "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
+        implementation "com.fasterxml.jackson.core:jackson-core:2.6.7"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.6.7"
+        implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
+        implementation "javax.validation:validation-api:1.1.0.Final"
 
-        compile "org.embulk:embulk-util-json:0.1.1"
-        compile "org.embulk:embulk-util-timestamp:0.2.1"
-        compile "org.embulk:embulk-util-retryhelper:0.8.2"
+        implementation "org.embulk:embulk-util-json:0.2.1"
+        implementation "org.embulk:embulk-util-timestamp:0.2.2"
+        implementation "org.embulk:embulk-util-retryhelper:0.8.2"
 
-        testCompile "org.embulk:embulk-junit4:0.10.31"
-        testCompile "org.embulk:embulk-core:0.10.31"
-        testCompile "org.embulk:embulk-deps:0.10.31"
+        testImplementation "org.embulk:embulk-junit4:0.10.49"
+        testImplementation "org.embulk:embulk-core:0.10.49"
+        testImplementation "org.embulk:embulk-deps:0.10.49"
+        testImplementation "com.google.guava:guava:18.0" // TODO will remove after replace guava
     }
 
     test {

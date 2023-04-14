@@ -32,7 +32,8 @@ import com.google.common.io.Resources;
 
 public class AfterLoadTest
 {
-    private static final String BASIC_RESOURCE_PATH = "org/embulk/output/mysql/test/expect/after_load/";
+    private static final String BASIC_RESOURCE_NAME = "org/embulk/output/mysql/test/expect/after_load/";
+    private static final String BASIC_RESOURCE_PATH = "/" + BASIC_RESOURCE_NAME;
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
     {
@@ -140,7 +141,7 @@ public class AfterLoadTest
 
     private Path toPath(String fileName) throws URISyntaxException
     {
-        URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
+        URL url = Resources.getResource(BASIC_RESOURCE_NAME + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 

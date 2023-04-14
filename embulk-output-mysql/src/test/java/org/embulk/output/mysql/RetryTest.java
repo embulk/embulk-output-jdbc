@@ -3,7 +3,7 @@ package org.embulk.output.mysql;
 import static org.embulk.output.mysql.MySQLTests.execute;
 import static org.embulk.output.mysql.MySQLTests.selectRecords;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,7 +43,8 @@ public class RetryTest
         public boolean enabled = true;
     }
 
-    private static final String BASIC_RESOURCE_PATH = "org/embulk/output/mysql/test/expect/retry/";
+    private static final String BASIC_RESOURCE_NAME = "org/embulk/output/mysql/test/expect/retry/";
+    private static final String BASIC_RESOURCE_PATH = "/" + BASIC_RESOURCE_NAME;
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
     {
@@ -386,7 +387,7 @@ public class RetryTest
 
     private Path toPath(String fileName) throws URISyntaxException
     {
-        URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
+        URL url = Resources.getResource(BASIC_RESOURCE_NAME + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 

@@ -2,7 +2,7 @@ package org.embulk.output.mysql;
 
 import static org.embulk.output.mysql.MySQLTests.execute;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -32,7 +32,8 @@ import com.google.common.io.Resources;
 
 public class BeforeLoadTest
 {
-    private static final String BASIC_RESOURCE_PATH = "org/embulk/output/mysql/test/expect/before_load/";
+    private static final String BASIC_RESOURCE_NAME = "org/embulk/output/mysql/test/expect/before_load/";
+    private static final String BASIC_RESOURCE_PATH = "/" + BASIC_RESOURCE_NAME;
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
     {
@@ -128,7 +129,7 @@ public class BeforeLoadTest
 
     private Path toPath(String fileName) throws URISyntaxException
     {
-        URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
+        URL url = Resources.getResource(BASIC_RESOURCE_NAME + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
