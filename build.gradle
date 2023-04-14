@@ -11,7 +11,7 @@ plugins {
 
 allprojects {
     group = "org.embulk"
-    version = "0.10.2"
+    version = "0.10.3"
     description = "Inserts or updates records to a table."
 }
 
