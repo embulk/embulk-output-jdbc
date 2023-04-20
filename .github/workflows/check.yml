@@ -1,10 +1,13 @@
-name: Build and test
+name: Check
 on: push
 jobs:
   mysql:
+    runs-on: ubuntu-latest
+    # push: always run.
+    # pull_request: run only when the PR is submitted from a forked repository, not within this repository.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
-    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:5.7
@@ -16,12 +19,13 @@ jobs:
           MYSQL_USER: ci
           MYSQL_PASSWORD: password
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: 8
-          distribution: 'zulu'
+          distribution: 'temurin'
+          cache: "gradle"
       - name: Connect
         run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show databases;"
       - name: Create database
@@ -31,13 +35,18 @@ jobs:
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
           EMBULK_OUTPUT_MYSQL_TEST_CONFIG: "${{ github.workspace }}/ci/mysql.yml"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: mysql
           path: embulk-output-mysql/build/reports/tests/test
   postgresql:
     runs-on: ubuntu-latest
+    # push: always run.
+    # pull_request: run only when the PR is submitted from a forked repository, not within this repository.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
     services:
       postgres:
         image: postgres:9.4
@@ -47,12 +56,13 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: 8
-          distribution: 'zulu'
+          distribution: 'temurin'
+          cache: "gradle"
       - name: Connect
         run: psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c "\l"
         env:
@@ -66,13 +76,18 @@ jobs:
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
           EMBULK_OUTPUT_POSTGRESQL_TEST_CONFIG: "${{ github.workspace }}/ci/postgresql.yml"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: postgresql
           path: embulk-output-postgresql/build/reports/tests/test
   redshift:
     runs-on: ubuntu-latest
+    # push: always run.
+    # pull_request: run only when the PR is submitted from a forked repository, not within this repository.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
     # Testing embulk-output-redshift emulated with PostgreSQL.
     services:
       postgres:
@@ -83,12 +98,13 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: 8
-          distribution: 'zulu'
+          distribution: 'temurin'
+          cache: "gradle"
       - name: Connect
         run: psql -h 127.0.0.1 -p 5439 -U postgres -d postgres -c "\l"
         env:
@@ -102,7 +118,7 @@ jobs:
         env:
           _JAVA_OPTIONS: "-Xmx2048m -Xms512m"
           EMBULK_OUTPUT_REDSHIFT_TEST_CONFIG: "${{ github.workspace }}/ci/redshift.yml"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: redshift
@@ -110,12 +126,18 @@ jobs:
           if-no-files-found: ignore
   sqlserver:
     runs-on: ubuntu-latest
+    # push: always run.
+    # pull_request: run only when the PR is submitted from a forked repository, not within this repository.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: 8
-          distribution: 'zulu'
+          distribution: 'temurin'
+          cache: "gradle"
       - name: Build-only
         run: ./gradlew --stacktrace :embulk-output-sqlserver:compileJava :embulk-output-sqlserver:compileTestJava
