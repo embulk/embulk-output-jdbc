@@ -1,5 +1,5 @@
 name: Check
-on: push
+on: [ pull_request, push ]
 jobs:
   mysql:
     runs-on: ubuntu-latest
