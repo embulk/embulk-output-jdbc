@@ -8,10 +8,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.embulk.config.ConfigSource;
 
 import static java.util.Locale.ENGLISH;
+import static java.util.stream.Collectors.joining;
 import static org.embulk.test.EmbulkTests.readSortedFile;
 
 public class PostgreSQLTests
@@ -60,4 +63,14 @@ public class PostgreSQLTests
         execute("\\copy " + tableName + " to '" + temp.toString().replace("\\", "\\\\") + "' delimiter ','");
         return readSortedFile(temp);
     }
+
+    public static String selectRecords(TestingEmbulk embulk, String tableName, List<String> columnList) throws IOException
+    {
+        Path temp = embulk.createTempFile("txt");
+        Files.delete(temp);
+        final String cols = columnList.stream().collect(Collectors.joining(","));
+        execute(String.format("\\COPY (SELECT %s FROM %s) TO '%s' With CSV DELIMITER ',';", cols,  tableName, temp.toString().replace("\\", "\\\\")));
+        return readSortedFile(temp);
+    }
+
 }
