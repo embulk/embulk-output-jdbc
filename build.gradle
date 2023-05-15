@@ -60,7 +60,7 @@ subprojects {
         // and added explicitly with versions exactly the same with embulk-core:0.10.31.
         implementation "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
         implementation "com.fasterxml.jackson.core:jackson-core:2.6.7"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.6.7"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.6.7.5"
         implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
         implementation "javax.validation:validation-api:1.1.0.Final"
 

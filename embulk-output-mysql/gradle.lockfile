@@ -3,7 +3,7 @@
 # This file is expected to be part of source control.
 com.fasterxml.jackson.core:jackson-annotations:2.6.7=compileClasspath,runtimeClasspath
 com.fasterxml.jackson.core:jackson-core:2.6.7=compileClasspath,runtimeClasspath
-com.fasterxml.jackson.core:jackson-databind:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.6.7.5=compileClasspath,runtimeClasspath
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7=compileClasspath,runtimeClasspath
 javax.validation:validation-api:1.1.0.Final=compileClasspath,runtimeClasspath
 mysql:mysql-connector-java:5.1.44=compileClasspath

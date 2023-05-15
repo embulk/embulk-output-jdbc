@@ -3,7 +3,7 @@
 # This file is expected to be part of source control.
 com.fasterxml.jackson.core:jackson-annotations:2.6.7=compileClasspath,runtimeClasspath
 com.fasterxml.jackson.core:jackson-core:2.6.7=compileClasspath,runtimeClasspath
-com.fasterxml.jackson.core:jackson-databind:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.6.7.5=compileClasspath,runtimeClasspath
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7=compileClasspath,runtimeClasspath
 com.github.jnr:jffi:1.2.16=compileClasspath,runtimeClasspath
 com.github.jnr:jnr-ffi:2.1.7=compileClasspath,runtimeClasspath
