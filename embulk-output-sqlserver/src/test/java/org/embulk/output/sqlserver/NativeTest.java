@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.embulk.config.ConfigSource;
@@ -26,12 +28,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
-
 public class NativeTest
 {
-    private static final String BASIC_RESOURCE_PATH = "org/embulk/output/sqlserver/test/expect/native/";
+    private static final String BASIC_RESOURCE_PATH = "/org/embulk/output/sqlserver/test/expect/native/";
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
     {
@@ -262,21 +261,22 @@ public class NativeTest
 
         // create input data dynamically because it is huge.
 
-        ImmutableList.Builder<String[]> recordsBuilder = ImmutableList.builder();
-        recordsBuilder.add(new String[]{"a", "X", "あ"});
-        recordsBuilder.add(new String[]{"b", createString(9000), createString(10000) + "い"});
-        recordsBuilder.add(new String[]{"c", createString(20000), createString(30000) + "う"});
-        List<String[]> records = recordsBuilder.build();
+        List<String[]> recordsList = new ArrayList<>();
+        recordsList.add(new String[]{"a", "X", "あ"});
+        recordsList.add(new String[]{"b", createString(9000), createString(10000) + "い"});
+        recordsList.add(new String[]{"c", createString(20000), createString(30000) + "う"});
+        List<String[]> records = Collections.unmodifiableList(recordsList);
 
-        ImmutableList.Builder<String> linesBuilder = ImmutableList.builder();
-        linesBuilder.add("ITEM1:long,ITEM2:string,ITEM3:string,ITEM4:string");
+        //ImmutableList.Builder<String> linesBuilder = ImmutableList.builder();
+        List<String> lines = new ArrayList<>();
+        lines.add("ITEM1:long,ITEM2:string,ITEM3:string,ITEM4:string");
         for (int i = 0; i < records.size(); i++) {
             String[] record = records.get(i);
-            linesBuilder.add((i + 1) + "," + record[0] + "," + record[1] + "," + record[2]);
+            lines.add((i + 1) + "," + record[0] + "," + record[1] + "," + record[2]);
         }
 
         Charset charset = Charset.forName("UTF8");
-        Files.write(in1, linesBuilder.build(), charset);
+        Files.write(in1, Collections.unmodifiableList(lines), charset);
 
         TestingEmbulk.RunResult result1 = embulk.runOutput(baseConfig.merge(loadYamlResource(embulk, "test_huge.yml")), in1);
         //assertThat(result1.getConfigDiff(), is((ConfigDiff) loadYamlResource(embulk, "test_expected.diff")));
@@ -310,7 +310,7 @@ public class NativeTest
 
     private Path toPath(String fileName) throws URISyntaxException
     {
-        URL url = Resources.getResource(BASIC_RESOURCE_PATH + fileName);
+        URL url = EmbulkTests.class.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 

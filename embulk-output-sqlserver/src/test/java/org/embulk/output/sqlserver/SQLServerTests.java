@@ -3,22 +3,22 @@ package org.embulk.output.sqlserver;
 import static java.util.Locale.ENGLISH;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
 
 public class SQLServerTests
 {
@@ -46,31 +46,37 @@ public class SQLServerTests
     {
         ConfigSource config = baseConfig();
 
-        ImmutableList.Builder<String> args = ImmutableList.builder();
-        args.add("sqlcmd")
-                .add("-U")
-                .add(config.get(String.class, "user"))
-                .add("-P")
-                .add(config.get(String.class, "password"))
-                .add("-H")
-                .add(config.get(String.class, "host"))
-                .add("-d")
-                .add(config.get(String.class, "database"))
-                .add("-Q")
-                .add(sql);
+        List<String> args = new ArrayList<>(Arrays.asList("sqlcmd",
+                "-U",
+                config.get(String.class, "user"),
+                "-P",
+                config.get(String.class, "password"),
+                "-H",
+                config.get(String.class, "host"),
+                "-d",
+                config.get(String.class, "database"),
+                "-Q",
+                sql
+                ));
+
         for (String option : options) {
-            args.add(option);
+            args.add((String)option);
         }
 
-        ProcessBuilder pb = new ProcessBuilder(args.build());
+        ProcessBuilder pb = new ProcessBuilder(Collections.unmodifiableList(args));
         pb.redirectErrorStream(true);
         int code;
         try {
             Process process = pb.start();
-            ByteStreams.copy(process.getInputStream(), System.out);
+            InputStream inputStream = process.getInputStream();
+            byte[] buffer = new byte[8192];
+            int readSize;
+            while ((readSize = inputStream.read(buffer)) != -1) {
+                System.out.write(buffer,0,readSize);
+            }
             code = process.waitFor();
         } catch (IOException | InterruptedException ex) {
-            throw Throwables.propagate(ex);
+            throw new RuntimeException(ex);
         }
         if (code != 0) {
             throw new RuntimeException(String.format(ENGLISH,

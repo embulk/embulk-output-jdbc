@@ -71,7 +71,6 @@ subprojects {
         testImplementation "org.embulk:embulk-junit4:0.10.49"
         testImplementation "org.embulk:embulk-core:0.10.49"
         testImplementation "org.embulk:embulk-deps:0.10.49"
-        testImplementation "com.google.guava:guava:18.0" // TODO will remove after replace guava
     }
 
     test {

@@ -3,10 +3,9 @@ package org.embulk.output.postgresql;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 
-import com.google.common.base.Throwables;
-import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -38,10 +37,15 @@ public class PostgreSQLTests
         int code;
         try {
             Process process = pb.start();
-            ByteStreams.copy(process.getInputStream(), System.out);
+            InputStream inputStream = process.getInputStream();
+            byte[] buffer = new byte[8192];
+            int readSize;
+            while ((readSize = inputStream.read(buffer)) != -1) {
+                System.out.write(buffer,0,readSize);
+            }
             code = process.waitFor();
         } catch (IOException | InterruptedException ex) {
-            throw Throwables.propagate(ex);
+            throw new RuntimeException(ex);
         }
         if (code != 0) {
             throw new RuntimeException(String.format(ENGLISH,

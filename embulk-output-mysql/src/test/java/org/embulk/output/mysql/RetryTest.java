@@ -34,8 +34,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.io.Resources;
-
 public class RetryTest
 {
     private static class Lock
@@ -43,8 +41,7 @@ public class RetryTest
         public boolean enabled = true;
     }
 
-    private static final String BASIC_RESOURCE_NAME = "org/embulk/output/mysql/test/expect/retry/";
-    private static final String BASIC_RESOURCE_PATH = "/" + BASIC_RESOURCE_NAME;
+    private static final String BASIC_RESOURCE_PATH = "/org/embulk/output/mysql/test/expect/retry/";
 
     private static ConfigSource loadYamlResource(TestingEmbulk embulk, String fileName)
     {
@@ -387,7 +384,7 @@ public class RetryTest
 
     private Path toPath(String fileName) throws URISyntaxException
     {
-        URL url = Resources.getResource(BASIC_RESOURCE_NAME + fileName);
+        URL url = EmbulkTests.class.getResource(BASIC_RESOURCE_PATH + fileName);
         return FileSystems.getDefault().getPath(new File(url.toURI()).getAbsolutePath());
     }
 
