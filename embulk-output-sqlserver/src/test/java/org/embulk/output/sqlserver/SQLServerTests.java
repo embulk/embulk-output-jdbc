@@ -60,7 +60,7 @@ public class SQLServerTests
                 ));
 
         for (String option : options) {
-            args.add((String)option);
+            args.add((String) option);
         }
 
         ProcessBuilder pb = new ProcessBuilder(Collections.unmodifiableList(args));
@@ -72,7 +72,7 @@ public class SQLServerTests
             byte[] buffer = new byte[8192];
             int readSize;
             while ((readSize = inputStream.read(buffer)) != -1) {
-                System.out.write(buffer,0,readSize);
+                System.out.write(buffer, 0, readSize);
             }
             code = process.waitFor();
         } catch (IOException | InterruptedException ex) {

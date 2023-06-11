@@ -41,7 +41,7 @@ public class PostgreSQLTests
             byte[] buffer = new byte[8192];
             int readSize;
             while ((readSize = inputStream.read(buffer)) != -1) {
-                System.out.write(buffer,0,readSize);
+                System.out.write(buffer, 0, readSize);
             }
             code = process.waitFor();
         } catch (IOException | InterruptedException ex) {
