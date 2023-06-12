@@ -6,11 +6,11 @@ com.amazonaws:aws-java-sdk-kms:1.11.523
 com.amazonaws:aws-java-sdk-s3:1.11.523
 com.amazonaws:aws-java-sdk-sts:1.11.523
 com.amazonaws:jmespath-java:1.11.523
-com.fasterxml.jackson.core:jackson-annotations:2.6.7
-com.fasterxml.jackson.core:jackson-core:2.6.7
-com.fasterxml.jackson.core:jackson-databind:2.6.7
-com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.6.7
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7
+com.fasterxml.jackson.core:jackson-annotations:2.13.3
+com.fasterxml.jackson.core:jackson-core:2.13.3
+com.fasterxml.jackson.core:jackson-databind:2.13.3
+com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.3
 commons-codec:commons-codec:1.10
 commons-logging:commons-logging:1.2
 javax.validation:validation-api:1.1.0.Final
