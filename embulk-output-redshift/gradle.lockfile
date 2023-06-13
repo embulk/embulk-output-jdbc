@@ -1,0 +1,32 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.amazonaws:aws-java-sdk-core:1.11.523=compileClasspath,runtimeClasspath
+com.amazonaws:aws-java-sdk-kms:1.11.523=compileClasspath,runtimeClasspath
+com.amazonaws:aws-java-sdk-s3:1.11.523=compileClasspath,runtimeClasspath
+com.amazonaws:aws-java-sdk-sts:1.11.523=compileClasspath,runtimeClasspath
+com.amazonaws:jmespath-java:1.11.523=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-annotations:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-core:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.6.7.5=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7=compileClasspath,runtimeClasspath
+commons-codec:commons-codec:1.10=compileClasspath,runtimeClasspath
+commons-logging:commons-logging:1.2=compileClasspath,runtimeClasspath
+javax.validation:validation-api:1.1.0.Final=compileClasspath,runtimeClasspath
+joda-time:joda-time:2.9.2=compileClasspath,runtimeClasspath
+org.apache.httpcomponents:httpclient:4.5.5=compileClasspath,runtimeClasspath
+org.apache.httpcomponents:httpcore:4.4.9=compileClasspath,runtimeClasspath
+org.embulk:embulk-spi:0.10.49=compileClasspath
+org.embulk:embulk-util-aws-credentials:0.4.0=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-config:0.3.3=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-json:0.2.1=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-retryhelper:0.8.2=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-rubytime:0.3.3=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-timestamp:0.2.2=compileClasspath,runtimeClasspath
+org.msgpack:msgpack-core:0.8.24=compileClasspath
+org.postgresql:postgresql:9.4-1205-jdbc41=compileClasspath,runtimeClasspath
+org.slf4j:jcl-over-slf4j:1.7.12=compileClasspath,runtimeClasspath
+org.slf4j:slf4j-api:2.0.7=compileClasspath
+software.amazon.ion:ion-java:1.0.2=compileClasspath,runtimeClasspath
+empty=

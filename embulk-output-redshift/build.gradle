@@ -1,29 +1,29 @@
 dependencies {
-    compile(project(path: ":embulk-output-jdbc", configuration: "runtimeElements"))
-    compile(project(path: ":embulk-output-postgresql", configuration: "runtimeElements"))
-    compile "org.postgresql:postgresql:9.4-1205-jdbc41"
+    implementation(project(path: ":embulk-output-jdbc", configuration: "runtimeElements"))
+    implementation(project(path: ":embulk-output-postgresql", configuration: "runtimeElements"))
+    implementation "org.postgresql:postgresql:9.4-1205-jdbc41"
 
-    compile("com.amazonaws:aws-java-sdk-s3:1.11.523") {
+    implementation("com.amazonaws:aws-java-sdk-s3:1.11.523") {
         exclude group: "joda-time", module: "joda-time"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
     }
-    compile("com.amazonaws:aws-java-sdk-sts:1.11.523") {
+    implementation("com.amazonaws:aws-java-sdk-sts:1.11.523") {
         exclude group: "joda-time", module: "joda-time"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
     }
-    compile("org.embulk:embulk-util-aws-credentials:0.4.0") {
+    implementation("org.embulk:embulk-util-aws-credentials:0.4.0") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
 
     // Joda-Time has been removed from Embulk since v0.10.30.
     // Ordinary plugins no longer need Joda-Time, but embulk-output-redshift depends on Joda-Time as aws-java-sdk-s3 depends.
-    compile "joda-time:joda-time:2.9.2"
+    implementation "joda-time:joda-time:2.9.2"
 
-    testCompile project(':embulk-output-jdbc').sourceSets.test.output
+    testImplementation project(':embulk-output-jdbc').sourceSets.test.output
 }
 
 embulkPlugin {

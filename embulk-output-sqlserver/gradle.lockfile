@@ -1,0 +1,27 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.fasterxml.jackson.core:jackson-annotations:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-core:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.6.7.5=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7=compileClasspath,runtimeClasspath
+com.github.jnr:jffi:1.2.16=compileClasspath,runtimeClasspath
+com.github.jnr:jnr-ffi:2.1.7=compileClasspath,runtimeClasspath
+com.github.jnr:jnr-x86asm:1.0.2=compileClasspath,runtimeClasspath
+com.microsoft.sqlserver:mssql-jdbc:7.2.2.jre8=compileClasspath,runtimeClasspath
+javax.validation:validation-api:1.1.0.Final=compileClasspath,runtimeClasspath
+net.sourceforge.jtds:jtds:1.3.1=compileClasspath,runtimeClasspath
+org.embulk:embulk-spi:0.10.49=compileClasspath
+org.embulk:embulk-util-config:0.3.3=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-json:0.2.1=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-retryhelper:0.8.2=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-rubytime:0.3.3=compileClasspath,runtimeClasspath
+org.embulk:embulk-util-timestamp:0.2.2=compileClasspath,runtimeClasspath
+org.msgpack:msgpack-core:0.8.24=compileClasspath
+org.ow2.asm:asm-analysis:5.0.4=compileClasspath,runtimeClasspath
+org.ow2.asm:asm-commons:5.0.4=compileClasspath,runtimeClasspath
+org.ow2.asm:asm-tree:5.0.4=compileClasspath,runtimeClasspath
+org.ow2.asm:asm-util:5.0.4=compileClasspath,runtimeClasspath
+org.ow2.asm:asm:5.0.4=compileClasspath,runtimeClasspath
+org.slf4j:slf4j-api:2.0.7=compileClasspath
+empty=
