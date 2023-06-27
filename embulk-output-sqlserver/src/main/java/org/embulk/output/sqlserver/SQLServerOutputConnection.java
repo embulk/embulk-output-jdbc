@@ -44,7 +44,7 @@ public class SQLServerOutputConnection
         case "BOOLEAN":
             return "BIT";
         case "CLOB":
-            return "TEXT";
+            return "NVARCHAR(max)";
         case "TIMESTAMP":
             return "DATETIME2";
         case "NVARCHAR":
