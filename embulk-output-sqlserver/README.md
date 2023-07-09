@@ -33,7 +33,7 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
 - **retry_limit**: max retry count for database operations (integer, default: 12). When intermediate table to create already created by another process, this plugin will retry with another table name to avoid collision.
 - **retry_wait**: initial retry wait time in milliseconds (integer, default: 1000 (1 second))
 - **max_retry_wait**: upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
-- **mode**: "insert", "insert_direct", "truncate_insert" , "replace" or "merge". See below. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert(delete_insert)" , "replace" or "merge". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = T.foo + S.foo` (`T` means target table and `S` means source table). (string array, default: always overwrites with new values)
 - **insert_method**: see below
@@ -47,7 +47,7 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
   NOTE: the default value_type for DATE, TIME and DATETIME2 is `string`, because jTDS driver, default JDBC driver for older embulk-output-sqlserver, returns Types.VARCHAR as JDBC type for these types.
   - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
-- **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert mode, the SQL will be executed after truncating. replace mode doesn't support this option.
+- **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert(delete_insert) mode, the SQL will be executed after truncating. replace mode doesn't support this option.
 - **after_load**: if set, this SQL will be executed after loading all records.
 - **connect_timeout**: timeout for the driver to connect. 0 means the default of SQL Server (15 by default). (integer (seconds), optional)
 - **socket_timeout**: timeout for executing the query. 0 means no timeout. (integer (seconds), optional)

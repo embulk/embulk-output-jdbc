@@ -26,19 +26,19 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
 - **retry_limit**: max retry count for database operations (integer, default: 12). When intermediate table to create already created by another process, this plugin will retry with another table name to avoid collision.
 - **retry_wait**: initial retry wait time in milliseconds (integer, default: 1000 (1 second))
 - **max_retry_wait**: upper limit of retry wait, which will be doubled at every retry (integer, default: 1800000 (30 minutes))
-- **mode**: "insert", "insert_direct", "truncate_insert", "replace", "merge" or "merge_direct". See below. (string, required)
+- **mode**: "insert", "insert_direct", "truncate_insert(delete_insert)", "replace", "merge" or "merge_direct". See below. (string, required)
 - **merge_keys**: key column names for merging records in merge mode (string array, required in merge mode if table doesn't have primary key)
 - **merge_rule**: list of column assignments for updating existing records used in merge mode, for example `foo = foo + S.foo` (`S` means source table). (string array, default: always overwrites with new values)
 - **ssl**: enables SSL. data will be encrypted but CA or certification will not be verified (boolean, default: false)
 - **batch_size**: size of a single batch insert (integer, default: 16777216)
 - **default_timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp into a SQL string. This default_timezone option is used to control the timezone. You can overwrite timezone for each columns using column_options option. (string, default: `UTC`)
 - **column_options**: advanced: a key-value pairs where key is a column name and value is options for the column.
-  - **type**: type of a column when this plugin creates new tables (e.g. `VARCHAR(255)`, `INTEGER NOT NULL UNIQUE`). This used when this plugin creates intermediate tables (insert, truncate_insert and merge modes), when it creates the target table (insert_direct and replace modes), and when it creates nonexistent target table automatically. (string, default: depends on input column type. `BIGINT` if input column type is long, `BOOLEAN` if boolean, `DOUBLE PRECISION` if double, `CLOB` if string, `TIMESTAMP WITH TIME ZONE` if timestamp)
+  - **type**: type of a column when this plugin creates new tables (e.g. `VARCHAR(255)`, `INTEGER NOT NULL UNIQUE`). This used when this plugin creates intermediate tables (insert, truncate_insert(delete_insert) and merge modes), when it creates the target table (insert_direct and replace modes), and when it creates nonexistent target table automatically. (string, default: depends on input column type. `BIGINT` if input column type is long, `BOOLEAN` if boolean, `DOUBLE PRECISION` if double, `CLOB` if string, `TIMESTAMP WITH TIME ZONE` if timestamp)
   - **value_type**: This plugin converts input column type (embulk type) into a database type to build a INSERT statement. This value_type option controls the type of the value in a INSERT statement. (string, default: depends on the sql type of the column. Available values options are: `byte`, `short`, `int`, `long`, `double`, `float`, `boolean`, `string`, `nstring`, `date`, `time`, `timestamp`, `decimal`, `json`, `null`, `pass`)
   - **timestamp_format**: If input column type (embulk type) is timestamp and value_type is `string` or `nstring`, this plugin needs to format the timestamp value into a string. This timestamp_format option is used to control the format of the timestamp. (string, default: `%Y-%m-%d %H:%M:%S.%6N`)
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 - **role_name**: name of a role to execute statements. If this option is set, it executes `SET ROLE "..."` statement every time when a new connection is established (string)
-- **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert mode, the SQL will be executed after truncating. replace mode doesn't support this option.
+- **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert(delete_insert) mode, the SQL will be executed after truncating. replace mode doesn't support this option.
 - **after_load**: if set, this SQL will be executed after loading all records.
 
 ### Modes

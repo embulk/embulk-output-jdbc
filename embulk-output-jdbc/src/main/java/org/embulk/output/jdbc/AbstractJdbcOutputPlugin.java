@@ -380,11 +380,12 @@ public abstract class AbstractJdbcOutputPlugin
             case "merge_direct":
                 return MERGE_DIRECT;
             case "truncate_insert":
+            case "delete_insert":
                 return TRUNCATE_INSERT;
             case "replace":
                 return REPLACE;
             default:
-                throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are insert, insert_direct, merge, merge_direct, truncate_insert, replace", value));
+                throw new ConfigException(String.format("Unknown mode '%s'. Supported modes are insert, insert_direct, merge, merge_direct, truncate_insert(delete_insert), replace", value));
             }
         }
 
