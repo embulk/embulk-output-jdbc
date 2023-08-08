@@ -103,7 +103,7 @@ Redshift output plugin for Embulk loads records to Redshift.
   * Transactional: No. If fails, the target table could have some rows inserted.
   * Resumable: No.
 * **truncate_insert**:
-  * Behavior: Same with `insert` mode excepting that it truncates(using `delete from`, not using `truncate`)  the target table right before the last `INSERT ...` query.
+  * Behavior: Same with `insert` mode excepting that it truncates the target table (with SQL `DELETE FROM`, not `TRUNCATE`) right before the last `INSERT ...` query.
   * Transactional: Yes.
   * Resumable: No.
 * **replace**:
