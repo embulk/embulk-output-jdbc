@@ -1369,7 +1369,18 @@ public abstract class AbstractJdbcOutputPlugin
                 SQLException ex = (SQLException) firstException;
                 String sqlState = ex.getSQLState();
                 int errorCode = ex.getErrorCode();
-                logger.error("{} ({}:{})", errorMessage, errorCode, sqlState);
+                logger.error("{} (first exception:{SQLState={}, ErrorCode={}})", errorMessage, errorCode, sqlState, ex);
+            } else {
+                logger.error("{} (first exception)", errorMessage, firstException);
+            }
+
+            if (lastException instanceof SQLException) {
+                SQLException ex = (SQLException) lastException;
+                String sqlState = ex.getSQLState();
+                int errorCode = ex.getErrorCode();
+                logger.error("{} (last exception:{SQLState={}, ErrorCode={}})", errorMessage, errorCode, sqlState, ex);
+            } else {
+                logger.error("{} (last exception)", errorMessage, lastException);
             }
         }
 
