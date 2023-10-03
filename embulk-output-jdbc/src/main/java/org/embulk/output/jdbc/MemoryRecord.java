@@ -41,7 +41,7 @@ public class MemoryRecord implements Record
 
     public Instant getTimestamp(Column column)
     {
-        return ((org.embulk.spi.time.Timestamp) getValue(column)).getInstant();
+        return (Instant)getValue(column);
     }
 
     public Value getJson(Column column)
