@@ -22,7 +22,7 @@ public class PageReaderRecord implements Record
     public PageReaderRecord(PageReader pageReader)
     {
         this.pageReader = pageReader;
-        readRecords = new ArrayList<MemoryRecord>();
+        readRecords = new ArrayList<>();
     }
 
     public void setPage(Page page)
