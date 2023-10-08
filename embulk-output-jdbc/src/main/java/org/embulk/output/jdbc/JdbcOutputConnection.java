@@ -370,7 +370,12 @@ public class JdbcOutputConnection
         throw new UnsupportedOperationException("not implemented");
     }
 
+    @Deprecated // Use executeUpdateInNewStatement instead.
     protected void executeSql(String sql) throws SQLException
+    {
+        executeUpdateInNewStatement(sql);
+    }
+    protected void executeUpdateInNewStatement(String sql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
@@ -383,7 +388,7 @@ public class JdbcOutputConnection
         }
     }
 
-    protected void executeSqlStatement(String sql) throws SQLException
+    protected void executeInNewStatement(String sql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
