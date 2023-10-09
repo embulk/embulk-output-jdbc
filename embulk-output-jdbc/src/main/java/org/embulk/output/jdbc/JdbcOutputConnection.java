@@ -370,11 +370,29 @@ public class JdbcOutputConnection
         throw new UnsupportedOperationException("not implemented");
     }
 
+    @Deprecated // Use executeUpdateInNewStatement instead.
     protected void executeSql(String sql) throws SQLException
+    {
+        executeUpdateInNewStatement(sql);
+    }
+    protected void executeUpdateInNewStatement(String sql) throws SQLException
     {
         Statement stmt = connection.createStatement();
         try {
             executeUpdate(stmt, sql);
+            commitIfNecessary(connection);
+        } catch (SQLException ex) {
+            throw safeRollback(connection, ex);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    protected void executeInNewStatement(String sql) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+            execute(stmt, sql);
             commitIfNecessary(connection);
         } catch (SQLException ex) {
             throw safeRollback(connection, ex);
@@ -398,14 +416,14 @@ public class JdbcOutputConnection
             }
 
             if (preSql.isPresent()) {
-                executeUpdate(stmt, preSql.get());
+                execute(stmt, preSql.get());
             }
 
             String sql = buildCollectInsertSql(fromTables, schema, toTable);
             executeUpdate(stmt, sql);
 
             if (postSql.isPresent()) {
-                executeUpdate(stmt, postSql.get());
+                execute(stmt, postSql.get());
             }
 
             commitIfNecessary(connection);
@@ -462,14 +480,14 @@ public class JdbcOutputConnection
         Statement stmt = connection.createStatement();
         try {
             if (preSql.isPresent()) {
-                executeUpdate(stmt, preSql.get());
+                execute(stmt, preSql.get());
             }
 
             String sql = buildCollectMergeSql(fromTables, schema, toTable, mergeConfig);
             executeUpdate(stmt, sql);
 
             if (postSql.isPresent()) {
-                executeUpdate(stmt, postSql.get());
+                execute(stmt, postSql.get());
             }
 
             commitIfNecessary(connection);
@@ -494,7 +512,7 @@ public class JdbcOutputConnection
             executeUpdate(stmt, buildRenameTableSql(fromTable, toTable));
 
             if (postSql.isPresent()) {
-                executeUpdate(stmt, postSql.get());
+                execute(stmt, postSql.get());
             }
 
             commitIfNecessary(connection);
@@ -628,6 +646,20 @@ public class JdbcOutputConnection
             logger.info(String.format("> %.2f seconds (%,d rows)", seconds, count));
         }
         return count;
+    }
+
+    protected boolean execute(Statement stmt, String sql) throws SQLException
+    {
+        logger.info("SQL: " + sql);
+        long startTime = System.currentTimeMillis();
+        boolean result = stmt.execute(sql);
+        double seconds = (System.currentTimeMillis() - startTime) / 1000.0;
+        if (result) {
+            logger.info(String.format("> succeed %.2f seconds", seconds));
+        } else {
+            logger.info(String.format("> failed %.2f seconds", seconds));
+        }
+        return result;
     }
 
     protected void commitIfNecessary(Connection con) throws SQLException
