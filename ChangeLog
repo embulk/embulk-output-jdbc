@@ -1,3 +1,10 @@
+Release 0.10.3 - 2023-10-10
+
+* Use NVARCHAR(max) for CLOB, instead of TEXT, when creating a table in SQLServer
+* Use execute() instead of executeUpdate() for afterLoad/beforeLoad
+* Add logging to avoid loss of information when exception changes during retries
+* Fix double casting on getTimestamp
+
 Release 0.10.2 - 2021-09-30
 
 * Make temp tables suffix length flexible
