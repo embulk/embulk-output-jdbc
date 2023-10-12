@@ -2,7 +2,7 @@
 
 JDBC output plugins for Embulk loads records to databases using JDBC drivers.
 
-**[WARNING!]** The next version of embulk-output-jdbc will use embulk 0.9, and will require Java 8. Java 7 will no longer be supported.
+**[WARNING!]** The next version of embulk-output-jdbc will require Embulk v0.11 and Java 8. It may work with Java 11+, but not fully tested.
 
 ## MySQL
 
