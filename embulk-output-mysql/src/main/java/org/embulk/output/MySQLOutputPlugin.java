@@ -54,6 +54,13 @@ public class MySQLOutputPlugin
         @ConfigDefault("\"disable\"") // backward compatibility
         public Ssl getSsl();
 
+        @Config("socket_timeout")
+        @ConfigDefault("2700000")
+        public int getSocketTimeout();
+
+        @Config("retryable_socket_timeout")
+        @ConfigDefault("1800000")
+        public int getRetryableSocketTimeout();
     }
 
     @Override
@@ -86,7 +93,7 @@ public class MySQLOutputPlugin
         props.setProperty("useCompression", "true");
 
         props.setProperty("connectTimeout", "300000"); // milliseconds
-        props.setProperty("socketTimeout", "1800000"); // smillieconds
+        props.setProperty("socketTimeout", String.valueOf(t.getRetryableSocketTimeout()));
 
         // Enable keepalive based on tcp_keepalive_time, tcp_keepalive_intvl and tcp_keepalive_probes kernel parameters.
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
@@ -111,7 +118,7 @@ public class MySQLOutputPlugin
         if (!retryableMetadataOperation) {
             // non-retryable batch operation uses longer timeout
             props.setProperty("connectTimeout",  "300000");  // milliseconds
-            props.setProperty("socketTimeout", "2700000");   // milliseconds
+            props.setProperty("socketTimeout", String.valueOf(t.getSocketTimeout()));
         }
 
         props.putAll(t.getOptions());
