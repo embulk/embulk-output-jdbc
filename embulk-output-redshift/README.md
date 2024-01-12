@@ -24,7 +24,7 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **transaction_isolation**: transaction isolation level for each connection ("read_uncommitted", "read_committed", "repeatable_read" or "serializable"). if not specified, database default value will be used.
 - **access_key_id**: deprecated. `aws_access_key_id` should be used (see "basic" in `aws_auth_method`).
 - **secret_access_key**: deprecated. `aws_secret_access_key` should be used (see "basic" in `aws_auth_method`).
-- **aws_auth_method**: name of mechanism to authenticate requests ("basic", "env", "instance", "profile", "properties", "anonymous", "session" or "default". default: "basic")
+- **aws_auth_method**: name of mechanism to authenticate requests ("basic", "env", "instance", "profile", "properties", "anonymous", "session", "assume_role" or "default". default: "basic")
 
   - "basic": uses `access_key_id` and `secret_access_key` to authenticate.
 
@@ -62,6 +62,14 @@ Redshift output plugin for Embulk loads records to Redshift.
     - **aws_secret_access_key**: AWS secret access key (string, required)
 
     - **aws_session_token**: session token (string, required)
+
+  - "assume_role": uses temporary security credentials created by AssumeRole.
+
+    - **aws_account_id**: AWS account ID (string, required)
+
+    - **aws_role_name**: AWS role name (string, required)
+
+    - **aws_external_id**: External ID (string, required)
 
   - "default": uses AWS SDK's default strategy to look up available credentials from runtime environment. This method behaves like the combination of the following methods.
 
