@@ -83,6 +83,10 @@ public class RedshiftOutputPlugin
         @ConfigDefault("true")
         public boolean getDeleteS3TempFile();
 
+        @Config("max_s3_upload_threads_per_task")
+        @ConfigDefault("null")
+        public Optional<Integer> getMaxS3UploadThreadsPerTask();
+
         @Config("ssl")
         @ConfigDefault("\"disable\"")
         public Ssl getSsl();
@@ -205,6 +209,8 @@ public class RedshiftOutputPlugin
         RedshiftPluginTask t = (RedshiftPluginTask) task;
         setAWSCredentialsBackwardCompatibility(t);
         return new RedshiftCopyBatchInsert(getConnector(task, true),
-                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(), t.getIamUserName(), t.getDeleteS3TempFile(), t.getCopyIamRoleName().orElse(null), t.getCopyAwsAccountId().orElse(null));
+                getAWSCredentialsProvider(t), t.getS3Bucket(), t.getS3KeyPrefix(),
+                t.getIamUserName(), t.getDeleteS3TempFile(), t.getMaxS3UploadThreadsPerTask().orElse(null),
+                t.getCopyIamRoleName().orElse(null), t.getCopyAwsAccountId().orElse(null));
     }
 }
