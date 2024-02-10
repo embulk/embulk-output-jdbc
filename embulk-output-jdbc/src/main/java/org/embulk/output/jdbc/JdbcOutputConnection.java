@@ -507,9 +507,9 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-            dropTableIfExists(stmt, toTable);
-
             executeUpdate(stmt, buildRenameTableSql(fromTable, toTable));
+
+            dropTableIfExists(stmt, toTable);
 
             if (postSql.isPresent()) {
                 execute(stmt, postSql.get());
