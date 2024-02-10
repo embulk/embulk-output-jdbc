@@ -256,6 +256,15 @@ public class JdbcOutputConnection
         return sb.toString();
     }
 
+    protected String buildSwapTablesSql(TableIdentifier fromTable, TableIdentifier toTable)
+    {
+        TableIdentifier tmpTable = new TableIdentifier(fromTable.getDatabase(), fromTable.getSchemaName(), fromTable.getTableName() + "_embulk_swap_tmp");
+
+        return buildRenameTableSql(fromTable, tmpTable) + "; " +
+               buildRenameTableSql(toTable, fromTable) + "; " +
+               buildRenameTableSql(tmpTable, toTable);
+    }
+
     public static enum ColumnDeclareType
     {
         SIMPLE,
@@ -507,9 +516,9 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-            dropTableIfExists(stmt, toTable);
+            executeUpdate(stmt, buildSwapTablesSql(fromTable, toTable));
 
-            executeUpdate(stmt, buildRenameTableSql(fromTable, toTable));
+            dropTableIfExists(stmt, fromTable);
 
             if (postSql.isPresent()) {
                 execute(stmt, postSql.get());
