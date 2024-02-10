@@ -102,6 +102,29 @@ public class MySQLOutputConnection
     }
 
     @Override
+    protected String buildSwapTablesSql(TableIdentifier fromTable, TableIdentifier toTable)
+    {
+        TableIdentifier tmpTable = new TableIdentifier(fromTable.getDatabase(), fromTable.getSchemaName(), fromTable.getTableName() + "_embulk_swap_tmp");
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("RENAME TABLE ");
+        quoteTableIdentifier(sb, fromTable);
+        sb.append(" TO ");
+        quoteTableIdentifier(sb, tmpTable);
+        sb.append(", ");
+        quoteTableIdentifier(sb, toTable);
+        sb.append(" TO ");
+        quoteTableIdentifier(sb, fromTable);
+        sb.append(", ");
+        quoteTableIdentifier(sb, tmpTable);
+        sb.append(" TO ");
+        quoteTableIdentifier(sb, toTable);
+
+        return sb.toString();
+    }
+
+    @Override
     protected String buildColumnTypeName(JdbcColumn c)
     {
         switch(c.getSimpleTypeName()) {
