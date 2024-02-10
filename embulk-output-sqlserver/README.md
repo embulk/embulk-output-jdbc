@@ -66,8 +66,8 @@ embulk "-J-Djava.library.path=C:\drivers" run input-sqlserver.yml
   * Transactional: Yes.
   * Resumable: No.
 * **replace**:
-  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
-  * Transactional: No. If fails, the target table could be dropped (because SQL Server can't rollback DDL).
+  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, swaps the intermediate table with target table by altering the names, and drops the intermediate table.
+  * Transactional: Yes.
   * Resumable: No.
 * **merge**:
   * Behavior: This mode writes rows to some intermediate tables first. If all those tasks run correctly, runs `MERGE INTO ... WHEN MATCHED THEN UPDATE ...  WHEN NOT MATCHED THEN INSERT ...` query. Namely, if merge keys of a record in the intermediate tables already exist in the target table, the target record is updated by the intermediate record, otherwise the intermediate record is inserted. If the target table doesn't exist, it is created automatically.

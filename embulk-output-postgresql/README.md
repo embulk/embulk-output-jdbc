@@ -56,7 +56,7 @@ PostgreSQL output plugin for Embulk loads records to PostgreSQL.
   * Transactional: Yes.
   * Resumable: No.
 * **replace**:
-  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, drops the target table and alters the name of the intermediate table into the target table name.
+  * Behavior: This mode writes rows to an intermediate table first. If all those tasks run correctly, swaps the intermediate table with target table by altering the names, and drops the intermediate table.
   * Transactional: Yes.
   * Resumable: No.
 * **merge**:
