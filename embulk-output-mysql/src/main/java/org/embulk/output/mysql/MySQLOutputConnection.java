@@ -107,6 +107,8 @@ public class MySQLOutputConnection
     {
         String suffix = "_embulk_swap_tmp";
         String uniqueName = String.format("%016x", System.currentTimeMillis()) + suffix;
+        // NOTE: The table name should be always shorter than 64 characters
+        // See also: https://dev.mysql.com/doc/refman/8.0/en/identifier-length.html
         TableIdentifier tmpTable = new TableIdentifier(fromTable.getDatabase(), fromTable.getSchemaName(), uniqueName);
 
         StringBuilder sb = new StringBuilder();
@@ -133,6 +135,8 @@ public class MySQLOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
+            // "DROP TABLE" causes an implicit commit in MySQL, so we rename the table at first.
+            // See also: https://dev.mysql.com/doc/refman/8.0/en/implicit-commit.html
             executeUpdate(stmt, buildSwapTableSql(fromTable, toTable));
 
             dropTableIfExists(stmt, fromTable);
