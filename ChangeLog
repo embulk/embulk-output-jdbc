@@ -1,3 +1,13 @@
+Release 0.10.5 - 2024-02-22
+
+* Added max_s3_upload_threads_per_task option to Redshift
+* Swap name + drop instead of drop + rename in MySQL replace mode
+* Upgrade the Gradle wrapper to 7.6.4, the Gradle plugin for Embulk plugins to 0.6.2, embulk-util-config to 0.3.4, and embulk-util-json to 0.3.0
+
+Release 0.10.4 - 2024-01-15
+
+* Add assume role authentication for Redshift
+
 Release 0.10.3 - 2023-10-10
 
 * Use NVARCHAR(max) for CLOB, instead of TEXT, when creating a table in SQLServer
