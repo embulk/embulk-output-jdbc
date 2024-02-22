@@ -6,7 +6,7 @@ plugins {
     id "maven-publish"
     id "signing"
     id 'checkstyle'
-    id "org.embulk.embulk-plugins" version "0.6.1" apply false
+    id "org.embulk.embulk-plugins" version "0.6.2" apply false
 }
 
 allprojects {
@@ -46,7 +46,7 @@ subprojects {
     dependencies {
         compileOnly "org.embulk:embulk-spi:0.10.49"
 
-        implementation("org.embulk:embulk-util-config:0.3.3") {
+        implementation("org.embulk:embulk-util-config:0.3.4") {
             // They conflict with embulk-core. They are once excluded here,
             // and added explicitly with versions exactly the same with embulk-core:0.10.31.
             exclude group: "com.fasterxml.jackson.core", module: "jackson-annotations"
@@ -64,7 +64,7 @@ subprojects {
         implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
         implementation "javax.validation:validation-api:1.1.0.Final"
 
-        implementation "org.embulk:embulk-util-json:0.2.1"
+        implementation "org.embulk:embulk-util-json:0.3.0"
         implementation "org.embulk:embulk-util-timestamp:0.2.2"
         implementation "org.embulk:embulk-util-retryhelper:0.8.2"
 
@@ -140,6 +140,7 @@ subprojects {
                             // http://central.sonatype.org/pages/requirements.html#license-information
                             name = "The Apache License, Version 2.0"
                             url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                            distribution = "repo"
                         }
                     }
 
