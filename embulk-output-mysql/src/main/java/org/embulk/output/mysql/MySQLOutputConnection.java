@@ -1,8 +1,10 @@
 package org.embulk.output.mysql;
 
+import java.sql.Statement;
 import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import org.embulk.output.MySQLTimeZoneComparison;
 import org.embulk.output.jdbc.JdbcColumn;
@@ -99,6 +101,56 @@ public class MySQLOutputConnection
         }
 
         return sb.toString();
+    }
+
+    private String buildSwapTableSql(TableIdentifier fromTable, TableIdentifier toTable)
+    {
+        String suffix = "_embulk_swap_tmp";
+        String uniqueName = String.format("%016x", System.currentTimeMillis()) + suffix;
+        // NOTE: The table name should be always shorter than 64 characters
+        // See also: https://dev.mysql.com/doc/refman/8.0/en/identifier-length.html
+        TableIdentifier tmpTable = new TableIdentifier(fromTable.getDatabase(), fromTable.getSchemaName(), uniqueName);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("RENAME TABLE ");
+        quoteTableIdentifier(sb, fromTable);
+        sb.append(" TO ");
+        quoteTableIdentifier(sb, tmpTable);
+
+        sb.append(", ");
+        quoteTableIdentifier(sb, toTable);
+        sb.append(" TO ");
+        quoteTableIdentifier(sb, fromTable);
+
+        sb.append(", ");
+        quoteTableIdentifier(sb, tmpTable);
+        sb.append(" TO ");
+        quoteTableIdentifier(sb, toTable);
+
+        return sb.toString();
+    }
+
+    @Override
+    public void replaceTable(TableIdentifier fromTable, JdbcSchema schema, TableIdentifier toTable, Optional<String> postSql) throws SQLException
+    {
+        Statement stmt = connection.createStatement();
+        try {
+            // "DROP TABLE" causes an implicit commit in MySQL, so we rename the table at first.
+            // See also: https://dev.mysql.com/doc/refman/8.0/en/implicit-commit.html
+            executeUpdate(stmt, buildSwapTableSql(fromTable, toTable));
+
+            dropTableIfExists(stmt, fromTable);
+
+            if (postSql.isPresent()) {
+                execute(stmt, postSql.get());
+            }
+
+            commitIfNecessary(connection);
+        } catch (SQLException ex) {
+            throw safeRollback(connection, ex);
+        } finally {
+            stmt.close();
+        }
     }
 
     @Override
