@@ -82,6 +82,7 @@ Redshift output plugin for Embulk loads records to Redshift.
 - **s3_bucket**: S3 bucket name for temporary files
 - **s3_key_prefix**: S3 key prefix for temporary files (string, default: "")
 - **delete_s3_temp_file**: whether to delete temporary files uploaded on S3 (boolean, default: true)
+- **max_s3_upload_threads_per_task**: The maximum number of threads per task which upload and copy data to Redshift via S3 (integer, optional). For example, if this option is 5 and the number of tasks is 8, 40 threads are created. If this option is increased, it may shorten the transfer time, but cause too many connections error. If this option is not specified, create as many new threads as needed, by default.
 - **copy_iam_role_name**: IAM Role for COPY credential(https://docs.aws.amazon.com/redshift/latest/dg/copy-usage_notes-access-permissions.html), if this is set, IAM Role is used instead of aws access key and aws secret access key(string, optional)
 - **copy_aws_account_id**: IAM Role's account ID for multi account COPY. If this is set, the ID is used instead of authenticated user's account ID. This is enabled only if copy_iam_role_name is set.(string, optional)
 - **options**: extra connection properties (hash, default: {})
