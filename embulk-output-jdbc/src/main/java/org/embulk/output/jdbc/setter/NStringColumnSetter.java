@@ -61,6 +61,6 @@ public class NStringColumnSetter
     @Override
     public void jsonValue(Value v) throws IOException, SQLException
     {
-        defaultValue.setNString();
+        batch.setNString(v.toJson());
     }
 }
