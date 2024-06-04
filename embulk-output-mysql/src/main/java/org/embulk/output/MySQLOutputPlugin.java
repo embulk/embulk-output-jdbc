@@ -88,7 +88,7 @@ public class MySQLOutputPlugin
         props.setProperty("connectTimeout", "300000"); // milliseconds
         props.setProperty("socketTimeout", "1800000"); // smillieconds
 
-        props.setProperty("nullDatabaseMeansCurrent", "true");
+        props.setProperty("nullCatalogMeansCurrent", "false");
 
         // Enable keepalive based on tcp_keepalive_time, tcp_keepalive_intvl and tcp_keepalive_probes kernel parameters.
         // Socket options TCP_KEEPCNT, TCP_KEEPIDLE, and TCP_KEEPINTVL are not configurable.
