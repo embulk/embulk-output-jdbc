@@ -981,6 +981,7 @@ public abstract class AbstractJdbcOutputPlugin
     {
         if (!connection.tableExists(table)) {
             // DatabaseMetaData.getPrimaryKeys fails if table does not exist
+            throw new SQLException();
             return Optional.empty();
         }
 
@@ -1028,6 +1029,7 @@ public abstract class AbstractJdbcOutputPlugin
         }
         final List<JdbcColumn> columns = Collections.unmodifiableList(builder);
         if (columns.isEmpty()) {
+            logger.info("column is empty!");
             return Optional.empty();
         } else {
             return Optional.of(new JdbcSchema(columns));
