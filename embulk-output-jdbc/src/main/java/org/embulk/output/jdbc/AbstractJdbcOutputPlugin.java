@@ -1028,7 +1028,6 @@ public abstract class AbstractJdbcOutputPlugin
         }
         final List<JdbcColumn> columns = Collections.unmodifiableList(builder);
         if (columns.isEmpty()) {
-            logger.info("column is empty!");
             return Optional.empty();
         } else {
             return Optional.of(new JdbcSchema(columns));
