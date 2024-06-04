@@ -999,9 +999,6 @@ public abstract class AbstractJdbcOutputPlugin
         final Set<String> primaryKeys = Collections.unmodifiableSet(primaryKeysBuilder);
 
         final ArrayList<JdbcColumn> builder = new ArrayList<>();
-        logger.info("table database: {}", table.getDatabase());
-        logger.info("table schema: {}", table.getSchemaName());
-        logger.info("table name: {}", table.getTableName());
         rs = dbm.getColumns(
                 JdbcUtils.escapeSearchString(table.getDatabase(), escape),
                 JdbcUtils.escapeSearchString(table.getSchemaName(), escape),
@@ -1010,7 +1007,6 @@ public abstract class AbstractJdbcOutputPlugin
         try {
             while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
-                logger.info("column name {}", columnName);
                 String simpleTypeName = rs.getString("TYPE_NAME").toUpperCase(Locale.ENGLISH);
                 boolean isUniqueKey = primaryKeys.contains(columnName);
                 int sqlType = rs.getInt("DATA_TYPE");
