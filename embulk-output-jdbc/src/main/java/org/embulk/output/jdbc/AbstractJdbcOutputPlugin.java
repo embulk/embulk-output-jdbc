@@ -982,7 +982,7 @@ public abstract class AbstractJdbcOutputPlugin
         if (!connection.tableExists(table)) {
             // DatabaseMetaData.getPrimaryKeys fails if table does not exist
             throw new SQLException();
-            return Optional.empty();
+            // return Optional.empty();
         }
 
         DatabaseMetaData dbm = connection.getMetaData();
