@@ -485,7 +485,8 @@ public abstract class AbstractJdbcOutputPlugin
             withRetry(task, new IdempotentSqlRunnable() {  // no intermediate data if isDirectModify == true
                 public void run() throws SQLException
                 {
-                    JdbcOutputConnection con = newConnection(task, true, false);
+                    // IBM DB2 requires explicit rollback/commit or AutoCommit to be enabled, so we pass `true` to the autoCommit argument.
+                    JdbcOutputConnection con = newConnection(task, true, true);
                     con.showDriverVersion();
                     try {
                         doBegin(con, task, schema, taskCount);

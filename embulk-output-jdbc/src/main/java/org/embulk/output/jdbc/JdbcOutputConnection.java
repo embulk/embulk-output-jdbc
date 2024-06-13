@@ -80,7 +80,9 @@ public class JdbcOutputConnection
     {
         Statement stmt = connection.createStatement();
         try {
-            String sql = "SET search_path TO " + quoteIdentifierString(schema);
+            // DB2 supports "SET SCHEMA" instead of "SET search_path TO".
+            // https://www.ibm.com/docs/en/db2/9.7?topic=s-set-schema
+            String sql = "SET SCHEMA " + quoteIdentifierString(schema);
             executeUpdate(stmt, sql);
             commitIfNecessary(connection);
         } finally {
@@ -367,7 +369,103 @@ public class JdbcOutputConnection
 
     protected String buildPreparedMergeSql(TableIdentifier toTable, JdbcSchema toTableSchema, MergeConfig mergeConfig) throws SQLException
     {
-        throw new UnsupportedOperationException("not implemented");
+        // NOTE: This implementation is dedicated to IBM DB2. Do not use this for other RDBMS, otherwise some errors may occur.
+
+        // We run the MERGE statement to perform an UPSERT.
+        // https://www.ibm.com/docs/ja/db2/9.7?topic=statements-merge
+        //
+        // The SQL string created here looks like this:
+        // MERGE INTO `table-name` USING (
+        //     VALUES (
+        //         ?,
+        //         ?,
+        //         ?
+        //     )
+        // ) AS tmp (
+        //     `column-name1`,
+        //     `column-name2`,
+        //     `column-name3`
+        // )
+        // ON `table-name`.`merge-key` = tmp.`merge-key`
+        // WHEN MATCHED THEN UPDATE SET
+        //     `colum-name1` = tmp.`column-name1`,
+        //     `colum-name2` = tmp.`column-name2`,
+        //     `colum-name3` = tmp.`column-name3`
+        // WHEN NOT MATCHED THEN INSERT (
+        //     `colum-name1`,
+        //     `colum-name2`,
+        //     `colum-name3`
+        // ) VALUES (
+        //     tmp.`colum-name1`,
+        //     tmp.`colum-name2`,
+        //     tmp.`colum-name3`
+        // )
+        StringBuilder sb = new StringBuilder();
+        sb.append("MERGE INTO ");
+        quoteTableIdentifier(sb, toTable);
+        sb.append(" USING (");
+        sb.append(" VALUES (");
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append("?");
+        }
+        sb.append(" )");
+        sb.append(" ) AS tmp (");
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            JdbcColumn column = toTableSchema.getColumn(i);
+            quoteIdentifierString(sb, column.getName());
+        }
+        sb.append(" )");
+        sb.append(" ON ");
+        List<String> mergeKeys = mergeConfig.getMergeKeys();
+        for (int i = 0; i < mergeKeys.size(); i++) {
+            if (i != 0) {
+                sb.append(" AND ");
+            }
+            quoteTableIdentifier(sb, toTable);
+            sb.append(".");
+            quoteIdentifierString(sb, mergeKeys.get(i));
+            sb.append(" = ");
+            sb.append("tmp.");
+            quoteIdentifierString(sb, mergeKeys.get(i));
+        }
+
+        sb.append(" WHEN MATCHED THEN UPDATE SET ");
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            JdbcColumn column = toTableSchema.getColumn(i);
+            quoteIdentifierString(sb, column.getName());
+            sb.append(" = ");
+            sb.append("tmp.");
+            quoteIdentifierString(sb, column.getName());
+        }
+
+        sb.append(" WHEN NOT MATCHED THEN INSERT (");
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            quoteIdentifierString(sb, toTableSchema.getColumn(i).getName());
+        }
+        sb.append(") VALUES (");
+        for (int i = 0; i < toTableSchema.getCount(); i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append("tmp.");
+            quoteIdentifierString(sb, toTableSchema.getColumn(i).getName());
+        }
+        sb.append(")");
+
+        return sb.toString();
+
     }
 
     @Deprecated // Use executeUpdateInNewStatement instead.

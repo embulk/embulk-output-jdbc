@@ -58,7 +58,7 @@ public class JdbcOutputPlugin
         return new Features()
             .setMaxTableNameLength(t.getMaxTableNameLength())
             .setSupportedModes(Collections.unmodifiableSet(
-                    new HashSet<>(Arrays.asList(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE))));
+                    new HashSet<>(Arrays.asList(Mode.INSERT, Mode.INSERT_DIRECT, Mode.TRUNCATE_INSERT, Mode.REPLACE, Mode.MERGE_DIRECT))));
     }
 
     @Override
