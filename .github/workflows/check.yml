@@ -138,8 +138,9 @@ jobs:
       with:
         name: postgresql9_4
         path: embulk-output-postgresql/build/reports/tests/test
-  # PostgreSQL 14 and later, raise the exception "The authentication type 10 is not supported."
-  # Use PostgreSQL 13 at this time.
+  # Testing with PostgreSQL 13 here, not with PostgreSQL 14 or later, because
+  # it raises an exception: "The authentication type 10 is not supported."
+  # TODO: Start testing with PostgreSQL 14 or later.
   postgresql13:
     runs-on: ubuntu-latest
     # push: always run.
