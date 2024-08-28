@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: 8
-        distribution: 'zulu'
+        distribution: "zulu"
         cache: "gradle"
     - name: Connect
       run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show databases;"
@@ -67,7 +67,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: 8
-        distribution: 'zulu'
+        distribution: "zulu"
         cache: "gradle"
     - name: Connect
       run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show databases;"
@@ -123,7 +123,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: 8
-        distribution: 'zulu'
+        distribution: "zulu"
         cache: "gradle"
     - name: Connect
       run: psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c "\l"
@@ -166,7 +166,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: 8
-        distribution: 'zulu'
+        distribution: "zulu"
         cache: "gradle"
     - name: Connect
       run: psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c "\l"
@@ -212,7 +212,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: 8
-        distribution: 'zulu'
+        distribution: "zulu"
         cache: "gradle"
     - name: Connect
       run: psql -h 127.0.0.1 -p 5439 -U postgres -d postgres -c "\l"
@@ -246,7 +246,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: 8
-        distribution: 'zulu'
+        distribution: "zulu"
         cache: "gradle"
     - name: Build-only
       run: ./gradlew --stacktrace :embulk-output-sqlserver:compileJava :embulk-output-sqlserver:compileTestJava
