@@ -79,19 +79,14 @@ jobs:
     # from `caching_sha2_password` that is the default in MySQL 8 because
     # Connector/J 5.x does not support `caching_sha2_password`.
     # TODO: Start testing with `caching_sha2_password` with Connector/J 8.x.
-    - name: Show password plugins
-      run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "SELECT user, host, plugin FROM mysql.user;"
-    - name: Change password mechanism1 (root@localhost)
+    #
+    # See also: https://dev.mysql.com/doc/refman/8.4/en/account-names.html
+    - name: Change password (root@localhost)
       run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';"
-    - name: Change password mechanism2 (root@%)
+    - name: Change password (root@%)
       run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
     - name: FLUSH PRIVILEGES
       run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "FLUSH PRIVILEGES;"
-    - name: Show password plugins2
-      run: mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "SELECT user, host, plugin FROM mysql.user;"
-    #
-    # End caching_sha2_password workaround.
-    #
     - name: Build with testing
       run: ./gradlew --stacktrace :embulk-output-mysql:check
       env:
