@@ -49,9 +49,10 @@ jobs:
       fail-fast: false
     services:
       mysql:
-        # Due to MySQL 8.4 disabled mysql_native_password by default,
-        # Connector/J 5.x can't connect to database.
-        # So, Use MySQL 8.3.
+        # Testing with MySQL 8.3 here, neither with 8.4 nor 9.0, because
+        # MySQL 8.4 has disabled mysql_native_password by default.
+        # Connector/J 5.x cannot connect to MySQL 8.4 due to this.
+        # TODO: Start testing with MySQL 8.4 and/or 9.0 with Connector/J 8.x.
         image: mysql:8.3
         options: --health-cmd "mysqladmin ping -h localhost" --health-interval 20s --health-timeout 10s --health-retries 10
         ports:
