@@ -267,6 +267,10 @@ public class PostgreSQLOutputConnection
             if (c.getDataLength() > MAX_NUMERIC_PRECISION || c.getDataLength() < MIN_NUMERIC_PRECISION) {
                 // getDataLength for numeric without precision will return 0 or 131089 .
                 // but cannot create column of numeric(0) and numeric(131089) .
+                // before PostgreSQL JDBC driver 42.2.23, return 131089. from 42.2.23 return 0.
+                // release note: https://jdbc.postgresql.org/changelogs/2021-07-06-42.2.23-release/
+                // issue: https://github.com/pgjdbc/pgjdbc/issues/2188
+                // pull request: https://github.com/pgjdbc/pgjdbc/pull/2189
                 return "NUMERIC";
             }
             break;
