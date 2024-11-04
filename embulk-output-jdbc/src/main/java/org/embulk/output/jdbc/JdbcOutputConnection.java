@@ -121,8 +121,16 @@ public class JdbcOutputConnection
     protected void dropTableIfExists(Statement stmt, TableIdentifier table) throws SQLException
     {
         if (supportsTableIfExistsClause()) {
-            String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
-            executeUpdate(stmt, sql);
+            try {
+                String sql = String.format("DROP TABLE IF EXISTS %s", quoteTableIdentifier(table));
+                executeUpdate(stmt, sql);
+            }
+            catch (Exception ex) {
+                logger.warn("IF EXISTS Not Supported.");
+                if (tableExists(table)) {
+                    dropTable(stmt, table);
+                }
+            }
         } else {
             if (tableExists(table)) {
                 dropTable(stmt, table);
