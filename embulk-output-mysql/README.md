@@ -37,6 +37,8 @@ MySQL output plugin for Embulk loads records to MySQL.
   - **timezone**: If input column type (embulk type) is timestamp, this plugin needs to format the timestamp value into a SQL string. In this cases, this timezone option is used to control the timezone. (string, value of default_timezone option is used by default)
 - **before_load**: if set, this SQL will be executed before loading all records. In truncate_insert mode, the SQL will be executed after truncating. replace mode doesn't support this option.
 - **after_load**: if set, this SQL will be executed after loading all records.
+- **socket_timeout**: socket timeout milliseconds (string, default: "2700000")
+- **retryable_socket_timeout**: socket timeout milliseconds on retrying (string, default: "1800000")
 
 ### Modes
 
