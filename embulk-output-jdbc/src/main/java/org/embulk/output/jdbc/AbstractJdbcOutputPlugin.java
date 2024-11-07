@@ -583,7 +583,7 @@ public abstract class AbstractJdbcOutputPlugin
                 }
             }
         }
-        task.setActualTable(new TableIdentifier(null, con.getSchemaName(), actualTable));
+        task.setActualTable(new TableIdentifier(con.getDatabaseName(), con.getSchemaName(), actualTable));
 
         Optional<JdbcSchema> initialTargetTableSchema =
             mode.ignoreTargetTableSchema() ?
